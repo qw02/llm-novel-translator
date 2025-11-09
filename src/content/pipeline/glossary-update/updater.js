@@ -1,5 +1,5 @@
 // Minimal async mutex to separate pending entries selection / scheduling from dictionary update / mutation
-import { parseJSONFromLLM } from "../../../core/utils/data-extraction.js";
+import { parseJSONFromLLM } from "../../utils/data-extraction.js";
 
 export class AsyncMutex {
   constructor() {

@@ -166,7 +166,7 @@ function cancelTask(taskId) {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Handle LLM request
-  if (message.type === 'llm.request') {
+  if (message.type === 'llm_request') {
     const { clientId, llmId, systemPrompt, userMessage } = message.payload;
     const taskId = nextTaskId++;
 
@@ -199,7 +199,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle cancellation
-  if (message.type === 'llm.cancel') {
+  if (message.type === 'llm_cancel') {
     const { clientId, pendingCount } = message.payload;
 
     console.log(`[Background] Received llm.cancel from client ${clientId} (${pendingCount} pending)`);

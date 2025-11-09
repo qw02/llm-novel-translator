@@ -68,15 +68,15 @@ class LLMClient {
     }
 
     try {
-      const response = await chrome.runtime.sendMessage({
-        type: 'llm.request',
-        payload: {
-          clientId: this.clientId,
-          llmId: this.llmId,
-          systemPrompt: pending.prompt.system,
-          userMessage: pending.prompt.user,
-        },
-      });
+      const payload = {
+        clientId: this.clientId,
+        llmId: this.llmId,
+        systemPrompt: pending.prompt.system,
+        userMessage: pending.prompt.user,
+      };
+
+      const response = await chrome.runtime.sendMessage({ type: 'llm_request', payload });
+
 
       this._pendingRequests.delete(requestId);
 
@@ -101,7 +101,7 @@ class LLMClient {
         if (pending.retryCount <= 3) {
           console.warn(
             `[LLMClient] Background worker unavailable for request ${requestId}, ` +
-            `retrying (${pending.retryCount}/3)...`
+            `retrying (${pending.retryCount}/3)...`,
           );
 
           setTimeout(() => this._sendRequest(requestId), 1000);
@@ -109,10 +109,10 @@ class LLMClient {
           this._pendingRequests.delete(requestId);
           this.progressTracker.markError(
             this.stageId,
-            'Background worker unavailable after retries'
+            'Background worker unavailable after retries',
           );
           pending.reject(
-            new Error('Background worker unavailable after 3 retry attempts')
+            new Error('Background worker unavailable after 3 retry attempts'),
           );
         }
       } else {
@@ -174,13 +174,12 @@ class LLMClient {
 
     // Send cancellation message to background worker
     // Fire and forget - don't await, we're cleaning up
-    chrome.runtime.sendMessage({
-      type: 'llm.cancel',
-      payload: {
-        clientId: this.clientId,
-        pendingCount,
-      },
-    }).catch(() => {
+    const payload = {
+      clientId: this.clientId,
+      pendingCount,
+    };
+
+    chrome.runtime.sendMessage({ type: 'llm_cancel', payload }).catch(() => {
       // Ignore errors - worker might already be dead, or we might be shutting down
     });
 

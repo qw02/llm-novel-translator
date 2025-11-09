@@ -49,7 +49,7 @@ async function handlePipelineStart() {
 
     // Step 4: Replace text on webpage
     console.log('[Main] Step 4: Replacing text on webpage...');
-    replaceText(translatedText);
+    // replaceText(translatedText);
     console.log('[Main] Text replacement complete');
 
   } catch (error) {

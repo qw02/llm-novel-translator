@@ -2,51 +2,12 @@
  * Stage 3: Split text into translation chunks
  */
 
-import { parseJSONFromLLM } from "../../../core/utils/data-extraction.js";
+import { parseJSONFromLLM } from "../../utils/data-extraction.js";
 
 export async function chunkText(config, textSegments) {
-  console.log(`[TextSplitting] Strategy: ${strategy}, Max size: ${maxChunkSize}`);
 
-  if (strategy === 'none') {
-    // No splitting - translate entire document as one chunk
-    return [[0, textSegments.length - 1]];
-  }
 
-  if (strategy === 'line') {
-    // One segment per chunk
-    return textSegments.map((_, i) => [i, i]);
-  }
 
-  if (strategy === 'smart') {
-    // Smart chunking based on character count
-    const intervals = [];
-    let start = 0;
-    let currentSize = 0;
-
-    for (let i = 0; i < textSegments.length; i++) {
-      const segmentSize = textSegments[i].text.length;
-
-      if (currentSize + segmentSize > maxChunkSize && currentSize > 0) {
-        // Close current chunk
-        intervals.push([start, i - 1]);
-        start = i;
-        currentSize = segmentSize;
-      } else {
-        currentSize += segmentSize;
-      }
-    }
-
-    // Close final chunk
-    if (start < textSegments.length) {
-      intervals.push([start, textSegments.length - 1]);
-    }
-
-    console.log(`[TextSplitting] Created ${intervals.length} smart chunks`);
-    return intervals;
-  }
-
-  // Default: line-by-line
-  return textSegments.map((_, i) => [i, i]);
 }
 
 

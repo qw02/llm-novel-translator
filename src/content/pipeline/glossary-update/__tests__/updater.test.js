@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AsyncMutex, GlossaryUpdater } from './../updater.js';
-import { parseJSONFromLLM } from '../../../../core/utils/data-extraction.js';
+import { parseJSONFromLLM } from '../../../utils/data-extraction.js';
 
 vi.mock('../../../../core/utils/data-extraction.js', () => ({
   parseJSONFromLLM: vi.fn().mockImplementation(() => [{ action: 'none' }]),

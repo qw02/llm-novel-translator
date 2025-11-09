@@ -9,7 +9,7 @@ vi.mock("../../../core/utils/data-extraction.js", () => {
 });
 
 // Import the mocked function to set return values per test.
-import { parseJSONFromLLM } from "../../../../core/utils/data-extraction.js";
+import { parseJSONFromLLM } from "../../../utils/data-extraction.js";
 
 // Import functions under test.
 import {

@@ -15,7 +15,6 @@ export function extractText() {
       id: p.id,
       index: index,
       text: p.textContent.trim(),
-      element: p, // Keep reference for later replacement
     });
   });
 

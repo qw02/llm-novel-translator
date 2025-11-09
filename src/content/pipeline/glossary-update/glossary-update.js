@@ -2,7 +2,7 @@
  * Stage 2: Merge new glossary entries with the existing dictionary
  */
 import { LLMClient } from "../../llm-client.js";
-import { getPromptBuilder } from "../../../core/prompts/index.js";
+import { getPromptBuilder } from "../../prompts/index.js";
 import { GlossaryUpdater } from "./updater.js";
 
 /**

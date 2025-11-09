@@ -59,25 +59,25 @@ export async function runPipeline(extractedText, config) {
 
 
     // Stage 4: Text Translation
-    console.log('[Pipeline] Stage 4: Text Translation');
-    const translatedChunks = await translateText(config, texts);
+    // console.log('[Pipeline] Stage 4: Text Translation');
+    // const translatedChunks = await translateText(config, texts);
 
     // Stage 5: Post Editing
-    let finalTranslation = translatedChunks;
-    if (config.postEdit) {
-      console.log('[Pipeline] Stage 5: Post Editing');
-      finalTranslation = await postEditText(config, texts, intervals, translatedChunks);
-      editClient.dispose();
-    }
+    // let finalTranslation = translatedChunks;
+    // if (config.postEdit) {
+    //   console.log('[Pipeline] Stage 5: Post Editing');
+    //   finalTranslation = await postEditText(config, texts, intervals, translatedChunks);
+    //   editClient.dispose();
+    // }
 
     // Reconstruct output format matching input
-    const output = extractedText.map((item, index) => ({
-      ...item,
-      translation: finalTranslation[index],
-    }));
+    // const output = extractedText.map((item, index) => ({
+    //   ...item,
+    //   translation: finalTranslation[index],
+    // }));
 
     console.log('[Pipeline] Pipeline completed successfully');
-    return output;
+    // return output;
 
   } catch (error) {
     console.error('[Pipeline] Pipeline failed:', error);

@@ -1,9 +1,9 @@
 export const MSG_TYPE = {
-  TRANSLATE_REQUEST: 'TRANSLATE_REQUEST',
-  TRANSLATION_RESULT: 'TRANSLATION_RESULT',
-  PROGRESS_UPDATE: 'PROGRESS_UPDATE',
   GET_SETTINGS: 'GET_SETTINGS',
   SAVE_SETTINGS: 'SAVE_SETTINGS',
+
+  llm_request: 'llm_request',
+  llm_cancel: 'llm_cancel',
 };
 
 // Helper for content script

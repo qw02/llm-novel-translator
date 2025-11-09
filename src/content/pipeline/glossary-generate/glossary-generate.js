@@ -2,9 +2,9 @@
  * Stage 1: Extract terminology from source text
  */
 
-import { getPromptBuilder } from '../../../core/prompts/index.js';
+import { getPromptBuilder } from '../../prompts/index.js';
 import { LLMClient } from "../../llm-client.js";
-import { parseJSONFromLLM } from "../../../core/utils/data-extraction.js"
+import { parseJSONFromLLM } from "../../utils/data-extraction.js"
 
 // Default chunk size for glossary generation
 const GLOSSARY_CHUNK_SIZE = 4000;
@@ -28,7 +28,6 @@ export async function generateGlossary(config, textSegments) {
     console.log(`[GlossaryGen] Created ${chunks.length} chunk(s) from text segments`);
 
     // Get prompt builder
-    console.log(config.languagePair);
     const promptBuilder = await getPromptBuilder(config.languagePair, 'glossary-generate');
 
     // Create prompts for each chunk
