@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "LLM Novel Translator (BYOK)",
+  "version": "1.0.0",
+  "description": "Translates webnovels with LLM using a RAG pipeline.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://openrouter.ai/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.deepseek.com/*",
+    "https://api.x.ai/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/main.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.syosetu.com/*/*/",
+        "https://kakuyomu.jp/works/*/episodes/*",
+        "file:///*.html"
+      ],
+      "js": [
+        "src/content/main.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "Webpage Text Translator",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "128": "icons/icon-128.png"
+  }
+}
