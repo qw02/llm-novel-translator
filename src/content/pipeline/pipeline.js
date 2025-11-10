@@ -10,19 +10,14 @@ import { generateGlossary } from './glossary-generate/glossary-generate.js';
 import { updateGlossary } from './glossary-update/glossary-update.js';
 import { segmentText } from './text-segmentation/text-segmentation.js';
 import { translateText } from './translation/translation.js';
-import { postEditText } from './post-edit/post-edit.js';
+// import { postEditText } from './post-edit/post-edit.js';
 
-export async function runPipeline(extractedText, config) {
+export async function runPipeline(texts, config) {
   console.log('[Pipeline] Starting translation pipeline');
 
   const progressTracker = getProgressTracker();
 
   try {
-    const texts = extractedText.map(item => ({
-      ...item,
-      text: item.text.normalize('NFC'),
-    }));
-
     // Mock object for testing
     // Actual will be loaded from background / storage
     let glossary = {
@@ -49,18 +44,14 @@ export async function runPipeline(extractedText, config) {
     }
 
     // Stage 3: Text Splitting
-    console.log('[Pipeline] Stage 3: Text Splitting');
     const intervals = await segmentText(config, texts);
-
-    console.log(`Intervals: ${JSON.stringify(intervals)}`);
-
-
-
 
 
     // Stage 4: Text Translation
-    // console.log('[Pipeline] Stage 4: Text Translation');
-    // const translatedChunks = await translateText(config, texts);
+    console.log('[Pipeline] Stage 4: Text Translation');
+    const translatedChunks = await translateText(config, texts, glossary, intervals);
+
+    console.log(translatedChunks);
 
     // Stage 5: Post Editing
     // let finalTranslation = translatedChunks;

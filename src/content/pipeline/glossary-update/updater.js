@@ -130,7 +130,6 @@ export class GlossaryUpdater {
         if (result.ok) {
           try {
             const parsed = parseJSONFromLLM(result.response);
-            console.log(parsed);
             const actions = this._normalizeActions(parsed);
             const validationError = this._validateActions(actions, meta.conflicts);
             if (!validationError) {

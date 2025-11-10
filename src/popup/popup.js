@@ -1,9 +1,17 @@
 // popup/popup.js
 
+
 const translateBtn = document.getElementById('translateBtn');
+const getProgressBtn = document.getElementById('getProgressBtn');
 const statusEl = document.getElementById('status');
+const statusDiv = document.getElementById("status");
+const simpleSection = document.getElementById("simpleSection");
+const rawSection = document.getElementById("rawSection");
+const simpleFormatDiv = document.getElementById("simpleFormat");
+const rawJsonDiv = document.getElementById("rawJson");
 
 translateBtn.addEventListener('click', onTranslateClick);
+getProgressBtn.addEventListener('click', onProgressClick);
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -31,6 +39,80 @@ async function onTranslateClick() {
     // Re-enable so the user can press again if desired
     translateBtn.disabled = false;
   }
+}
+
+async function onProgressClick() {
+  try {
+    statusDiv.textContent = "Fetching progress...";
+
+    // Get the active tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab?.id) {
+      statusDiv.textContent = "Error: No active tab found";
+      return;
+    }
+
+    // Send message to the content script in that tab
+    const response = await chrome.tabs.sendMessage(tab.id, {
+      action: "getProgressState"
+    });
+
+    if (response?.success) {
+      statusDiv.textContent = "Progress data retrieved!";
+      displayProgressData(response.data);
+    } else {
+      statusDiv.textContent = "Error: Invalid response from content script";
+    }
+  } catch (error) {
+    statusDiv.textContent = `Error: ${error.message}`;
+    console.error("Failed to get progress:", error);
+  }
+}
+
+function displayProgressData(data) {
+  // Show both sections
+  simpleSection.style.display = "block";
+  rawSection.style.display = "block";
+
+  // Display raw JSON
+  rawJsonDiv.textContent = JSON.stringify(data, null, 2);
+
+  // Display simple formatted version
+  let html = "";
+
+  // Global progress
+  if (data.global) {
+    html += `<strong>Global Progress:</strong><br>`;
+    html += `Progress: ${(data.global.progress * 100).toFixed(1)}%<br>`;
+    html += `Total: ${data.global.total} | Completed: ${data.global.completed} | Remaining: ${data.global.remaining}<br>`;
+    html += `Errors: ${data.global.errors}<br>`;
+    html += `<br>`;
+  }
+
+  // Individual stages
+  html += `<strong>Stages:</strong><br>`;
+  for (const [stageId, stage] of Object.entries(data)) {
+    if (stageId === "global") continue;
+
+    html += `<br><strong>${stage.label || stageId}</strong><br>`;
+    html += `Status: ${stage.done ? "✓ Done" : "In Progress"}<br>`;
+    html += `Completed: ${stage.completed}/${stage.total}`;
+
+    if (!stage.done) {
+      html += ` (${(stage.progress * 100).toFixed(1)}%)<br>`;
+      html += `Speed: ${stage.speed} tasks/sec | ETA: ${stage.eta}s<br>`;
+      html += `Elapsed: ${stage.elapsed}s<br>`;
+    } else {
+      html += `<br>`;
+    }
+
+    if (stage.errorCount > 0) {
+      html += `<span style="color: #d00;">Errors: ${stage.errorCount}</span><br>`;
+    }
+  }
+
+  simpleFormatDiv.innerHTML = html;
 }
 
 // Utils

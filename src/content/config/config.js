@@ -24,9 +24,21 @@ export function validateConfig() {
       overlapCount: 10,
     },
 
+    translation: {
+      // Language specific settings
+      narrative: 'auto',
+      honorifics: 'preserve',
+      nameOrder: 'ja',
+
+      // Standard configs
+      contextLines: 5
+    },
+
     // Translation settings
     sourceLang: 'ja',
     targetLang: 'en',
+    customInstruction: "User Entered Instructions",
+
     get languagePair() {
       return `${this.sourceLang}_${this.targetLang}`;
     },
@@ -54,7 +66,7 @@ const languageNames = {
   "zh-Hans": "Simplified Chinese",
   "zh-Hant": "Traditional Chinese",
   "ja": "Japanese",
-  "ko": "Korean"
+  "ko": "Korean",
 };
 
 function getName(code) {

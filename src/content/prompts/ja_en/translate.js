@@ -1,22 +1,20 @@
 export default {
-  build(text, config) {
+  build(text, extraContext, config) {
     const {
       precedingText = '',
-      glossary,
+      glossaryEntries = [],
+      customInstruction,
+    } = extraContext;
+
+    const {
       narrative,
       honorifics,
       nameOrder,
-      customInstruction,
     } = config;
 
     // ========================================
     // SYSTEM PROMPT ASSEMBLY
     // ========================================
-
-    const baseSystem = `
-You are a highly skilled Japanese to English literature translator, tasked with translating text from Japanese to English. Aim to maintain the original tone, prose, nuance, and character voices of the source text as closely as possible.
-Do not under any circumstances localize anything by changing the original meaning or tone, stick strictly to translating the original tone, prose and language as closely as possible to the original text.
-`.trim();
 
     // --- Narrative Voice ---
     let narrativeInstruction = '';
@@ -108,6 +106,9 @@ Use English name ordering (FirstName-LastName) in your translation.
 
     // Assemble system prompt
     const system = `
+You are a highly skilled Japanese to English literature translator, tasked with translating text from Japanese to English. Aim to maintain the original tone, prose, nuance, and character voices of the source text as closely as possible.
+Do not under any circumstances localize anything by changing the original meaning or tone, stick strictly to translating the original tone, prose and language as closely as possible to the original text.
+
 <instructions>
 ### Guiding Principles & Context Usage
 Prioritize Raw Text: If you encounter any discrepancies between the provided \`<metadata>\` and the actual Japanese text, always treat the raw Japanese text as the ultimate source of truth. Ignore any metadata that directly contradicts the text itself.
@@ -160,24 +161,7 @@ Output: <translation> ==--==--== <translation>
     // USER PROMPT ASSEMBLY
     // ========================================
 
-    const fullContextText = precedingText + text;
-
-    // --- Glossary Metadata ---
-    let glossaryMetadata = '';
-    if (glossary && Object.keys(glossary).length > 0) {
-      const relevantEntries = Object.entries(glossary)
-        .filter(([key]) => fullContextText.includes(key))
-        .map(([key, val]) => `${key} -> ${val.translation || val}`)
-        .join('\n');
-
-      if (relevantEntries) {
-        glossaryMetadata = `
-### Glossary
-Use the following translations consistently:
-${relevantEntries}
-`.trim();
-      }
-    }
+    const glossaryMetadata = glossaryEntries.join('\n');
 
     // --- Preceding Text Context ---
     const precedingTextContext = precedingText

@@ -12,6 +12,7 @@ const tasksByClient = new Map(); // clientId -> Set<taskId>
 const pendingTasks = new Map(); // taskId -> { timeoutId, resolve, reject }
 
 let nextTaskId = 1;
+let echoCounter = 0;
 
 /**
  * Mock response generator based on request patterns.
@@ -128,25 +129,41 @@ function generateMockResponse(llmId, systemPrompt, userMessage) {
     };
   }
 
-// Error simulation
-  if (userMessage.includes('MOCK_ERROR')) {
-    return {
-      ok: false,
-      error: 'Simulated API error: HTTP 500',
-    };
-  }
+  // Translation mock (echo with counter)
+  if (llmId === '99-4') {
+    // Extract text from <raw-text> tags
+    const match = userMessage.match(/<raw-text>\s*([\s\S]*?)\s*<\/raw-text>/);
 
-// Slow response simulation
-  if (userMessage.includes('MOCK_SLOW')) {
-    // This will be handled by the artificial delay below
+    if (!match) {
+      return {
+        ok: false,
+        error: 'No <raw-text> block found in user message'
+      };
+    }
+
+    const rawText = match[1];
+
+    // Split by newlines and filter out empty lines
+    const lines = rawText.split('\n').filter(line => line.trim().length > 0);
+
+    // Generate echo response with incrementing counter
+    const echoLines = lines.map(line => {
+      echoCounter++;
+      return `<translation>#${echoCounter} Echo: ${line}</translation>`;
+    });
+
+    const response = echoLines.join('\n');
+
     return {
       ok: true,
       data: {
-        assistant: 'This response was intentionally delayed to simulate a slow API call.',
+        assistant: response,
         reasoning: null,
       },
     };
   }
+
+
 
 // Default echo response
   return {

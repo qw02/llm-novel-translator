@@ -147,6 +147,9 @@ describe('LLM result application without real LLM', () => {
   });
 
   it('ignores invalid actions and continues', async () => {
+    // Silence the log from the invalid action
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     parseJSONFromLLM.mockReturnValue([{ action: 'delete', id: 999 }]); // not in conflicts
     const client = immediateClient('x');
     const updater = new GlossaryUpdater(client, { build: vi.fn() });

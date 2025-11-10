@@ -12,21 +12,22 @@
             margin: 0;
             padding: 12px;
             font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-            min-width: 220px;
+            min-width: 320px;
+            max-width: 500px;
         }
         .row {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        #translateBtn {
+        button {
             padding: 8px 12px;
             border: 1px solid #888;
             border-radius: 6px;
             cursor: pointer;
             background: transparent;
         }
-        #translateBtn:disabled {
+        button:disabled {
             opacity: 0.6;
             cursor: default;
         }
@@ -36,13 +37,49 @@
             color: #666;
             white-space: pre-wrap;
         }
+        .section {
+            margin-top: 16px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        #simpleFormat {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        #rawJson {
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #120202;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
 <div class="row">
     <button id="translateBtn" type="button">Translate</button>
+    <button id="getProgressBtn" type="button">Get Progress State</button>
 </div>
 <div id="status" aria-live="polite"></div>
+
+<div class="section" id="simpleSection" style="display: none;">
+    <div class="section-title">Simple Format</div>
+    <div id="simpleFormat"></div>
+</div>
+
+<div class="section" id="rawSection" style="display: none;">
+    <div class="section-title">Raw JSON</div>
+    <div id="rawJson"></div>
+</div>
 
 <script type="module" src="./popup.js"></script>
 </body>
