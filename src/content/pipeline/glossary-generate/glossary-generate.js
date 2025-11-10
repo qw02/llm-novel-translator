@@ -5,6 +5,7 @@
 import { getPromptBuilder } from '../../prompts/index.js';
 import { LLMClient } from "../../llm-client.js";
 import { parseJSONFromLLM } from "../../utils/data-extraction.js"
+import { getParagraphWeight } from "../../utils/text-helpers.js";
 
 // Default chunk size for glossary generation
 const GLOSSARY_CHUNK_SIZE = 4000;
@@ -22,7 +23,9 @@ export async function generateGlossary(config, textSegments) {
   try {
     // Chunk texts into manageable blocks
     const chunkSize = config.glossaryChunkSize || GLOSSARY_CHUNK_SIZE;
-    const chunks = chunkTexts(textSegments, chunkSize);
+    const sourceLang = config.sourceLang;
+
+    const chunks = chunkTexts(textSegments, chunkSize, sourceLang);
 
     // Get prompt builder
     const promptBuilder = await getPromptBuilder(config.languagePair, 'glossary-generate');
@@ -81,18 +84,23 @@ export async function generateGlossary(config, textSegments) {
 /**
  * Chunk texts into blocks to fit in LLM context window
  */
-function chunkTexts(textSegments, maxChunkSize) {
+function chunkTexts(texts, maxChunkSize, lang) {
   const chunks = [];
   let currentChunk = '';
+  let currentWeight = 0;
 
-  for (const segment of textSegments) {
+  for (const segment of texts) {
     const text = segment.text;
+    const textWeight = getParagraphWeight(text, lang);
 
-    if (currentChunk.length + text.length > maxChunkSize && currentChunk.length > 0) {
+    // If adding this paragraph would exceed the maximum chunk size, start a new chunk
+    if (currentWeight + textWeight > maxChunkSize && currentWeight > 0) {
       chunks.push(currentChunk);
       currentChunk = text;
+      currentWeight = textWeight;
     } else {
       currentChunk += (currentChunk ? '\n' : '') + text;
+      currentWeight += textWeight;
     }
   }
 
@@ -104,7 +112,7 @@ function chunkTexts(textSegments, maxChunkSize) {
 }
 
 /**
- * Validate Stage 1 response structure
+ * Validate structure of generated glossary
  */
 function validateStage1Response(obj) {
   if (!obj || !Array.isArray(obj.entries)) {

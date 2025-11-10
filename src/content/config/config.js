@@ -16,7 +16,7 @@ export function validateConfig() {
     },
 
     updateGlossary: true,
-    glossaryChunkSize: 4000,
+    glossaryChunkSize: 2000,
 
     textSegmentation: {
       method: 'chunk', // other values: 'single', 'entire'
