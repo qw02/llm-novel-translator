@@ -1,8 +1,9 @@
 // intervals.test.js
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+
 // Mock the LLM parser module used by the implementation.
-vi.mock("../../../core/utils/data-extraction.js", () => {
+vi.mock("../../../utils/data-extraction.js", () => {
   return {
     parseJSONFromLLM: vi.fn(),
   };
@@ -15,7 +16,7 @@ import { parseJSONFromLLM } from "../../../utils/data-extraction.js";
 import {
   getIntervalsFromLLMOrFallback,
   makeFallbackIntervals,
-} from "../text-segmentation.js";
+} from "../llm-chunking.js";
 
 
 

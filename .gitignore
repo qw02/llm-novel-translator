@@ -68,3 +68,4 @@ debug.log
 # Extension package
 *.xpi
 web-ext-artifacts/
+/test_pages/

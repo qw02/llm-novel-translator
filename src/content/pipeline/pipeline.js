@@ -8,9 +8,9 @@ import { getProgressTracker } from '../progress-tracking.js';
 
 import { generateGlossary } from './glossary-generate/glossary-generate.js';
 import { updateGlossary } from './glossary-update/glossary-update.js';
-import { chunkText } from './text-segmentation/text-segmentation.js';
-import { translateText } from './translation.js';
-import { postEditText } from './post-edit.js';
+import { segmentText } from './text-segmentation/text-segmentation.js';
+import { translateText } from './translation/translation.js';
+import { postEditText } from './post-edit/post-edit.js';
 
 export async function runPipeline(extractedText, config) {
   console.log('[Pipeline] Starting translation pipeline');
@@ -52,7 +52,9 @@ export async function runPipeline(extractedText, config) {
 
     // Stage 3: Text Splitting
     console.log('[Pipeline] Stage 3: Text Splitting');
-    const intervals = await chunkText(config, texts);
+    const intervals = await segmentText(config, texts);
+
+    console.log(`Intervals: ${JSON.stringify(intervals)}`);
 
 
 

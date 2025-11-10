@@ -119,5 +119,4 @@ End: ${formattedText.end}
 
     return { system, user }
   },
-
 }

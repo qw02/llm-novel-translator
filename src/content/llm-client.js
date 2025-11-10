@@ -58,6 +58,29 @@ class LLMClient {
   }
 
   /**
+   * Sends multiple requests concurrently.
+   *
+   * @param {Array<Object>} prompts - Array of prompts (system/user message)
+   * @returns {Promise<Array<{ok: boolean, data?: string, error?: string}>>}
+   */
+  async requestBatch(prompts) {
+    if (this._disposed) {
+      throw new Error('LLMClient has been disposed');
+    }
+
+    const promises = prompts.map(async (userMessage) => {
+      try {
+        const result = await this.request(userMessage);
+        return { ok: true, data: result };
+      } catch (error) {
+        return { ok: false, error: error.message };
+      }
+    });
+
+    return Promise.all(promises);
+  }
+
+  /**
    * Internal method to send or retry a request.
    * @private
    */
@@ -121,29 +144,6 @@ class LLMClient {
         pending.reject(error);
       }
     }
-  }
-
-  /**
-   * Sends multiple requests concurrently.
-   *
-   * @param {Array<Object>} prompts - Array of prompts (system/user message)
-   * @returns {Promise<Array<{ok: boolean, data?: string, error?: string}>>}
-   */
-  async requestBatch(prompts) {
-    if (this._disposed) {
-      throw new Error('LLMClient has been disposed');
-    }
-
-    const promises = prompts.map(async (userMessage) => {
-      try {
-        const result = await this.request(userMessage);
-        return { ok: true, data: result };
-      } catch (error) {
-        return { ok: false, error: error.message };
-      }
-    });
-
-    return Promise.all(promises);
   }
 
   /**

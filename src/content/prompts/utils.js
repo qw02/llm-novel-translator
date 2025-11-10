@@ -1,5 +1,5 @@
 /**
- * Generates the prompt for a chunking task.
+ * Formatting helper for the chunk text prompt builders
  * @param {Array<{text: string, index: number}>} indexedParagraphs - The paragraphs for this batch.
  * @param offset - The offset to subtract for mapping indices to lower range.
  * @returns {{start: number|number, end: number|number, text: string}}
