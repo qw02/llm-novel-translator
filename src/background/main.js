@@ -85,6 +85,49 @@ function generateMockResponse(llmId, systemPrompt, userMessage) {
     };
   }
 
+  // Text Chunking mock
+  if (llmId === '99-3') {
+    // Extract start and end from metadata section
+    const startMatch = userMessage.match(/Start:\s*(\d+)/);
+    const endMatch = userMessage.match(/End:\s*(\d+)/);
+
+    if (!startMatch || !endMatch) {
+      // Invalid format, return error
+      return {
+        ok: false,
+        error: 'Invalid metadata format in mock',
+      };
+    }
+
+    const start = Number(startMatch[1]);
+    const end = Number(endMatch[1]);
+
+    // Generate random intervals covering [start, end]
+    const intervals = [];
+    let current = start;
+
+    while (current <= end) {
+      // Random chunk size between 4 and 7 paragraphs
+      const chunkSize = Math.floor(Math.random() * 4) + 4; // 4, 5, 6, or 7
+      const intervalEnd = Math.min(current + chunkSize - 1, end);
+
+      intervals.push([current, intervalEnd]);
+
+      current = intervalEnd + 1;
+    }
+
+    // Return as JSON string (matching LLM output format)
+    const response = JSON.stringify(intervals);
+
+    return {
+      ok: true,
+      data: {
+        assistant: response,
+        reasoning: null,
+      },
+    };
+  }
+
 // Error simulation
   if (userMessage.includes('MOCK_ERROR')) {
     return {

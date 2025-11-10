@@ -19,7 +19,7 @@ export function validateConfig() {
     glossaryChunkSize: 4000,
 
     textSegmentation: {
-      method: 'entire', // other values: 'single', 'entire'
+      method: 'chunk', // other values: 'single', 'entire'
       chunkSize: 1500, // These keys depend on the method, if it's single then nothing else is needed for example.
       overlapCount: 10,
     },

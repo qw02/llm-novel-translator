@@ -4,6 +4,7 @@
 
 import { segmentSingleLine } from "./single-line.js";
 import { segmentEntirePage } from "./entire-page.js";
+import { segmentWithChunking } from "./llm-chunking.js";
 
 export async function segmentText(config, texts) {
   const method = config.textSegmentation.method;

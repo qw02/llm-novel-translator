@@ -18,8 +18,6 @@ export async function runPipeline(extractedText, config) {
   const progressTracker = getProgressTracker();
 
   try {
-    // Preprocessing: Unicode normalization, etc.
-    console.log('[Pipeline] Preprocessing...');
     const texts = extractedText.map(item => ({
       ...item,
       text: item.text.normalize('NFC'),

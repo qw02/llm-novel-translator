@@ -1,4 +1,169 @@
 import { parseJSONFromLLM } from "../../utils/data-extraction.js";
+import { LLMClient } from "../../llm-client.js";
+import { getPromptBuilder } from "../../prompts/index.js";
+import { mergeChunkIntervals } from "../../utils/merge-intervals.js";
+
+/**
+ * Segments text using LLM-based chunking strategy.
+ *
+ * Flow:
+ * 1. Create overlapping batches of paragraphs
+ * 2. Generate prompts with offset mapping for each batch
+ * 3. Send all requests to LLM concurrently
+ * 4. Parse responses and unmap offsets to get actual paragraph indices
+ * 5. Merge overlapping suggestions from batches
+ * 6. Return final 0-indexed intervals
+ *
+ * @param {Object} config - Configuration object
+ * @param {Array<{id: string, index: number, text: string}>} texts - Input paragraphs
+ * @returns {Promise<Array<[number, number]>>} 0-indexed intervals [[start, end], ...]
+ */
+export async function segmentWithChunking(config, texts) {
+  if (texts.length === 0) {
+    return [];
+  }
+
+  const client = new LLMClient({
+    llmId: config.llm.textChunking,
+    stageId: "3",
+    stageLabel: "Text Segmentation",
+  });
+
+  try {
+    const promptBuilder = await getPromptBuilder(config.languagePair, 'text-segmentation');
+
+    // Create batches with overlap and offset metadata
+    const batches = createChunkingBatches(texts, config);
+
+    const prompts = batches.map(batch =>
+      promptBuilder.build(batch.paragraphs, batch.offset),
+    );
+
+    const results = await client.requestBatch(prompts);
+
+    // Parse each response and unmap offsets to get actual paragraph indices
+    const intervalLists = results.map((result, i) => {
+      const batch = batches[i];
+
+      // Parser handles offset unmapping and validation
+      const intervals = getIntervalsFromLLMOrFallback(
+        result.ok ? result.data : null,
+        batch.actualStart,
+        batch.actualEnd,
+        {
+          offset: batch.offset,
+          fallbackSize: config.textSegmentation.fallbackSize ?? 5,
+        },
+      );
+
+      return intervals;
+    });
+
+    // Merge overlapping suggestions from all batches
+    // Input: Array of interval lists (1-indexed)
+    // Output: Single merged list (1-indexed)
+    const mergedIntervals = mergeChunkIntervals(intervalLists, {
+      tolerance: config.textSegmentation.mergeTolerance ?? 1,
+    });
+
+
+    // Convert from 1-indexed to 0-indexed for array access
+    return mergedIntervals.map(interval => [interval[0] - 1, interval[1] - 1]);
+
+  } finally {
+    client.dispose();
+  }
+}
+
+/**
+ * Creates batches of paragraphs for LLM chunking requests.
+ * Each batch stays under the configured character/word limit and includes overlap.
+ *
+ * @param {Array<{id: string, index: number, text: string}>} texts - Input paragraphs
+ * @param {Object} config - Configuration object
+ * @param {string} config.sourceLang - Source language code
+ * @param {Object} config.textSegmentation - Segmentation settings
+ * @param {number} config.textSegmentation.chunkSize - Maximum weight per batch
+ * @param {number} [config.textSegmentation.overlapCount=10] - Paragraphs to overlap
+ * @returns {Array<Object>} Batches with metadata
+ */
+export function createChunkingBatches(texts, config) {
+  const batches = [];
+  const chunkSize = config.textSegmentation.chunkSize;
+  const overlapCount = config.textSegmentation.overlapCount ?? 10;
+  const sourceLang = config.sourceLang;
+
+  let currentStart = 0;
+
+  while (currentStart < texts.length) {
+    let currentWeight = 0;
+    let endIndex = currentStart;
+
+    // Greedily build a batch until we reach the weight limit
+    for (let i = currentStart; i < texts.length; i++) {
+      const paragraph = texts[i];
+      const weight = getParagraphWeight(paragraph.text, sourceLang);
+
+      // If adding this paragraph would exceed limit, stop
+      // (but always include at least one paragraph)
+      if (currentWeight > 0 && currentWeight + weight > chunkSize) {
+        break;
+      }
+
+      currentWeight += weight;
+      endIndex = i;
+    }
+
+    const paragraphs = texts.slice(currentStart, endIndex + 1);
+
+    // Shift to 1-index for LLM input
+    const actualStart = paragraphs[0].index + 1;
+    const actualEnd = paragraphs[paragraphs.length - 1].index + 1;
+
+    // Calculate offset to keep LLM-visible numbers in low range
+    // If actualStart >= 20, map to start at 20; otherwise no offset
+    const offset = actualStart >= 20 ? actualStart - 20 : 0;
+
+    batches.push({
+      paragraphs,
+      offset,
+      actualStart,
+      actualEnd,
+    });
+
+    // If we've processed the last paragraph, we're done
+    if (endIndex >= texts.length - 1) {
+      break;
+    }
+
+    // Calculate the start of the next batch with overlap
+    // Ensure we always move forward by at least one paragraph
+    const nextStartIndex = endIndex - overlapCount + 1;
+    currentStart = Math.max(currentStart + 1, nextStartIndex);
+  }
+
+  return batches;
+}
+
+/**
+ * Computes the weight (character or word count) of a paragraph based on language.
+ * Determines how paragraphs are batched to stay under the chunk size limit.
+ *
+ * @param {string} text - The paragraph text
+ * @param {string} lang - BCP-47 Language code (e.g., 'ja', 'en', 'zh-Hans')
+ * @returns {number} Weight of the paragraph
+ */
+export function getParagraphWeight(text, lang) {
+  const cjkLanguages = ['ja', 'zh', 'zh-CN', 'zh-TW', 'ko'];
+
+  if (cjkLanguages.includes(lang)) {
+    // For CJK: count individual characters
+    return text.length;
+  }
+
+  // For other languages: count words (split by whitespace)
+  return text.split(/\s+/).filter(word => word.length > 0).length;
+}
 
 /**
  * Generate a simple fallback: split [start, end] into chunks of size `step` (default 5).

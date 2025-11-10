@@ -13,8 +13,6 @@ const GLOSSARY_CHUNK_SIZE = 4000;
  * Generate glossary entries from text segments
  */
 export async function generateGlossary(config, textSegments) {
-  console.log('[GlossaryGen] Starting glossary generation');
-
   const client = new LLMClient({
     llmId: config.llm.glossaryGenerate,
     stageId: "1",
@@ -25,7 +23,6 @@ export async function generateGlossary(config, textSegments) {
     // Chunk texts into manageable blocks
     const chunkSize = config.glossaryChunkSize || GLOSSARY_CHUNK_SIZE;
     const chunks = chunkTexts(textSegments, chunkSize);
-    console.log(`[GlossaryGen] Created ${chunks.length} chunk(s) from text segments`);
 
     // Get prompt builder
     const promptBuilder = await getPromptBuilder(config.languagePair, 'glossary-generate');
@@ -72,9 +69,6 @@ export async function generateGlossary(config, textSegments) {
         console.warn(`[GlossaryGen] Failed to process chunk ${i + 1}/${results.length}:`, err.message);
       }
     }
-
-    console.log(`[GlossaryGen] Completed: ${successCount} chunk(s) succeeded, ${failCount} chunk(s) failed`);
-    console.log(`[GlossaryGen] Extracted ${allEntries.length} glossary entries total`);
 
     return allEntries;
 

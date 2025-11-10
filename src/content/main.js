@@ -12,7 +12,6 @@ import { validateConfig } from './config/config.js';
 // Listen for pipeline start message from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'pipeline.start') {
-    console.log('[Main] Pipeline start request received');
 
     // Run pipeline asynchronously
     handlePipelineStart().then(() => {
@@ -30,9 +29,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handlePipelineStart() {
   try {
     // Step 1: Extract text from webpage
-    console.log('[Main] Step 1: Extracting text...');
     const extractedText = extractText();
-    console.log(`[Main] Extracted ${extractedText.length} text segments`);
 
     // Step 2: Validate configuration
     console.log('[Main] Step 2: Validating configuration...');
