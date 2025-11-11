@@ -1,6 +1,7 @@
 /**
  * Configuration validation (stub for now)
  */
+import { LANGS } from "../../common/languages.js";
 
 export function validateConfig() {
   console.log('[Config] Validating configuration...');
@@ -31,8 +32,10 @@ export function validateConfig() {
       nameOrder: 'ja',
 
       // Standard configs
-      contextLines: 5
+      contextLines: 5,
     },
+
+    postEdit: true,
 
     // Translation settings
     sourceLang: 'ja',
@@ -58,17 +61,6 @@ export function validateConfig() {
   return config;
 }
 
-// BCP-47
-const languageNames = {
-  "en": "English",
-  "es": "Spanish",
-  "fr": "French",
-  "zh-Hans": "Simplified Chinese",
-  "zh-Hant": "Traditional Chinese",
-  "ja": "Japanese",
-  "ko": "Korean",
-};
-
 function getName(code) {
-  return languageNames[code] || code;
+  return LANGS[code] || code;
 }

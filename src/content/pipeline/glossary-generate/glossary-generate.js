@@ -60,7 +60,7 @@ export async function generateGlossary(config, textSegments) {
           continue;
         }
 
-        if (validateStage1Response(parsed)) {
+        if (validateGlossaryStructure(parsed)) {
           allEntries.push(...parsed.entries);
           successCount++;
         } else {
@@ -84,7 +84,7 @@ export async function generateGlossary(config, textSegments) {
 /**
  * Chunk texts into blocks to fit in LLM context window
  */
-function chunkTexts(texts, maxChunkSize, lang) {
+export function chunkTexts(texts, maxChunkSize, lang) {
   const chunks = [];
   let currentChunk = '';
   let currentWeight = 0;
@@ -114,7 +114,7 @@ function chunkTexts(texts, maxChunkSize, lang) {
 /**
  * Validate structure of generated glossary
  */
-function validateStage1Response(obj) {
+export function validateGlossaryStructure(obj) {
   if (!obj || !Array.isArray(obj.entries)) {
     return false;
   }

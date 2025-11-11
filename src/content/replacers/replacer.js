@@ -5,11 +5,11 @@
 
 export function replaceText(translatedData) {
   console.log(`[Replacer] Replacing ${translatedData.length} text segments`);
+  console.log(translatedData);
 
   for (const item of translatedData) {
-    if (item.element && item.translation) {
-      item.element.textContent = item.translation;
-    }
+    const element = document.getElementById(item.id);
+    element.textContent = item.translatedText;
   }
 
   console.log('[Replacer] Text replacement complete');

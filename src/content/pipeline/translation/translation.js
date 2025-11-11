@@ -18,7 +18,7 @@ import { extractTextFromTag } from "../../utils/data-extraction.js";
  * @param {Array<{id: string, index: number, text: string}>} texts - Input texts
  * @param {Object} glossary - Glossary with entries array
  * @param {Array<[number, number]>} intervals - 0-indexed intervals [[start, end], ...]
- * @returns {Promise<Array>} Texts with added translatedText field
+ * @returns {Promise<{translatedTexts: Array, translationMetadata: Array}>} Texts with translatedText and metadata
  */
 export async function translateText(config, texts, glossary, intervals) {
   // Initialize all translatedText fields to undefined
@@ -28,7 +28,7 @@ export async function translateText(config, texts, glossary, intervals) {
 
   if (texts.length === 0 || intervals.length === 0) {
     console.warn('[Translation] Translation pipeline called with missing text or intervals!');
-    return texts;
+    return { translatedTexts: texts, translationMetadata: [] };
   }
 
   const client = new LLMClient({
@@ -43,7 +43,7 @@ export async function translateText(config, texts, glossary, intervals) {
     const languageSpecificConfig = config.translation;
 
     // Build prompts for all intervals
-    const promptMetadata = intervals.map(([start, end]) => {
+    const promptData = intervals.map(([start, end]) => {
       const intervalTexts = texts.slice(start, end + 1);
       const precedingText = computePrecedingText(texts, start, config);
       const sourceText = intervalTexts.map(t => t.text).join('\n');
@@ -62,29 +62,39 @@ export async function translateText(config, texts, glossary, intervals) {
       );
 
       return {
-        start,
-        end,
+        interval: [start, end],
+        precedingText,
+        sourceText,
+        relevantEntries,
         prompt,
       };
     });
 
-    const prompts = promptMetadata.map(m => m.prompt);
+    const prompts = promptData.map(m => m.prompt);
 
     // Send to LLM
     const results = await client.requestBatch(prompts);
 
+    // Store data for post-editing
+    const intervalMetadata = [];
+
     // Map translations back to text objects
     for (let i = 0; i < results.length; i++) {
-      const { start, end } = promptMetadata[i];
+      const { interval, precedingText, sourceText, relevantEntries } = promptData[i];
+      const [start, end] = interval;
       const result = results[i];
       const intervalTexts = texts.slice(start, end + 1);
 
+      let translatedText = '';
+      let success = false;
+
       if (result.ok) {
         // Extract and map successful translation
-        const translatedText = extractTextFromTag(result.data, 'translation');
+        translatedText = extractTextFromTag(result.data, 'translation');
 
         if (translatedText.length > 0) {
           mapTranslationToTexts(intervalTexts, translatedText);
+          success = true;
         } else {
           // Empty translation: mark as failed
           console.warn(`Empty translation for interval [${start}, ${end}]`);
@@ -101,9 +111,21 @@ export async function translateText(config, texts, glossary, intervals) {
           text.translationError = result.error;
         }
       }
+
+      intervalMetadata.push({
+        interval: [start, end],
+        precedingText,
+        sourceText,
+        translatedText,
+        relevantEntries,
+        success,
+      });
     }
 
-    return texts;
+    return {
+      translatedTexts: texts,
+      translationMetadata: intervalMetadata,
+    };
 
   } finally {
     client.dispose();
@@ -149,7 +171,6 @@ export function filterRelevantGlossary(glossary, fullContextText) {
 
   return relevantEntries;
 }
-
 
 /**
  * Maps translated lines back to the interval's text objects.

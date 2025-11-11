@@ -13,6 +13,7 @@ const pendingTasks = new Map(); // taskId -> { timeoutId, resolve, reject }
 
 let nextTaskId = 1;
 let echoCounter = 0;
+let postEditCounter = 0;
 
 /**
  * Mock response generator based on request patterns.
@@ -163,6 +164,91 @@ function generateMockResponse(llmId, systemPrompt, userMessage) {
     };
   }
 
+  if (llmId === '99-5') {
+    // Extract line numbers from Machine Translation section
+    const translationMatch = userMessage.match(/## Machine Translation.*?\n([\s\S]*?)(?:\n---|$)/);
+
+    if (!translationMatch) {
+      return {
+        ok: false,
+        error: 'No Machine Translation section found'
+      };
+    }
+
+    const translationSection = translationMatch[1];
+
+    // Extract all line numbers (0-indexed as shown in prompt)
+    const lineMatches = [...translationSection.matchAll(/^(\d+)\./gm)];
+    const lineNumbers = lineMatches.map(m => parseInt(m[1]));
+
+    if (lineNumbers.length === 0) {
+      return {
+        ok: false,
+        error: 'No lines found in translation section'
+      };
+    }
+
+    const minLine = Math.min(...lineNumbers);
+    const maxLine = Math.max(...lineNumbers);
+    const numLines = lineNumbers.length;
+
+    // Cycle through action types (0-3)
+    const actionType = postEditCounter % 4;
+    postEditCounter++;
+
+    let operations;
+
+    switch (actionType) {
+      case 0:
+        // No changes
+        operations = { action: 'none' };
+        break;
+
+      case 1:
+        // Update first line
+        operations = [
+          {
+            action: 'update',
+            line: minLine,
+            text: `Edited line #${echoCounter++}: updated content`
+          }
+        ];
+        break;
+
+      case 2:
+        // Delete last line (only if more than 1 line exists)
+        if (numLines > 1) {
+          operations = [
+            { action: 'delete', line: maxLine }
+          ];
+        } else {
+          // Fallback to none if only one line
+          operations = { action: 'none' };
+        }
+        break;
+
+      case 3:
+        // Add a line after the first line
+        operations = [
+          {
+            action: 'add',
+            line: minLine + 1,
+            text: `Added line #${echoCounter++}: new content`
+          }
+        ];
+        break;
+    }
+
+    const response = `<operations>${JSON.stringify(operations)}</operations>`;
+
+    return {
+      ok: true,
+      data: {
+        assistant: response,
+        reasoning: null,
+      },
+    };
+  }
 
 
 // Default echo response
@@ -222,15 +308,15 @@ function cancelTask(taskId) {
 }
 
 /**
- * Message handler for llm.request and llm.cancel
+ * Message handler for llm_request and llm_cancel
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Handle LLM request
   if (message.type === 'llm_request') {
-    const { clientId, llmId, systemPrompt, userMessage } = message.payload;
+    const { clientId, llmId, systemPrompt, userMessage, customParams } = message.payload;
     const taskId = nextTaskId++;
 
-    console.log(`[Background] Received llm.request from client ${clientId}`, {
+    console.log(`[Background] Received llm_request from client ${clientId}`, {
       taskId,
       userMessage: userMessage,
       systemMessage: systemPrompt,
@@ -262,7 +348,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'llm_cancel') {
     const { clientId, pendingCount } = message.payload;
 
-    console.log(`[Background] Received llm.cancel from client ${clientId} (${pendingCount} pending)`);
+    console.log(`[Background] Received llm_cancel from client ${clientId} (${pendingCount} pending)`);
 
     // Cancel all queued/pending tasks for this client
     const tasks = tasksByClient.get(clientId);

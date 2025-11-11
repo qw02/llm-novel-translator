@@ -27,6 +27,14 @@ class LLMClient {
     // Register with progress tracker
     this.progressTracker = getProgressTracker();
     this.progressTracker.createStage(this.stageId, stageLabel);
+
+    this.customParams = {};
+    this._setDefaultParams();
+  }
+
+
+  _setDefaultParams() {
+    this.customParams.temperature = 0.6;
   }
 
   /**
@@ -96,6 +104,7 @@ class LLMClient {
         llmId: this.llmId,
         systemPrompt: pending.prompt.system,
         userMessage: pending.prompt.user,
+        customParams: this.customParams
       };
 
       const response = await chrome.runtime.sendMessage({ type: 'llm_request', payload });

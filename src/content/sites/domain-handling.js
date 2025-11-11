@@ -1,0 +1,1 @@
+// Given a URL, return a unique series ID (can be undefined if cannot determine from URL) and site ID ( 'foo.com' -> 1, 'bar.org -> 2)
