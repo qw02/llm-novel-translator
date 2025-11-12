@@ -1,6 +1,4 @@
-// popup/popup.js
-
-
+// Existing elements
 const translateBtn = document.getElementById('translateBtn');
 const getProgressBtn = document.getElementById('getProgressBtn');
 const statusEl = document.getElementById('status');
@@ -10,8 +8,67 @@ const rawSection = document.getElementById("rawSection");
 const simpleFormatDiv = document.getElementById("simpleFormat");
 const rawJsonDiv = document.getElementById("rawJson");
 
+// New API key elements
+const openrouterKeyInput = document.getElementById('openrouterKey');
+const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+const apiKeyStatus = document.getElementById('apiKeyStatus');
+
+// Existing event listeners
 translateBtn.addEventListener('click', onTranslateClick);
 getProgressBtn.addEventListener('click', onProgressClick);
+
+// New API key event listener
+saveApiKeyBtn.addEventListener('click', onSaveApiKey);
+
+// Load existing API key on popup load
+loadApiKey();
+
+async function loadApiKey() {
+  try {
+    const result = await chrome.storage.local.get('api_keys');
+    if (result.api_keys?.openrouter) {
+      openrouterKeyInput.value = result.api_keys.openrouter;
+    }
+  } catch (error) {
+    console.error('[Popup] Failed to load API key:', error);
+  }
+}
+
+async function onSaveApiKey() {
+  const apiKey = openrouterKeyInput.value.trim();
+
+  if (!apiKey) {
+    showApiKeyStatus('Please enter an API key', 'error');
+    return;
+  }
+
+  try {
+    // Get existing keys
+    const result = await chrome.storage.local.get('api_keys');
+    const existingKeys = result.api_keys || {};
+
+    // Update OpenRouter key
+    existingKeys.openrouter = apiKey;
+
+    // Save back to storage
+    await chrome.storage.local.set({ api_keys: existingKeys });
+
+    showApiKeyStatus('API key saved successfully!', 'success');
+  } catch (error) {
+    console.error('[Popup] Failed to save API key:', error);
+    showApiKeyStatus('Failed to save: ' + error.message, 'error');
+  }
+}
+
+function showApiKeyStatus(message, type) {
+  apiKeyStatus.textContent = message;
+  apiKeyStatus.className = type;
+  apiKeyStatus.style.display = 'block';
+
+  setTimeout(() => {
+    apiKeyStatus.style.display = 'none';
+  }, 3000);
+}
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -27,7 +84,7 @@ async function onTranslateClick() {
       throw new Error('No active tab found');
     }
 
-    // Fire-and-forget: we don’t await pipeline completion.
+    // Fire-and-forget: we don't await pipeline completion.
     // The content script handles the long-running work.
     await sendMessageToTab(tab.id, { type: 'pipeline.start', payload: { source: 'popup' } }, { awaitResponse: false });
 
@@ -116,7 +173,6 @@ function displayProgressData(data) {
 }
 
 // Utils
-
 function getActiveTab() {
   return new Promise((resolve, reject) => {
     try {
@@ -134,7 +190,7 @@ function getActiveTab() {
 /**
  * Sends a message to a specific tab.
  * By default we send and do not wait for a response (popup should not hang).
- * Set opts.awaitResponse = true if you want to await the content script’s reply.
+ * Set opts.awaitResponse = true if you want to await the content script's reply.
  */
 function sendMessageToTab(tabId, message, opts = { awaitResponse: false }) {
   return new Promise((resolve, reject) => {

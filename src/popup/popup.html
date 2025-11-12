@@ -62,9 +62,61 @@
             max-height: 300px;
             overflow-y: auto;
         }
+        .api-key-section {
+            margin-bottom: 16px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .api-key-section label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .api-key-section input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #888;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+        .api-key-section button {
+            margin-top: 6px;
+        }
+        #apiKeyStatus {
+            margin-top: 6px;
+            font-size: 11px;
+            padding: 4px;
+            border-radius: 3px;
+            display: none;
+        }
+        #apiKeyStatus.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        #apiKeyStatus.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
+<!-- API Key Configuration Section -->
+<div class="api-key-section">
+    <label for="openrouterKey">OpenRouter API Key:</label>
+    <input
+            type="password"
+            id="openrouterKey"
+            placeholder="sk-or-v1-..."
+            autocomplete="off"
+    >
+    <button id="saveApiKeyBtn" type="button">Save API Key</button>
+    <div id="apiKeyStatus"></div>
+</div>
+
+<!-- Existing Translation Controls -->
 <div class="row">
     <button id="translateBtn" type="button">Translate</button>
     <button id="getProgressBtn" type="button">Get Progress State</button>

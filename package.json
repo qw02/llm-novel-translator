@@ -7,14 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "watch": "vite build --watch",
-    "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.0.8"
   },
   "dependencies": {
-    "vitest": "^4.0.8"
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@google/generative-ai": "^0.24.1",
+    "ollama": "^0.6.2",
+    "openai": "^6.8.1",
+    "p-queue": "^9.0.0"
   }
 }

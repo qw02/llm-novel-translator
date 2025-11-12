@@ -1,7 +1,4 @@
 export const MSG_TYPE = {
-  GET_SETTINGS: 'GET_SETTINGS',
-  SAVE_SETTINGS: 'SAVE_SETTINGS',
-
   llm_request: 'llm_request',
   llm_cancel: 'llm_cancel',
 };
