@@ -2,6 +2,9 @@ import PQueue from 'p-queue';
 import { PROVIDER_CONFIGS, PROVIDER_TYPE_MAP, RATE_LIMIT_CONFIG } from './config/defaults.js';
 import { getApiKey } from './utils/api-key-manager.js';
 import { OpenRouterProvider } from './providers/openrouter-provider.js';
+import { OpenAIProvider } from './providers/openai-provider.js';
+import { DeepSeekProvider } from './providers/deepseek-provider.js';
+import { GoogleProvider } from './providers/google-provider.js';
 
 /**
  * Registry mapping provider types to their implementation classes.
@@ -9,7 +12,9 @@ import { OpenRouterProvider } from './providers/openrouter-provider.js';
  */
 const PROVIDER_REGISTRY = {
   openrouter: OpenRouterProvider,
-  // Phase 3: Add OpenAIProvider, AnthropicProvider, etc.
+  openai: OpenAIProvider,
+  deepseek: DeepSeekProvider,
+  google: GoogleProvider,
 };
 
 /**
@@ -117,17 +122,9 @@ export class LLMCoordinator {
   handleCancel(payload) {
     const { clientId, pendingCount } = payload;
 
-    console.log(`[LLMCoordinator] Cancelling requests for client ${clientId} (${pendingCount} pending)`);
-
     // Simple cancellation: remove from tracking
     // In-flight requests will complete but content script will discard responses
     const cancelled = this.activeRequests.delete(clientId);
-
-    if (cancelled) {
-      console.log(`[LLMCoordinator] Cancelled tracking for client ${clientId}`);
-    } else {
-      console.log(`[LLMCoordinator] No active requests found for client ${clientId}`);
-    }
   }
 
   /**
@@ -163,16 +160,16 @@ export class LLMCoordinator {
     // Merge parameters with precedence: customParams > model config > defaults
     const params = {
       model: foundModel.model,
+      temperature: customParams.temperature ?? foundModel.temperature ?? 0.6,
+      max_tokens: customParams.max_tokens ?? foundModel.tokens ?? 4096,
     };
 
     // Add provider-specific parameters
-    if (foundModel.providers) {
-      params.providers = foundModel.providers;
-    }
-
-    if (foundModel.reasoning !== undefined) {
-      params.reasoning = foundModel.reasoning;
-    }
+    ["providers", "reasoning"].forEach(key => {
+      if (foundModel[key] !== undefined) {
+        params[key] = foundModel[key];
+      }
+    });
 
     return {
       providerType: foundProvider,
@@ -199,7 +196,7 @@ export class LLMCoordinator {
       return this.providers.get(key);
     }
 
-    // Create new provider instance
+    // Create a new provider instance
     console.log(`[LLMCoordinator] Creating new provider: ${providerType}`);
 
     const ProviderClass = PROVIDER_REGISTRY[providerType];

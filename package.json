@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.29.0",
     "ollama": "^0.6.2",
     "openai": "^6.8.1",
     "p-queue": "^9.0.0"

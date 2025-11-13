@@ -1,4 +1,5 @@
 import { getProgressTracker } from './progress-tracking.js';
+import { MSG_TYPE } from "../common/messaging.js";
 
 // Generate unique client IDs
 let nextClientId = 1;
@@ -107,7 +108,7 @@ class LLMClient {
         customParams: this.customParams
       };
 
-      const response = await chrome.runtime.sendMessage({ type: 'llm_request', payload });
+      const response = await chrome.runtime.sendMessage({ type: MSG_TYPE.llm_request, payload });
 
 
       this._pendingRequests.delete(requestId);

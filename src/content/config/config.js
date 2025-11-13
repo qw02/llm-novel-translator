@@ -9,11 +9,11 @@ export function validateConfig() {
   // For now, return hardcoded config
   const config = {
     llm: {
-      glossaryGenerate: '99-1',
-      glossaryUpdate: '99-2',
-      textChunking: '99-3',
-      translation: '99-4',
-      postEdit: '99-5',
+      glossaryGenerate: '6-3',
+      glossaryUpdate: '6-4',
+      textChunking: '6-4',
+      translation: '6-4',
+      postEdit: '6-4',
     },
 
     updateGlossary: true,

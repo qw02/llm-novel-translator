@@ -55,6 +55,29 @@ Your primary directive is to be **conservative**. Do not re-translate the text f
     *   The line numbers in your JSON commands correspond to the line numbers of the **Machine Translation** input.
     *   **IMPORTANT:** Operations are sequential. An \`add\` or \`delete\` operation will shift the line numbers for all subsequent lines. You must account for this in your list of commands.
 
+## Output Format:
+### Format 1
+\`\`\`
+<details>
+...
+</details>
+<operations>
+\`\`\`json
+...
+\`\`\`
+</operations>
+\`\`\`
+
+OR
+
+### Format 2
+<operations>
+\`\`\`json
+...
+\`\`\`
+</operations>
+\`\`\`
+
 **JSON Command Reference:**
 
 *   **No Changes:** If the translation is acceptable, output a single JSON object.

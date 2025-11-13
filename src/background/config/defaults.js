@@ -17,44 +17,32 @@ export const PROVIDER_CONFIGS = {
       //   label: 'Kimi K2 0905',
       //   providers: ['DeepInfra', 'Chutes'],
       // },
-      // {
-      //   id: '1-2',
-      //   model: 'google/gemini-2.5-pro-preview',
-      //   label: 'Gemini Pro 2.5',
-      //   providers: ['Google AI Studio', 'Google'],
-      // },
-      // {
-      //   id: '1-3',
-      //   model: 'google/gemini-2.5-flash',
-      //   label: 'Gemini Flash 2.5',
-      //   providers: ['Google AI Studio', 'Google'],
-      // },
       {
-        id: '99-1',
+        id: '101-1',
         model: 'deepseek/deepseek-v3.2-exp',
         label: 'DS V3.2 E / 99-1',
         providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
       },
       {
-        id: '99-2',
+        id: '101-2',
         model: 'deepseek/deepseek-v3.2-exp',
         label: 'DS V3.2 E / 99-1',
         providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
       },
       {
-        id: '99-3',
+        id: '101-3',
         model: 'deepseek/deepseek-v3.2-exp',
         label: 'DS V3.2 E / 99-1',
         providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
       },
       {
-        id: '99-4',
+        id: '101-4',
         model: 'deepseek/deepseek-v3.2-exp',
         label: 'DS V3.2 E / 99-1',
         providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
       },
       {
-        id: '99-5',
+        id: '101-5',
         model: 'deepseek/deepseek-v3.2-exp',
         label: 'DS V3.2 E / 99-1',
         providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
@@ -132,19 +120,17 @@ export const PROVIDER_CONFIGS = {
   },
 
   deepseek: {
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    endpoint: 'https://api.deepseek.com/v1',
     models: [
       {
         id: '4-1',
         model: 'deepseek-chat',
-        label: 'DeepSeek V3.2 Exp (R: Off)',
-        reasoning: false,
+        label: 'DeepSeek V3.2 Exp (R: Off)'
       },
       {
         id: '4-3',
         model: 'deepseek-reasoner',
         label: 'DeepSeek V3.2 Exp (R: On)',
-        reasoning: true,
         tokens: 8192,
       },
     ],
@@ -158,7 +144,7 @@ export const PROVIDER_CONFIGS = {
   },
 
   google: {
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta',
+    endpoint: 'handled-by-sdk',
     models: [
       {
         id: '6-1',
@@ -210,7 +196,7 @@ export const PROVIDER_CONFIGS = {
   },
 
   xai: {
-    endpoint: 'https://api.x.ai/v1/chat/completions',
+    endpoint: 'https://api.x.ai/v1',
     models: [
       {
         id: '5-1',

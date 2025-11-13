@@ -9,7 +9,7 @@ const simpleFormatDiv = document.getElementById("simpleFormat");
 const rawJsonDiv = document.getElementById("rawJson");
 
 // New API key elements
-const openrouterKeyInput = document.getElementById('openrouterKey');
+const providerKeyInput = document.getElementById('providerKey');
 const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
 const apiKeyStatus = document.getElementById('apiKeyStatus');
 
@@ -26,8 +26,8 @@ loadApiKey();
 async function loadApiKey() {
   try {
     const result = await chrome.storage.local.get('api_keys');
-    if (result.api_keys?.openrouter) {
-      openrouterKeyInput.value = result.api_keys.openrouter;
+    if (result.api_keys?.google) {
+      providerKeyInput.value = result.api_keys.google;
     }
   } catch (error) {
     console.error('[Popup] Failed to load API key:', error);
@@ -35,7 +35,7 @@ async function loadApiKey() {
 }
 
 async function onSaveApiKey() {
-  const apiKey = openrouterKeyInput.value.trim();
+  const apiKey = providerKeyInput.value.trim();
 
   if (!apiKey) {
     showApiKeyStatus('Please enter an API key', 'error');
@@ -47,8 +47,8 @@ async function onSaveApiKey() {
     const result = await chrome.storage.local.get('api_keys');
     const existingKeys = result.api_keys || {};
 
-    // Update OpenRouter key
-    existingKeys.openrouter = apiKey;
+    // Update key
+    existingKeys.google = apiKey;
 
     // Save back to storage
     await chrome.storage.local.set({ api_keys: existingKeys });
