@@ -5,6 +5,7 @@ import { OpenRouterProvider } from './providers/openrouter-provider.js';
 import { OpenAIProvider } from './providers/openai-provider.js';
 import { DeepSeekProvider } from './providers/deepseek-provider.js';
 import { GoogleProvider } from './providers/google-provider.js';
+import { ConfigManager } from "./config/config-manager.js";
 
 /**
  * Registry mapping provider types to their implementation classes.
@@ -40,7 +41,10 @@ export class LLMCoordinator {
     // Request ID counter
     this.nextRequestId = 1;
 
-    console.log('[LLMCoordinator] Initialized');
+    // Config manager for multi-source resolution
+    this.configManager = new ConfigManager();
+
+    console.log('[LLMCoordinator] Initialized with providers:', Object.keys(PROVIDER_REGISTRY));
   }
 
   /**
@@ -67,8 +71,8 @@ export class LLMCoordinator {
     this._trackRequest(clientId, requestId);
 
     try {
-      // Step 1: Resolve configuration (simplified for Phase 2)
-      const config = await this._resolveConfig(llmId, customParams);
+      // Step 1: Resolve configuration via ConfigManager
+      const config = await this.configManager.resolveConfig(llmId, customParams);
 
       // Step 2: Get or create provider instance
       const provider = await this._getProvider(config.providerType, config.endpoint);
@@ -125,6 +129,35 @@ export class LLMCoordinator {
     // Simple cancellation: remove from tracking
     // In-flight requests will complete but content script will discard responses
     const cancelled = this.activeRequests.delete(clientId);
+  }
+
+  /**
+   * Gets model list from ConfigManager.
+   *
+   * @param {Object} options
+   * @param {boolean} options.showAll - Include cached provider models
+   * @returns {Promise<Array>} Array of model configs
+   */
+  async getModelList(options) {
+    return await this.configManager.getModelList(options);
+  }
+
+  /**
+   * Refreshes model lists from all providers.
+   *
+   * @returns {Promise<Object>} Refresh results summary
+   */
+  async refreshModelList() {
+    return await this.configManager.refreshModelList(PROVIDER_REGISTRY);
+  }
+
+  /**
+   * Clears all cached model lists.
+   *
+   * @returns {Promise<void>}
+   */
+  async clearModelCache() {
+    return await this.configManager.clearModelCache();
   }
 
   /**
@@ -188,15 +221,13 @@ export class LLMCoordinator {
    * @private
    */
   async _getProvider(providerType, endpoint) {
-    // For Phase 2, we only support one endpoint per provider type
-    // Phase 3 will handle multiple endpoints (e.g., multiple Ollama instances)
     const key = providerType;
 
     if (this.providers.has(key)) {
       return this.providers.get(key);
     }
 
-    // Create a new provider instance
+    // Create new provider instance
     console.log(`[LLMCoordinator] Creating new provider: ${providerType}`);
 
     const ProviderClass = PROVIDER_REGISTRY[providerType];

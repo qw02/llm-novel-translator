@@ -41,6 +41,20 @@ export class BaseProvider {
   }
 
   /**
+   * Fetches available models from provider API.
+   * Optional method - providers without /models endpoint can skip implementation.
+   *
+   * @returns {Promise<Array<Object>>} Array of model configs: { provider, id, model, label }
+   * @throws {Error} If not implemented by subclass
+   */
+  async getAvailableModels() {
+    // Default implementation: return empty array
+    // Subclasses should override if they support dynamic model listing
+    console.log(`[${this.providerType}] getAvailableModels() not implemented, skipping`);
+    return [];
+  }
+
+  /**
    * Normalizes a provider-specific response to the standard format.
    * Can be overridden by subclasses for provider-specific extraction logic.
    *

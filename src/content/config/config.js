@@ -3,9 +3,7 @@
  */
 import { LANGS } from "../../common/languages.js";
 
-export function validateConfig() {
-  console.log('[Config] Validating configuration...');
-
+export function getTranslationConfig() {
   // For now, return hardcoded config
   const config = {
     llm: {
@@ -26,7 +24,7 @@ export function validateConfig() {
     },
 
     translation: {
-      // Language specific settings
+      // Language pair specific settings
       narrative: 'auto',
       honorifics: 'preserve',
       nameOrder: 'ja',

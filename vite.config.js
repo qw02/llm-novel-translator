@@ -18,7 +18,7 @@ export default defineConfig({
           if (chunk.name === 'content') return 'src/content/main.js';
           return 'src/popup/[name].js';
         },
-      },
+      }
     },
 
     minify: false,

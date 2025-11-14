@@ -7,7 +7,7 @@
 import { runPipeline } from './pipeline/pipeline.js';
 import { extractText } from './extractors/test-page.js';
 import { replaceText } from './replacers/replacer.js';
-import { validateConfig } from './config/config.js';
+import { getTranslationConfig } from './config/config.js';
 
 // Listen for pipeline start message from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -31,12 +31,17 @@ async function handlePipelineStart() {
     // Step 1: Extract text from webpage
     const extractedText = extractText();
 
-    // Step 2: Validate configuration
-    console.log('[Main] Step 2: Validating configuration...');
-    const config = validateConfig();
+    // Step 2: Obtain the config (persistant from options page, user-set in pop-up, values based on website content, etc.)
+    console.log('[Main] Step 2: Aggregating configuration...');
+    const config = getTranslationConfig();
     if (!config.valid) {
       throw new Error('Configuration validation failed');
     }
+
+    // if (!config.translation.valid) {
+    //   // Show warning (page and selected language seems different), user can choose to bypass
+    // }
+
     console.log('[Main] Configuration valid');
 
     // Step 3: Run translation pipeline

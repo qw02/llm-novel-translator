@@ -7,6 +7,9 @@ import { LLMCoordinator } from "./llm-coordinator.js";
 const BG_MSG_TYPES = {
   llm_request: 'llm_request',
   llm_cancel: 'llm_cancel',
+  get_models: 'get_models',
+  refresh_models: 'refresh_models',
+  clear_model_cache: 'clear_model_cache',
 };
 
 // Initialize coordinator for LLM external calls
@@ -17,15 +20,51 @@ const coordinator = new LLMCoordinator();
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // LLM completion request
-  if (message.type === BG_MSG_TYPES.llm_request) {
+  if (message.type === MSG_TYPE.llm_request) {
     coordinator.handleRequest(message.payload, sendResponse);
     return true; // Keep channel open for async response
   }
 
   // LLM cancellation request
-  if (message.type === BG_MSG_TYPES.llm_cancel) {
+  if (message.type === MSG_TYPE.llm_cancel) {
     coordinator.handleCancel(message.payload);
     return false; // No response needed
+  }
+
+  // Get model list
+  if (message.type === MSG_TYPE.get_models) {
+    coordinator.getModelList(message.payload)
+      .then(models => {
+        sendResponse({ ok: true, data: models });
+      })
+      .catch(error => {
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
+  }
+
+  // Refresh model list from providers
+  if (message.type === MSG_TYPE.refresh_models) {
+    coordinator.refreshModelList()
+      .then(results => {
+        sendResponse({ ok: true, data: results });
+      })
+      .catch(error => {
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
+  }
+
+  // Clear model cache
+  if (message.type === MSG_TYPE.clear_model_cache) {
+    coordinator.clearModelCache()
+      .then(() => {
+        sendResponse({ ok: true });
+      })
+      .catch(error => {
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
   }
 
   // Unknown message type

@@ -63,6 +63,54 @@ export class OpenAIProvider extends BaseProvider {
   }
 
   /**
+   * Fetches available models from OpenAI API.
+   *
+   * @returns {Promise<Array<Object>>} Array of model configs
+   */
+  async getAvailableModels() {
+    try {
+      console.log('[OpenAI] Fetching available models from API...');
+
+      const response = await this.client.models.list();
+      const models = [];
+
+      for (const model of response.data) {
+        // Filter to only include chat models
+        if (model.id.includes('gpt') || model.id.includes('o1') || model.id.includes('o3')|| model.id.includes('o4')) {
+          models.push({
+            provider: 'openai',
+            id: `openai-${model.id}`,  // Prefix to ensure uniqueness
+            model: model.id,
+            label: this._formatModelLabel(model.id),
+          });
+        }
+      }
+
+      console.log(`[OpenAI] Found ${models.length} chat models`);
+      return models;
+
+    } catch (error) {
+      console.error('[OpenAI] Failed to fetch models:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Formats model ID into a readable label.
+   *
+   * @param {string} modelId - Model identifier from API
+   * @returns {string} Formatted label
+   * @private
+   */
+  _formatModelLabel(modelId) {
+    // Simple formatting: capitalize and remove dashes
+    return modelId
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  /**
    * Normalizes OpenAI response.
    * Uses base class implementation as OpenAI format is the standard.
    *
