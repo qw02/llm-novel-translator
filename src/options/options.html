@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Novel Translator – Options</title>
+    <link rel="stylesheet" href="options.css">
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+<div id="options-root">
+    <aside class="sidebar">
+        <h1 class="sidebar-title">Extension Settings</h1>
+        <nav class="sidebar-nav">
+            <button class="sidebar-item active" data-tab="welcome">
+                Welcome / Help
+            </button>
+            <button class="sidebar-item" data-tab="api-keys">
+                API Keys
+            </button>
+            <button class="sidebar-item" data-tab="models">
+                Model / Translation Config
+            </button>
+            <button class="sidebar-item" data-tab="glossary">
+                Glossary
+            </button>
+            <button class="sidebar-item" data-tab="custom-instructions">
+                Custom Instructions
+            </button>
+        </nav>
+    </aside>
+
+    <main id="tab-container">
+        <!-- Welcome tab -->
+        <section id="tab-welcome" class="tab active">
+            <div id="welcome-docs">
+                <h2>Welcome</h2>
+                <p>TODO</p>
+            </div>
+        </section>
+
+        <!-- Stub tabs for future implementation -->
+
+        <section id="tab-api-keys" class="tab" hidden>
+            <h2>API Keys</h2>
+            <p>TODO</p>
+            <!-- This tab will later get its own form + Save/Cancel buttons -->
+        </section>
+
+        <section id="tab-models" class="tab" hidden>
+            <h2>Model / Translation Config</h2>
+            <p>TODO</p>
+        </section>
+
+        <section id="tab-glossary" class="tab" hidden>
+            <h2>Glossary</h2>
+            <p>TODO</p>
+        </section>
+
+        <section id="tab-custom-instructions" class="tab" hidden>
+            <h2>Custom Instructions</h2>
+            <p>TODO</p>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -26,7 +26,6 @@ const PROVIDER_REGISTRY = {
  * - Per-provider rate limiting via p-queue
  * - Request tracking for cancellation
  */
-// TODO: Config resolution (simplified for Phase 2, full implementation in Phase 4)
 export class LLMCoordinator {
   constructor() {
     // Provider instances: Map<providerType, ProviderInstance>

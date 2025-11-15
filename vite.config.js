@@ -11,11 +11,13 @@ export default defineConfig({
         background: resolve(__dirname, 'src/background/main.js'),
         content: resolve(__dirname, 'src/content/main.js'),
         popup: resolve(__dirname, 'src/popup/popup.html'),
+        options: resolve(__dirname, 'src/options/options.html'),
       },
       output: {
         entryFileNames: chunk => {
           if (chunk.name === 'background') return 'src/background/main.js';
           if (chunk.name === 'content') return 'src/content/main.js';
+          if (chunk.name === 'options') return 'src/options/js/main.js';
           return 'src/popup/[name].js';
         },
       }

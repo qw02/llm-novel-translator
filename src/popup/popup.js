@@ -17,6 +17,9 @@ const apiKeyStatus = document.getElementById('apiKeyStatus');
 translateBtn.addEventListener('click', onTranslateClick);
 getProgressBtn.addEventListener('click', onProgressClick);
 
+
+document.getElementById('openOptionsPage').addEventListener('click', openOptionsPage);
+
 // New API key event listener
 saveApiKeyBtn.addEventListener('click', onSaveApiKey);
 
@@ -213,4 +216,15 @@ function sendMessageToTab(tabId, message, opts = { awaitResponse: false }) {
       reject(e);
     }
   });
+}
+
+function openOptionsPage() {
+  // Modern way (MV3-safe)
+  if (chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    // Fallback, just in case
+    const url = chrome.runtime.getURL('options/options.html');
+    window.open(url, '_blank');
+  }
 }
