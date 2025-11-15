@@ -119,10 +119,230 @@
             </div>
         </section>
 
-        <!-- Stub tabs -->
+        <!-- Translation / Models config -->
         <section id="tab-models" class="tab" hidden>
             <h2>Model / Translation Config</h2>
-            <p>TODO</p>
+
+            <!-- Simple vs Advanced mode -->
+            <div class="mode-toggle">
+                <span>Configuration mode:</span>
+                <label>
+                    <input type="radio" name="config-mode" id="mode-simple" value="simple" checked>
+                    Simple
+                </label>
+                <label>
+                    <input type="radio" name="config-mode" id="mode-advanced" value="advanced">
+                    Advanced
+                </label>
+            </div>
+
+            <!-- Advanced-only settings -->
+            <div id="advanced-settings" hidden>
+                <h3>Advanced Options</h3>
+
+                <div class="advanced-row">
+                    <label>
+                        <input type="checkbox" id="show-all-models">
+                        Show all models (from all providers)
+                    </label>
+                    <button type="button" id="refresh-models">Refresh model list</button>
+                </div>
+
+                <div class="advanced-row">
+                    <label for="glossary-chunk-size">Glossary chunk size:</label>
+                    <select id="glossary-chunk-size">
+                        <option value="500">500</option>
+                        <option value="1000">1,000</option>
+                        <option value="2000">2,000</option>
+                        <option value="5000">5,000</option>
+                        <option value="10000">10,000</option>
+                        <option value="100000">100,000</option>
+                        <option value="1000000">1,000,000</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Pipeline stages -->
+
+            <!-- 1 & 2. Glossary generation + update -->
+            <section class="stage" id="stage-glossary">
+                <h3>1 & 2. Glossary Generation and Update</h3>
+
+                <label>
+                    <input type="checkbox" id="glossary-enabled">
+                    Enable glossary generation and update
+                </label>
+
+                <div id="glossary-models" class="stage-models">
+                    <div class="stage-block">
+                        <h4>Glossary Generation</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-glossary-generate"
+                                    class="provider-select"
+                                    data-stage="glossaryGenerate"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-glossary-generate"
+                                    class="model-select"
+                                    data-stage="glossaryGenerate"></select>
+                        </label>
+                    </div>
+
+                    <div class="stage-block">
+                        <h4>Glossary Update</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-glossary-update"
+                                    class="provider-select"
+                                    data-stage="glossaryUpdate"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-glossary-update"
+                                    class="model-select"
+                                    data-stage="glossaryUpdate"></select>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Text segmentation -->
+            <section class="stage" id="stage-segmentation">
+                <h3>3. Text Segmentation</h3>
+
+                <label for="segmentation-method">Segmentation method:</label>
+                <select id="segmentation-method">
+                    <option value="chunk">Chunked</option>
+                    <option value="entire">Entire Page</option>
+                    <option value="single">Single Line</option>
+                </select>
+
+                <div id="segmentation-model-container" class="stage-models">
+                    <div class="stage-block">
+                        <h4>Segmentation Model</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-text-chunking"
+                                    class="provider-select"
+                                    data-stage="textChunking"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-text-chunking"
+                                    class="model-select"
+                                    data-stage="textChunking"></select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Advanced-only chunk settings -->
+                <div id="segmentation-advanced-settings" class="advanced-row" hidden>
+                    <label for="chunk-size">Chunk size:</label>
+                    <select id="chunk-size">
+                        <option value="500">500</option>
+                        <option value="1000">1,000</option>
+                        <option value="1500">1,500</option>
+                        <option value="2000">2,000</option>
+                        <option value="3000">3,000</option>
+                        <option value="5000">5,000</option>
+                    </select>
+
+                    <label for="overlap-count">Overlap lines:</label>
+                    <select id="overlap-count">
+                        <option value="0">0</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- 4. Translation -->
+            <section class="stage" id="stage-translation">
+                <h3>4. Translation</h3>
+
+                <div class="stage-models">
+                    <div class="stage-block">
+                        <h4>Translation Model</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-translation"
+                                    class="provider-select"
+                                    data-stage="translation"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-translation"
+                                    class="model-select"
+                                    data-stage="translation"></select>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="language-selectors">
+                    <label>
+                        Source language:
+                        <select id="source-lang"></select>
+                    </label>
+                    <label>
+                        Target language:
+                        <select id="target-lang"></select>
+                    </label>
+                </div>
+
+                <div id="translation-common-settings">
+                    <label for="context-lines">Context lines:</label>
+                    <select id="context-lines">
+                        <option value="0">0</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="7">7</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+
+                <div id="translation-pair-settings">
+                    <!-- Pair-specific UI will be injected here based on `${source}_${target}` -->
+                </div>
+            </section>
+
+            <!-- 5. Post-edit -->
+            <section class="stage" id="stage-postedit">
+                <h3>5. Post-Edit / Quality Check</h3>
+
+                <label>
+                    <input type="checkbox" id="postedit-enabled">
+                    Enable post-edit / QC step
+                </label>
+
+                <div id="postedit-models" class="stage-models">
+                    <div class="stage-block">
+                        <h4>Post-edit Model</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-postedit"
+                                    class="provider-select"
+                                    data-stage="postEdit"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-postedit"
+                                    class="model-select"
+                                    data-stage="postEdit"></select>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <div id="models-status" class="status-message" aria-live="polite"></div>
+
+            <div class="tab-actions">
+                <button id="models-save" type="button">Save</button>
+                <button id="models-cancel" type="button">Cancel</button>
+            </div>
         </section>
 
         <section id="tab-glossary" class="tab" hidden>

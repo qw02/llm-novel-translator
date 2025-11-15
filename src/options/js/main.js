@@ -1,4 +1,5 @@
 import { apiKeysTabController } from './tabs/api-keys.js';
+import { modelsTabController } from './tabs/models.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebarButtons = Array.from(
@@ -11,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const unsavedDialog = document.getElementById('unsaved-dialog');
 
   const tabControllers = {
-    'api-keys': apiKeysTabController
-    // 'models': modelsTabController,
+    'api-keys': apiKeysTabController,
+    'models': modelsTabController,
     // 'glossary': glossaryTabController,
     // 'custom-instructions': customInstructionsTabController,
   };
