@@ -19,7 +19,9 @@ export function getTranslationConfig() {
 
     textSegmentation: {
       method: 'chunk', // other values: 'single', 'entire'
-      chunkSize: 1500, // These keys depend on the method, if it's single then nothing else is needed for example.
+
+      // These keys depend on the method, if it's single then nothing else is needed for example.
+      chunkSize: 1500,
       overlapCount: 10,
     },
 
@@ -53,9 +55,6 @@ export function getTranslationConfig() {
     valid: true,
   };
 
-  // Future: Validate API keys, check language detection, etc.
-
-  console.log('[Config] Configuration:', config);
   return config;
 }
 

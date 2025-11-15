@@ -38,14 +38,88 @@
             </div>
         </section>
 
-        <!-- Stub tabs for future implementation -->
-
+        <!-- API Keys tab -->
         <section id="tab-api-keys" class="tab" hidden>
             <h2>API Keys</h2>
-            <p>TODO</p>
-            <!-- This tab will later get its own form + Save/Cancel buttons -->
+            <p>Enter your API keys for the providers you use.</p>
+
+            <div class="api-keys-grid">
+                <div class="api-key-row">
+                    <label for="api-key-openrouter">OpenRouter</label>
+                    <input
+                            id="api-key-openrouter"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="openrouter"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="api-key-openai">OpenAI</label>
+                    <input
+                            id="api-key-openai"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="openai"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="api-key-anthropic">Anthropic</label>
+                    <input
+                            id="api-key-anthropic"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="anthropic"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="api-key-deepseek">DeepSeek</label>
+                    <input
+                            id="api-key-deepseek"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="deepseek"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="api-key-google">Google</label>
+                    <input
+                            id="api-key-google"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="google"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="api-key-xai">xAI</label>
+                    <input
+                            id="api-key-xai"
+                            class="api-key-input"
+                            type="password"
+                            autocomplete="off"
+                            data-provider="xai"
+                    >
+                </div>
+            </div>
+
+            <div id="api-keys-status" class="status-message" aria-live="polite"></div>
+
+            <div class="tab-actions">
+                <button id="api-keys-save" type="button">Save</button>
+                <button id="api-keys-cancel" type="button">Cancel</button>
+            </div>
         </section>
 
+        <!-- Stub tabs -->
         <section id="tab-models" class="tab" hidden>
             <h2>Model / Translation Config</h2>
             <p>TODO</p>
@@ -61,6 +135,17 @@
             <p>TODO</p>
         </section>
     </main>
+</div>
+
+<div id="unsaved-dialog" class="unsaved-dialog" hidden>
+    <div class="unsaved-dialog-content">
+        <p>You have unsaved changes. What would you like to do?</p>
+        <div class="unsaved-dialog-actions">
+            <button type="button" data-unsaved-action="save">Save</button>
+            <button type="button" data-unsaved-action="discard">Discard</button>
+            <button type="button" data-unsaved-action="cancel">Cancel</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>

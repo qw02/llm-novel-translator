@@ -23,11 +23,11 @@ export default defineConfig({
       }
     },
 
-    minify: false,
-    terserOptions: {
-      compress: false,
-      mangle: false,
-    },
+    // minify: false,
+    // terserOptions: {
+    //   compress: false,
+    //   mangle: false,
+    // },
   },
   plugins: [
     {

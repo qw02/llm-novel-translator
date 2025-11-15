@@ -72,22 +72,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Open options menu from right click on icon
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: 'open-options',
-    title: 'Open Extension Settings',
-    contexts: ['action'] // Right-click on the extension icon
-  });
-});
-
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'open-options') {
-    void chrome.runtime.openOptionsPage();
-  }
-});
-
-
 console.log('[Background] Service worker started');
 
 self.addEventListener('beforeunload', () => {

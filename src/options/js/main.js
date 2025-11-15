@@ -1,3 +1,5 @@
+import { apiKeysTabController } from './tabs/api-keys.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const sidebarButtons = Array.from(
     document.querySelectorAll('.sidebar-item')
@@ -6,22 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab')
   );
 
-  let currentTabId = 'welcome';
+  const unsavedDialog = document.getElementById('unsaved-dialog');
 
-  /**
-   * Central check that runs:
-   *  - before switching tabs
-   *  - before closing/reloading the options page
-   *
-   * For now it always returns true.
-   * You can later replace this with per-tab checks like:
-   *   return tabState[currentTabId]?.canNavigateAway() ?? true;
-   */
-  function canNavigateAway(fromTabId) {
-    // Placeholder logic for now:
-    // Always allow navigation / closing.
-    return true;
-  }
+  const tabControllers = {
+    'api-keys': apiKeysTabController
+    // 'models': modelsTabController,
+    // 'glossary': glossaryTabController,
+    // 'custom-instructions': customInstructionsTabController,
+  };
+
+  let currentTabId = 'welcome';
+  let pendingTabId = null;
 
   function setActiveSidebarItem(tabId) {
     sidebarButtons.forEach((btn) => {
@@ -45,45 +42,105 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function showTab(targetTabId) {
-    if (!targetTabId || targetTabId === currentTabId) {
-      return;
+  async function onTabShown(tabId) {
+    const controller = tabControllers[tabId];
+    if (controller && typeof controller.onShow === 'function') {
+      await controller.onShow();
     }
-
-    const allowed = canNavigateAway(currentTabId);
-    if (!allowed) {
-      // In the future, you might open a modal here:
-      // "Discard changes?" with Save / Discard / Cancel.
-      return;
-    }
-
-    // Switch active sidebar item
-    setActiveSidebarItem(targetTabId);
-
-    // Switch visible tab content
-    setActiveTabContent(targetTabId);
-
-    currentTabId = targetTabId;
   }
 
-  // Sidebar click wiring
+  function showTab(tabId) {
+    if (!tabId || tabId === currentTabId) return;
+
+    setActiveSidebarItem(tabId);
+    setActiveTabContent(tabId);
+    currentTabId = tabId;
+
+    void onTabShown(tabId);
+  }
+
+  function canNavigateAway(fromTabId) {
+    const controller = tabControllers[fromTabId];
+    if (controller && typeof controller.canNavigateAway === 'function') {
+      return controller.canNavigateAway();
+    }
+    return true;
+  }
+
+  function openUnsavedDialog(targetTabId) {
+    pendingTabId = targetTabId;
+    unsavedDialog.hidden = false;
+  }
+
+  function closeUnsavedDialog() {
+    unsavedDialog.hidden = true;
+    pendingTabId = null;
+  }
+
+  function setupUnsavedDialogHandlers() {
+    unsavedDialog.addEventListener('click', async (event) => {
+      const btn = event.target;
+      if (!(btn instanceof HTMLButtonElement)) return;
+
+      const action = btn.dataset.unsavedAction;
+      if (!action) return;
+
+      const currentController = tabControllers[currentTabId];
+
+      if (action === 'save') {
+        if (currentController && typeof currentController.save === 'function') {
+          try {
+            await currentController.save();
+          } catch {
+            // Save failed; stay on current tab
+          }
+        }
+        closeUnsavedDialog();
+        if (pendingTabId) {
+          showTab(pendingTabId);
+        }
+
+      } else if (action === 'discard') {
+        if (currentController && typeof currentController.reset === 'function') {
+          currentController.reset();
+        }
+        closeUnsavedDialog();
+        if (pendingTabId) {
+          showTab(pendingTabId);
+        }
+
+      } else if (action === 'cancel') {
+        closeUnsavedDialog();
+      }
+    });
+  }
+
+  function attemptTabSwitch(targetTabId) {
+    if (targetTabId === currentTabId) return;
+
+    const allowed = canNavigateAway(currentTabId);
+
+    if (allowed) {
+      showTab(targetTabId);
+    } else {
+      openUnsavedDialog(targetTabId);
+    }
+  }
+
   sidebarButtons.forEach((btn) => {
     btn.addEventListener('click', (event) => {
       event.preventDefault();
       const targetTabId = btn.dataset.tab;
-      showTab(targetTabId);
+      attemptTabSwitch(targetTabId);
     });
   });
 
-  // Always land on the welcome tab on load/refresh
   showTab('welcome');
+  setupUnsavedDialogHandlers();
 
-  // Run navigation check when the user tries to close or reload this page
   window.addEventListener('beforeunload', (event) => {
     const allowed = canNavigateAway(currentTabId);
-
     if (!allowed) {
-      // Standard pattern to trigger the browser's "Leave site?" dialog.
       event.preventDefault();
       event.returnValue = '';
     }

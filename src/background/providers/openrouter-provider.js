@@ -85,6 +85,35 @@ export class OpenRouterProvider extends BaseProvider {
     }
   }
 
+  async getAvailableModels() {
+    try {
+      console.log('[OpenRouter] Fetching available models from API...');
+
+      const response = await this.client.models.list();
+
+      const models = [];
+
+      for (const model of response.data) {
+        // Only include text -> text models
+        if (model.architecture.input_modalities.includes('text') && model.architecture.output_modalities.includes('text')) {
+          models.push({
+            provider: 'openrouter',
+            id: `openrouter-${model.id}`, // id needs to be unique
+            model: model.id,
+            label: model.name,
+          })
+        }
+      }
+
+      console.log(`[OpenAI] Found ${models.length} chat models`);
+      return models;
+
+    } catch (error) {
+      console.error('[OpenAI] Failed to fetch models:', error.message);
+      throw error;
+    }
+  }
+
   /**
    * Builds reasoning configuration for OpenRouter.
    *
