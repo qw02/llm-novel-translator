@@ -127,12 +127,12 @@ export const PROVIDER_CONFIGS = {
         model: 'deepseek-chat',
         label: 'DeepSeek V3.2 Exp (R: Off)'
       },
-      {
-        id: '4-3',
-        model: 'deepseek-reasoner',
-        label: 'DeepSeek V3.2 Exp (R: On)',
-        tokens: 8192,
-      },
+      // {
+      //   id: '4-3',
+      //   model: 'deepseek-reasoner',
+      //   label: 'DeepSeek V3.2 Exp (R: On)',
+      //   tokens: 8192,
+      // },
     ],
     limits: {
       stage1: 'all',
@@ -238,7 +238,7 @@ export const PROVIDER_CONFIGS = {
  * These are applied if not specified in model config, user overrides, or custom params.
  */
 export const DEFAULT_PARAMS = {
-  max_tokens: 512,
+  max_tokens: 2048,
 };
 
 /**

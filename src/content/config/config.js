@@ -7,15 +7,15 @@ export function getTranslationConfig() {
   // For now, return hardcoded config
   const config = {
     llm: {
-      glossaryGenerate: '6-3',
-      glossaryUpdate: '6-4',
-      textChunking: '6-4',
-      translation: '6-4',
-      postEdit: '6-4',
+      glossaryGenerate: '4-1',
+      glossaryUpdate: '4-1',
+      textChunking: '4-1',
+      translation: '4-1',
+      postEdit: '4-1',
     },
 
-    updateGlossary: true,
-    glossaryChunkSize: 2000,
+    updateGlossary: false,
+    glossaryChunkSize: 3000,
 
     textSegmentation: {
       method: 'chunk', // other values: 'single', 'entire'
@@ -35,12 +35,12 @@ export function getTranslationConfig() {
       contextLines: 5,
     },
 
-    postEdit: true,
+    postEdit: false,
 
     // Translation settings
     sourceLang: 'ja',
     targetLang: 'en',
-    customInstruction: "User Entered Instructions",
+    customInstruction: "",
 
     get languagePair() {
       return `${this.sourceLang}_${this.targetLang}`;

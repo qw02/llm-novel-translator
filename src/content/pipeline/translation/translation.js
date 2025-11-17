@@ -18,7 +18,7 @@ import { extractTextFromTag } from "../../utils/data-extraction.js";
  * @param {Array<{id: string, index: number, text: string}>} texts - Input texts
  * @param {Object} glossary - Glossary with entries array
  * @param {Array<[number, number]>} intervals - 0-indexed intervals [[start, end], ...]
- * @returns {Promise<{translatedTexts: Array, translationMetadata: Array}>} Texts with translatedText and metadata
+ * @returns {Promise<{translatedTexts: Array<{id: string, index: number, text: string}>, translationMetadata: *[]}>} Texts with translatedText and metadata
  */
 export async function translateText(config, texts, glossary, intervals) {
   // Initialize all translatedText fields to undefined

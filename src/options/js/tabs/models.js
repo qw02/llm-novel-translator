@@ -51,7 +51,7 @@ function getDefaultConfig() {
     },
 
     translation: {
-      // Pair-specific options will go here (e.g., honorifics) later.
+      // Pair-specific options will go here
       contextLines: 5,
     },
 

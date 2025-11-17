@@ -64,7 +64,7 @@ export async function segmentWithChunking(config, texts) {
     // Input: Array of interval lists (1-indexed)
     // Output: Single merged list (1-indexed)
     const mergedIntervals = mergeChunkIntervals(intervalLists, {
-      tolerance: config.textSegmentation.mergeTolerance ?? 1,
+      tolerance: 1,
     });
 
 

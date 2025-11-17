@@ -1,35 +1,4 @@
-/**
- * Dumb extractor for test page with known structure
- * For dev use
- */
-export function extractText() {
-  // Get all <p> elements with id starting with "p"
-  const paragraphs = document.querySelectorAll('p[id^="p"]');
-
-  const extracted = [];
-  let nonEmptyIndex = 0;
-  paragraphs.forEach((p) => {
-    const rawText = p.textContent;
-    const processedText = new TextPreProcessor(rawText)
-      .normalizeText()
-      .processRubyAnnotations()
-      .removeBrTags()
-      .trim()
-      .getText();
-
-    if (processedText) {
-      extracted.push({
-        id: p.id,
-        index: nonEmptyIndex,
-        text: processedText,
-      });
-      nonEmptyIndex++;
-    }
-  });
-  return extracted;
-}
-
-class TextPreProcessor {
+export class TextPreProcessor {
   constructor(text) {
     this.text = text;
   }

@@ -1,13 +1,14 @@
 /**
  * content/main.js
  *
- * Entry point - receives messages from popup and coordinates everything
+ * Entry point for content script - receives messages from popup and coordinates everything
  */
 
 import { runPipeline } from './pipeline/pipeline.js';
-import { extractText } from './extractors/test-page.js';
-import { replaceText } from './replacers/replacer.js';
 import { getTranslationConfig } from './config/config.js';
+import { extractText, replaceText, buildGlossaryKeys } from './dom-adapter.js';
+import { getGlossary, saveGlossary } from './glossary.js';
+
 
 // Listen for pipeline start message from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -39,20 +40,25 @@ async function handlePipelineStart() {
     }
 
     // if (!config.translation.valid) {
-    //   // Show warning (page and selected language seems different), user can choose to bypass
+    // TODO: Show warning (page and selected language seems different), user can choose to bypass
+    // Use lib to get language of `extractedText`
+    // Compare to translation source
     // }
 
     console.log('[Main] Configuration valid');
 
-    // Step 3: Run translation pipeline
-    console.log('[Main] Step 3: Starting translation pipeline...');
-    const translatedText = await runPipeline(extractedText, config);
-    console.log('[Main] Pipeline completed, received translations');
+    // Read in glossary for this series from storage
+    const glossaryStorageKeys = buildGlossaryKeys(config.sourceLang, config.targetLang);
+    const glossary = await getGlossary(glossaryStorageKeys.seriesKey);
 
-    // Step 4: Replace text on webpage
-    console.log('[Main] Step 4: Replacing text on webpage...');
+    // Run the main translation pipeline
+    const { translatedText: translatedText, glossary: updatedGlossary } = await runPipeline(extractedText, glossary, config);
+
+    // Save the updated glossary (will be the same if update not ran
+    await saveGlossary(glossaryStorageKeys, glossary);
+
+    // Write translation back to webpage DOM
     replaceText(translatedText);
-    console.log('[Main] Text replacement complete');
 
   } catch (error) {
     console.error('[Main] Error in pipeline:', error);
