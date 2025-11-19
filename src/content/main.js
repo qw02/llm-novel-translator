@@ -9,21 +9,17 @@ import { getTranslationConfig } from './config/config.js';
 import { extractText, replaceText, buildGlossaryKeys } from './dom-adapter.js';
 import { getGlossary, saveGlossary } from './glossary.js';
 
-
-// Listen for pipeline start message from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'pipeline.start') {
 
-    // Run pipeline asynchronously
     handlePipelineStart().then(() => {
-      console.log('[Main] Pipeline completed successfully');
       sendResponse({ ok: true });
     }).catch((error) => {
       console.error('[Main] Pipeline failed:', error);
       sendResponse({ ok: false, error: error.message });
     });
 
-    return true; // Keep channel open for async response
+    return true;
   }
 });
 

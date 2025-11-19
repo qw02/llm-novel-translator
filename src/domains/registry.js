@@ -1,6 +1,7 @@
 import { DomainAdapter } from './DomainAdapter.js';
 import { LocalFileTestAdapter } from './sites/local-file-test.js';
 import { KakuyomuAdapter } from "./sites/kakuyomu.js";
+import { FallbackGenericAdapter } from './sites/fallback-generic.js';
 
 /**
  * Simple wildcard matcher for URL patterns used by domain adapters.
@@ -36,13 +37,15 @@ const ADAPTER_CLASSES = [
   KakuyomuAdapter
 ];
 
+/**
+ * Single fallback adapter class, used when nothing else matches.
+ */
+const FALLBACK_ADAPTER_CLASS = FallbackGenericAdapter;
+
 let cachedAdapter = null;
 
 /**
  * Resolve (and cache) the appropriate adapter instance for the current page.
- *
- * If no adapter matches, this function throws. The caller (typically the
- * content script) can catch this and show an appropriate error in the UI.
  *
  * @param {string} [url]
  * @returns {DomainAdapter}
@@ -61,13 +64,27 @@ export function getActiveAdapter(url = window.location.href) {
     }
   }
 
-  throw new Error(`No DomainAdapter registered for URL: ${url}`);
+  // No specific adapter matched: use the generic fallback.
+  cachedAdapter = new FALLBACK_ADAPTER_CLASS();
+  return cachedAdapter;
 }
 
 /**
- * Clear the cached adapter instance.
- * This is mostly useful for testing.
+ * Returns true if there is a site-specific adapter for the given URL,
+ * i.e. an adapter other than the fallback generic one.
+ *
+ * If url is omitted, window.location.href is used.
+ *
+ * @param {string} [url]
+ * @returns {boolean}
  */
-export function resetAdapterCache() {
-  cachedAdapter = null;
+export function isSiteSupported(url = window.location.href) {
+  for (const AdapterClass of ADAPTER_CLASSES) {
+    const patterns = AdapterClass.matchPatterns || [];
+    const matched = patterns.some((pattern) => urlMatchesPattern(url, pattern));
+    if (matched) {
+      return true;
+    }
+  }
+  return false;
 }

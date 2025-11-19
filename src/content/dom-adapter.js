@@ -19,7 +19,7 @@ export const getSeriesId = () => {
 };
 
 /**
- * This is what your pipeline calls:
+ * Used by pipeline or preview to get the text content from the DOM
  *   const paragraphs = extractText();
  *
  * @returns {import('../domains/types.js').ParagraphData[]}
@@ -29,7 +29,7 @@ export const extractText = () => {
 };
 
 /**
- * This is what your pipeline calls after translation:
+ * Writes the translation back to the DOM
  *   replaceText(translatedParagraphs, options);
  *
  * @param {import('../domains/types.js').TranslatedParagraph[]} items
