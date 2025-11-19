@@ -20,8 +20,29 @@ chromeMock.runtime = {
 
 chromeMock.storage = {
   local: {
-    get: vi.fn((key, cb) => cb?.({ [key]: null })),
-    set: vi.fn((data, cb) => cb?.()),
+    get: vi.fn((keys) => {
+      return new Promise((resolve) => {
+        // Mock implementation: return empty object or whatever is set
+        // For now, just return empty object or null for keys
+        const result = {};
+        if (typeof keys === 'string') {
+          result[keys] = null;
+        } else if (Array.isArray(keys)) {
+          keys.forEach(k => result[k] = null);
+        }
+        resolve(result);
+      });
+    }),
+    set: vi.fn((items) => {
+      return new Promise((resolve) => {
+        resolve();
+      });
+    }),
+    remove: vi.fn((keys) => {
+      return new Promise((resolve) => {
+        resolve();
+      });
+    }),
   },
 }
 
