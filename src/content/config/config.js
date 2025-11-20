@@ -36,17 +36,20 @@ export async function getTranslationConfig(popupOverrides) {
   // Add getters
   const config = new TranslationConfig(rawConfig);
 
+  console.log(popupOverrides);
+
+  // Add overrides from popup UI
   if (popupOverrides.skipGlossary && config.updateGlossary) {
     config.updateGlossary = false;
   }
 
-  // Add overrides from popup UI
-  for (const key in popupOverrides) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      config[key] = popupOverrides[key];
-    } else {
-      console.warn(`Popup pass in keys that do not exist in config object: Key: ${key}.`)
-    }
+
+  if (popupOverrides.popupSourceLang) {
+    config.sourceLang = popupOverrides.popupSourceLang;
+  }
+
+  if (popupOverrides.popupTargetLang) {
+    config.targetLang = popupOverrides.popupTargetLang;
   }
 
   return config;
@@ -62,6 +65,7 @@ export async function getTranslationConfig(popupOverrides) {
  * @returns {Promise<{ok: boolean, error?: string, warning?: string}>}
  */
 export async function validateConfig(config, text) {
+  console.log('Starting validation...');
   let warnings = [];
 
   // --- 1. Hard Validation (Blocking Errors) ---
@@ -107,7 +111,7 @@ export async function validateConfig(config, text) {
       );
     }
 
-    // Case B: Match, but Low Confidence
+      // Case B: Match, but Low Confidence
     // The language matches, but there is significant noise (mixed languages, code snippets, etc.)
     else if (langAnalysis.confidence < CONFIDENCE_THRESHOLD) {
       const percentage = Math.floor(langAnalysis.confidence * 100);

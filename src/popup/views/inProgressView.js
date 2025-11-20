@@ -1,5 +1,7 @@
 import { clearElement, createSection, createButton } from "../ui/dom.js";
 
+let isDetailsOpen = false;
+
 function formatPercent(globalProgress) {
   if (!globalProgress && globalProgress !== 0) return "0%";
   return `${Math.round(globalProgress * 100)}%`;
@@ -46,12 +48,11 @@ function buildSimpleProgressText(progressData) {
   return lines.join("\n");
 }
 
-export function renderInProgressView(root, { pipelineState }) {
+export function renderInProgressView(root, { pipelineState, progressData }) {
   clearElement(root);
 
   const { section, body } = createSection("Translating…", "Running pipeline");
 
-  const progressData = pipelineState?.progress || null;
   const globalProgress = progressData?.global?.progress ?? 0;
 
   const progressContainer = document.createElement("div");
@@ -85,9 +86,11 @@ export function renderInProgressView(root, { pipelineState }) {
   const buttons = document.createElement("div");
   buttons.className = "button-row";
 
-  const detailsToggle = createButton("View detailed", {
-    variant: "secondary",
-  });
+  // Set initial text based on sticky state
+  const detailsToggle = createButton(
+    isDetailsOpen ? "Hide detailed" : "View detailed",
+    { variant: "secondary" }
+  );
 
   buttons.appendChild(detailsToggle);
   body.appendChild(buttons);
@@ -100,7 +103,10 @@ export function renderInProgressView(root, { pipelineState }) {
   body.appendChild(simpleText);
 
   detailsToggle.addEventListener("click", () => {
-    if (simpleText.style.display === "none") {
+    isDetailsOpen = !isDetailsOpen;
+
+    // Update UI
+    if (isDetailsOpen) {
       simpleText.style.display = "block";
       detailsToggle.textContent = "Hide detailed";
     } else {

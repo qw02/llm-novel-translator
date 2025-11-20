@@ -1,9 +1,35 @@
+import { POPUP_MSG_TYPE } from "../common/messaging.js";
+
 function storageGet(keyOrKeys) {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(keyOrKeys, (result) => {
       const err = chrome.runtime.lastError;
       if (err) reject(err);
       else resolve(result);
+    });
+  });
+}
+
+// Session-scoped storage for per-tab overrides
+function storageSessionGet(keyOrKeys) {
+  return new Promise((resolve, reject) => {
+    // Fallback for environments without storage.session (rare in MV3 but safe)
+    const area = chrome.storage.session || chrome.storage.local;
+    area.get(keyOrKeys, (result) => {
+      const err = chrome.runtime.lastError;
+      if (err) reject(err);
+      else resolve(result);
+    });
+  });
+}
+
+function storageSessionSet(obj) {
+  return new Promise((resolve, reject) => {
+    const area = chrome.storage.session || chrome.storage.local;
+    area.set(obj, () => {
+      const err = chrome.runtime.lastError;
+      if (err) reject(err);
+      else resolve();
     });
   });
 }
@@ -45,9 +71,7 @@ function sendMessageToTab(tabId, message) {
 }
 
 export async function querySiteSupported(tabId) {
-  const response = await sendMessageToTab(tabId, {
-    type: "site.supported",
-  });
+  const response = await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.site_supported });
 
   if (!response || !response.ok) {
     // If you want to be defensive:
@@ -59,26 +83,27 @@ export async function querySiteSupported(tabId) {
 }
 
 /**
- * Queries current pipeline state from the content script.
- * Expects content script to respond to: { type: 'getProgressState' }
- *
- * Recommended response shape:
- * {
- *   ok: true,
- *   state: {
- *     status: 'idle' | 'running' | 'complete_success' | 'complete_error' | 'warning_pending',
- *     progress: { ... } | null,
- *     error: { message: string } | null,
- *     warning: { ... } | null
- *   }
- * }
+ * Returns: { status: 'IDLE' | 'RUNNING' | ..., error: ..., warning: ... }
  */
-export async function getPipelineState(tabId) {
-  const response = await sendMessageToTab(tabId, { type: "getProgressState" });
-  if (!response || !response.ok) {
+export async function getPipelineLifecycleState(tabId) {
+  const response = await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.pipeline_getState });
+  if (!response || !response.success) {
+    // Fallback to IDLE if content script is not ready
+    return { status: "IDLE" };
+  }
+  return response.state || { status: "IDLE" };
+}
+
+/**
+ * Gets the granular LLM progress metrics.
+ * Only call this when lifecycle status is 'RUNNING'.
+ */
+export async function getLlmProgress(tabId) {
+  const response = await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.get_progress_state });
+  if (!response || !response.success) {
     return null;
   }
-  return response.state || null;
+  return response.data || null;
 }
 
 /**
@@ -87,12 +112,15 @@ export async function getPipelineState(tabId) {
  */
 export async function startPipeline(tabId, payload) {
   const response = await sendMessageToTab(tabId, {
-    type: "pipeline.start",
+    type: POPUP_MSG_TYPE.pipeline_start,
     payload,
   });
+
   if (!response || !response.ok) {
     throw new Error(response?.error || "Failed to start pipeline");
   }
+
+  return response;
 }
 
 /**
@@ -101,7 +129,7 @@ export async function startPipeline(tabId, payload) {
  */
 export async function continuePipeline(tabId) {
   const response = await sendMessageToTab(tabId, {
-    type: "pipeline.continue",
+    type: POPUP_MSG_TYPE.pipeline_continue
   });
   if (!response || !response.ok) {
     throw new Error(response?.error || "Failed to continue pipeline");
@@ -112,7 +140,7 @@ export async function continuePipeline(tabId) {
  * Asks content script to show the glossary widget.
  */
 export async function showGlossaryWidget(tabId) {
-  await sendMessageToTab(tabId, { type: "glossary.showWidget" });
+  await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.glossary_showWidget });
 }
 
 /**
@@ -127,4 +155,32 @@ export async function showPreview(tabId) {
  */
 export function openOptionsPage() {
   void chrome.runtime.openOptionsPage();
+}
+
+/**
+ * Per-tab language overrides.
+ * Stored as: { "popup_lang_overrides": { "TAB_ID": { popupSourceLang: '...', popupTargetLang: '...' } } }
+ */
+export async function getPopupLanguageOverrides(tabId) {
+  if (!tabId && tabId !== 0) return {};
+  const { popup_lang_overrides } = await storageSessionGet("popup_lang_overrides");
+  const all = popup_lang_overrides || {};
+  return all[String(tabId)] || {};
+}
+
+export async function setPopupLanguageOverrides(tabId, overrides) {
+  if (!tabId && tabId !== 0) return;
+  const key = String(tabId);
+  const { popup_lang_overrides } = await storageSessionGet("popup_lang_overrides");
+  const all = popup_lang_overrides || {};
+
+  if (!overrides || (!overrides.popupSourceLang && !overrides.popupTargetLang)) {
+    delete all[key];
+  } else {
+    all[key] = {
+      popupSourceLang: overrides.popupSourceLang,
+      popupTargetLang: overrides.popupTargetLang,
+    };
+  }
+  await storageSessionSet({ popup_lang_overrides: all });
 }

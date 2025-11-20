@@ -192,14 +192,4 @@ class StageTracker {
   }
 }
 
-// Sends progress data to popup or widget when requested
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "getProgressState") {
-    const tracker = getProgressTracker();
-    const state = tracker.getState();
-    sendResponse({ success: true, data: state });
-    return true; // Keep the message channel open for async response
-  }
-});
-
 export { ProgressMetrics, getProgressTracker };

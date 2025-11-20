@@ -328,3 +328,12 @@ body {
 .text-small {
     font-size: 11px;
 }
+
+.lang-select {
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    min-width: 120px;
+}

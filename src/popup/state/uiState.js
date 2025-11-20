@@ -7,37 +7,25 @@ export const UiState = {
   COMPLETE_ERROR: "COMPLETE_ERROR",
 };
 
-/**
- * Computes which high-level UI state to show.
- *
- * @param {Object} args
- * @param {boolean} args.hasApiKeys
- * @param {boolean} args.siteSupported
- * @param {Object|null} args.pipelineState
- */
 export function computeUiState({ hasApiKeys, siteSupported, pipelineState }) {
   if (!hasApiKeys) {
     return UiState.WELCOME;
   }
 
-  const status = pipelineState?.status || "idle";
+  const status = pipelineState?.status || "IDLE";
+  console.log(status)
 
-  if (status === "running" || status === "in_progress") {
+  if (status === "RUNNING" || status === "VALIDATING") {
     return UiState.IN_PROGRESS;
   }
 
-  if (status === "complete_success" || status === "done") {
+  if (status === "COMPLETE_SUCCESS") {
     return UiState.COMPLETE_SUCCESS;
   }
 
-  if (status === "complete_error" || pipelineState?.error) {
+  if (status === "COMPLETE_ERROR" || pipelineState?.error) {
     return UiState.COMPLETE_ERROR;
   }
 
-  // Idle states based on site support
-  if (siteSupported) {
-    return UiState.IDLE_SUPPORTED;
-  } else {
-    return UiState.IDLE_UNSUPPORTED;
-  }
+  return siteSupported ? UiState.IDLE_SUPPORTED : UiState.IDLE_UNSUPPORTED;
 }

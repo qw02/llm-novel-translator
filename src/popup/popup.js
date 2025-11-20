@@ -3,12 +3,15 @@ import {
   getConfigFromDisk,
   getActiveTab,
   querySiteSupported,
-  getPipelineState,
+  getPipelineLifecycleState,
+  getLlmProgress,
   startPipeline,
   continuePipeline,
   openOptionsPage,
   showGlossaryWidget,
   showPreview,
+  getPopupLanguageOverrides,
+  setPopupLanguageOverrides,
 } from "./extensionApi.js";
 
 import { UiState, computeUiState } from "./state/uiState.js";
@@ -22,17 +25,48 @@ import {
   showWarningOverlay,
   removeWarningOverlayIfAny,
 } from "./views/warningOverlay.js";
+import { POPUP_MSG_TYPE } from "../common/messaging.js";
 
 
 let appRoot = null;
 let currentTab = null;
 let currentUiState = null;
 let progressTimer = null;
+
 let skipGlossary = false;
 let lastPopupError = null;
 
+let currentConfig = null;
+let currentSourceLang = null;
+let currentTargetLang = null;
+
 // Entry point
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // We cannot inject into chrome:// or edge:// pages.
+  if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
+    console.warn("Cannot inject into system pages.");
+    return;
+  }
+
+  // Load the content script if needed
+  try {
+    // Attempt to send a "ping" message to see if the script is already there.
+    // If the script isn't there, this will throw an error, which we catch to trigger injection.
+    await chrome.tabs.sendMessage(tab.id, { type: POPUP_MSG_TYPE.ping });
+    console.log("Content script already loaded.");
+  } catch (error) {
+    // If we land here, the script hasn't been injected yet.
+    console.log("Injecting content script...");
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['src/content/main.js']
+    });
+  }
+
+
   appRoot = document.getElementById("app");
   initPopup().catch((err) => {
     console.error("[popup] init failed", err);
@@ -42,7 +76,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Listen for async warnings from content script
+// Listen for async warnings from the content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "validation.warning" && message.warning) {
     // Show overlay; continuation is wired in initPopup/refresh
@@ -78,8 +112,9 @@ async function refresh() {
     getConfigFromDisk(),
   ]);
 
-  const hasApiKeys = apiKeys && Object.keys(apiKeys).length > 0;
+  currentConfig = config || null;
 
+  const hasApiKeys = apiKeys && Object.keys(apiKeys).length > 0;
   let siteSupported = false;
   let pipelineState = null;
 
@@ -88,17 +123,27 @@ async function refresh() {
     try {
       siteSupported = await querySiteSupported(currentTab.id);
     } catch (err) {
-      console.warn("[popup] querySiteSupported failed:", err);
-      siteSupported = false; // conservative fallback
-    }
+      console.warn("[popup] querySiteSupported failed:", JSON.stringify(err));
+      siteSupported = false;     }
 
-    // And also fetch pipeline state
     try {
-      pipelineState = await getPipelineState(currentTab.id);
+      pipelineState = await getPipelineLifecycleState(currentTab.id);
     } catch {
-      pipelineState = null;
+      pipelineState = { status: "IDLE" };
     }
   }
+
+  let langOverrides = {};
+  if (currentTab?.id) {
+    langOverrides = await getPopupLanguageOverrides(currentTab.id);
+  }
+
+  const baseSourceLang = currentConfig?.sourceLang || "ja";
+  const baseTargetLang = currentConfig?.targetLang || "en";
+
+  // If session has override, use it; otherwise use disk config
+  currentSourceLang = langOverrides.popupSourceLang || baseSourceLang;
+  currentTargetLang = langOverrides.popupTargetLang || baseTargetLang;
 
   const uiState = computeUiState({ hasApiKeys, siteSupported, pipelineState });
   currentUiState = uiState;
@@ -106,17 +151,21 @@ async function refresh() {
   const renderContext = {
     root: appRoot,
     apiKeys,
-    config,
+    config: currentConfig,
     siteSupported,
     pipelineState,
     tab: currentTab,
     popupError: lastPopupError,
     skipGlossary,
+    selectedSourceLang: currentSourceLang,
+    selectedTargetLang: currentTargetLang,
     onOpenOptions: handleOpenOptions,
     onTranslate: handleTranslateClick,
     onShowGlossary: handleShowGlossaryClick,
     onShowPreview: handleShowPreviewClick,
     onToggleSkipGlossary: handleToggleSkipGlossary,
+    onSourceLangChange: handleSourceLangChange,
+    onTargetLangChange: handleTargetLangChange,
   };
 
   renderView(uiState, renderContext);
@@ -125,6 +174,7 @@ async function refresh() {
     await handleWarningFromContentScript(pipelineState.warning);
   }
 
+  // Only when we need to show in-progress do we start polling LLM progress
   if (uiState === UiState.IN_PROGRESS && currentTab?.id) {
     startProgressTimer(currentTab.id);
   }
@@ -134,7 +184,7 @@ async function refresh() {
  * Renders the appropriate sub-view for the current UI state.
  */
 function renderView(uiState, context) {
-  const { root, pipelineState } = context;
+  const { root, pipelineState, progressData = null } = context;
 
   if (!root) return;
 
@@ -150,10 +200,14 @@ function renderView(uiState, context) {
         config: context.config,
         popupError: context.popupError,
         skipGlossary: context.skipGlossary,
+        selectedSourceLang: context.selectedSourceLang,
+        selectedTargetLang: context.selectedTargetLang,
         onOpenOptions: context.onOpenOptions,
         onTranslate: () => context.onTranslate(context.tab),
         onShowGlossary: () => context.onShowGlossary(context.tab),
         onToggleSkipGlossary: context.onToggleSkipGlossary,
+        onSourceLangChange: context.onSourceLangChange,
+        onTargetLangChange: context.onTargetLangChange,
       });
       break;
 
@@ -162,17 +216,22 @@ function renderView(uiState, context) {
         config: context.config,
         popupError: context.popupError,
         skipGlossary: context.skipGlossary,
+        selectedSourceLang: context.selectedSourceLang,
+        selectedTargetLang: context.selectedTargetLang,
         onOpenOptions: context.onOpenOptions,
         onTranslate: () => context.onTranslate(context.tab),
         onShowGlossary: () => context.onShowGlossary(context.tab),
         onShowPreview: () => context.onShowPreview(context.tab),
         onToggleSkipGlossary: context.onToggleSkipGlossary,
+        onSourceLangChange: context.onSourceLangChange,
+        onTargetLangChange: context.onTargetLangChange,
       });
       break;
 
     case UiState.IN_PROGRESS:
       renderInProgressView(root, {
-        pipelineState: pipelineState,
+        pipelineState,
+        progressData,
       });
       break;
 
@@ -197,51 +256,47 @@ function renderView(uiState, context) {
 }
 
 /**
- * Starts polling the content script for pipeline state every second.
+ * Starts polling the content script for the pipeline state every second.
  */
 function startProgressTimer(tabId) {
   clearProgressTimer();
 
   progressTimer = setInterval(async () => {
     try {
-      const pipelineState = await getPipelineState(tabId);
-      const hasApiKeys = true;
+      // 1. Ask content script for lifecycle state
+      const pipelineState = await getPipelineLifecycleState(tabId);
 
-      let siteSupported = false;
-      if (currentTab?.id) {
-        try {
-          siteSupported = await querySiteSupported(currentTab.id);
-        } catch {
-          siteSupported = false;
-        }
+      // If no longer running, stop polling and do a full refresh()
+      if (!pipelineState || pipelineState.status !== "RUNNING") {
+        clearProgressTimer();
+        await refresh();
+        return;
       }
 
-      const uiState = computeUiState({
-        hasApiKeys,
-        siteSupported,
-        pipelineState,
-      });
-      currentUiState = uiState;
+      // 2. Now, and only now, ask for granular LLM progress
+      const progressData = await getLlmProgress(tabId);
 
-      renderView(uiState, {
+      // 3. Re-render only the in-progress view with fresh metrics
+      renderView(UiState.IN_PROGRESS, {
         root: appRoot,
         apiKeys: null,
-        config: null,
-        siteSupported,
+        config: currentConfig,
+        siteSupported: true,
         pipelineState,
+        progressData,
         tab: currentTab,
         popupError: lastPopupError,
         skipGlossary,
+        selectedSourceLang: currentSourceLang,
+        selectedTargetLang: currentTargetLang,
         onOpenOptions: handleOpenOptions,
         onTranslate: handleTranslateClick,
         onShowGlossary: handleShowGlossaryClick,
         onShowPreview: handleShowPreviewClick,
         onToggleSkipGlossary: handleToggleSkipGlossary,
+        onSourceLangChange: handleSourceLangChange,
+        onTargetLangChange: handleTargetLangChange,
       });
-
-      if (uiState !== UiState.IN_PROGRESS) {
-        clearProgressTimer();
-      }
     } catch (err) {
       console.error("[popup] progress polling failed", err);
       clearProgressTimer();
@@ -263,15 +318,55 @@ async function handleTranslateClick(tab) {
   if (!tab?.id) return;
   lastPopupError = null;
 
-  try {
-    await startPipeline(tab.id, {
-      source: "popup",
-      overrides: {
-        skipGlossary, // Update set to false if skip glossary toggle enabled
-      },
-    });
-    // The actual state transition will be picked up via polling / refresh.
+  const baseSourceLang = currentConfig?.sourceLang || "ja";
+  const baseTargetLang = currentConfig?.targetLang || "en";
+
+  // Use currently selected values (state initialized in refresh)
+  const src = currentSourceLang;
+  const tgt = currentTargetLang;
+
+  // 1. Validation: Source cannot equal Target
+  if (src === tgt) {
+    lastPopupError = "Source and Target languages cannot be the same.";
     await refresh();
+    return;
+  }
+
+  // 2. Construct Payload
+  const payload = {
+    source: "popup",
+    overrides: {
+      skipGlossary: skipGlossary
+    }
+  };
+
+  // Add language overrides ONLY if they differ from disk config
+  // Content script `getTranslationConfig` looks for `popupSourceLang` / `popupTargetLang`
+  if (src !== baseSourceLang) {
+    payload.overrides.popupSourceLang = src;
+  }
+  if (tgt !== baseTargetLang) {
+    payload.overrides.popupTargetLang = tgt;
+  }
+
+  try {
+    // 1. Send Start Command
+    const result = await startPipeline(tab.id, payload);
+
+    // 2. Check Result
+    if (result.status === 'started') {
+      // 3. IMMEDIATE TRANSITION:
+      // Force UI state locally to avoid flicker, then start polling.
+      currentUiState = UiState.IN_PROGRESS;
+
+      // This will fetch lifecycle (which is now RUNNING) + progress and render immediately
+      startProgressTimer(tab.id);
+    }
+    else if (result.status === 'warning_pending') {
+      // Do nothing; the message listener will trigger the overlay
+      // or has already triggered it.
+    }
+
   } catch (err) {
     console.error("[popup] failed to start pipeline", err);
     lastPopupError = err?.message || "Failed to start translation.";
@@ -317,6 +412,26 @@ function handleToggleSkipGlossary(checked) {
   skipGlossary = Boolean(checked);
 }
 
+async function handleSourceLangChange(newCode) {
+  currentSourceLang = newCode;
+  if (currentTab?.id) {
+    await setPopupLanguageOverrides(currentTab.id, {
+      popupSourceLang: currentSourceLang,
+      popupTargetLang: currentTargetLang,
+    });
+  }
+}
+
+async function handleTargetLangChange(newCode) {
+  currentTargetLang = newCode;
+  if (currentTab?.id) {
+    await setPopupLanguageOverrides(currentTab.id, {
+      popupSourceLang: currentSourceLang,
+      popupTargetLang: currentTargetLang,
+    });
+  }
+}
+
 /**
  * Displays warning overlay for validation warnings,
  * and hooks up continue/cancel behavior.
@@ -327,17 +442,25 @@ async function handleWarningFromContentScript(warning) {
   showWarningOverlay(appRoot, warning, {
     onContinue: async () => {
       try {
-        await continuePipeline(currentTab.id);
         removeWarningOverlayIfAny();
-        await refresh();
+
+        // 1. Send Continue Command
+        await continuePipeline(currentTab.id);
+
+        // 2. IMMEDIATE TRANSITION:
+        // Switch to In Progress view immediately
+        currentUiState = UiState.IN_PROGRESS;
+        startProgressTimer(currentTab.id);
+
       } catch (err) {
         console.error("[popup] continue pipeline failed", err);
+        lastPopupError = err.message;
+        await refresh();
       }
     },
     onCancel: async () => {
       removeWarningOverlayIfAny();
-      // User cancelled; do nothing else. The pipeline stays not started.
-      await refresh();
+      await refresh(); // Reverts to idle state
     },
   });
 }

@@ -19,17 +19,10 @@ export function showWarningOverlay(root, warning, { onContinue, onCancel }) {
 
   const body = document.createElement("p");
   body.className = "warning-body";
-  body.textContent = warning?.message || "There is a potential issue with the configuration.";
+  body.textContent = warning || "There is a potential issue with the configuration.";
 
   modal.appendChild(title);
   modal.appendChild(body);
-
-  if (warning?.detail) {
-    const detail = document.createElement("p");
-    detail.className = "warning-detail";
-    detail.textContent = warning.detail;
-    modal.appendChild(detail);
-  }
 
   const actions = document.createElement("div");
   actions.className = "button-row";

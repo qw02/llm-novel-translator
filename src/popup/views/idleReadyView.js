@@ -8,10 +8,25 @@ import {
 } from "../ui/dom.js";
 import { LANGS } from "../../common/languages.js";
 
-function getLanguageLabel(config, key, fallback) {
-  if (!config) return fallback;
-  const code = config[key] || fallback;
-  return LANGS[code];
+function createLangSelect(selectedValue, onChange) {
+  const select = document.createElement("select");
+  select.className = "lang-select";
+
+  Object.entries(LANGS).forEach(([code, name]) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = name;
+    if (code === selectedValue) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+
+  select.addEventListener("change", (e) => {
+    onChange?.(e.target.value);
+  });
+
+  return select;
 }
 
 export function renderIdleReadyView(
@@ -20,21 +35,31 @@ export function renderIdleReadyView(
     config,
     popupError,
     skipGlossary,
+    selectedSourceLang,
+    selectedTargetLang,
     onOpenOptions,
     onTranslate,
     onShowGlossary,
     onToggleSkipGlossary,
+    onSourceLangChange,
+    onTargetLangChange,
   }
 ) {
   clearElement(root);
 
   const { section, body } = createSection("Translate this page");
 
-  const srcLang = getLanguageLabel(config, "sourceLang", "");
-  const tgtLang = getLanguageLabel(config, "targetLang", "");
+  const srcSelect = createLangSelect(
+    selectedSourceLang || config?.sourceLang || "ja",
+    onSourceLangChange
+  );
+  const tgtSelect = createLangSelect(
+    selectedTargetLang || config?.targetLang || "en",
+    onTargetLangChange
+  );
 
-  body.appendChild(createRow("Source language", srcLang));
-  body.appendChild(createRow("Target language", tgtLang));
+  body.appendChild(createRow("Source language", srcSelect));
+  body.appendChild(createRow("Target language", tgtSelect));
 
   const glossaryEnabled =
     !!config?.llm?.glossaryGenerate || !!config?.updateGlossary;
