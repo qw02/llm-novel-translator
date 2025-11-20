@@ -299,8 +299,8 @@ export class ModelsTabController {
 
   async loadConfig() {
     try {
-      const result = await chrome.storage.local.get('translation-config');
-      const stored = result['translation-config'];
+      const result = await chrome.storage.local.get('translation_config');
+      const stored = result['translation_config'];
 
       if (stored && typeof stored === 'object') {
         // Merge into defaults to ensure all keys exist
@@ -725,7 +725,7 @@ export class ModelsTabController {
     }
 
     try {
-      await chrome.storage.local.set({ 'translation-config': newConfig });
+      await chrome.storage.local.set({ 'translation_config': newConfig });
       this.config = newConfig;
       this.originalConfig = deepClone(newConfig);
       this.isDirty = false;

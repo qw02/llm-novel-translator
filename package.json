@@ -4,21 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "watch": "vite build --watch",
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive:true, force:true})\"",
+    "build": "npm run clean && vite build && vite build -c vite.config.content.js",
+    "watch": "npm run clean && concurrently \"npm:watch:ui\" \"npm:watch:content\"",
+    "watch:ui": "vite build --watch",
+    "watch:content": "vite build --watch -c vite.config.content.js",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.28",
+    "concurrently": "^9.2.1",
+    "glob": "11.1.0",
     "vite": "^7.1.7",
     "vitest": "^4.0.8"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
     "@google/genai": "^1.29.0",
-    "glob": "^11.0.3",
+    "franc": "^6.2.0",
     "ollama": "^0.6.2",
     "openai": "^6.8.1",
     "p-queue": "^9.0.0"

@@ -1,230 +1,343 @@
-// Existing elements
-const translateBtn = document.getElementById('translateBtn');
-const getProgressBtn = document.getElementById('getProgressBtn');
-const statusEl = document.getElementById('status');
-const statusDiv = document.getElementById("status");
-const simpleSection = document.getElementById("simpleSection");
-const rawSection = document.getElementById("rawSection");
-const simpleFormatDiv = document.getElementById("simpleFormat");
-const rawJsonDiv = document.getElementById("rawJson");
+import {
+  getApiKeys,
+  getConfigFromDisk,
+  getActiveTab,
+  querySiteSupported,
+  getPipelineState,
+  startPipeline,
+  continuePipeline,
+  openOptionsPage,
+  showGlossaryWidget,
+  showPreview,
+} from "./extensionApi.js";
 
-// New API key elements
-const providerKeyInput = document.getElementById('providerKey');
-const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-const apiKeyStatus = document.getElementById('apiKeyStatus');
+import { UiState, computeUiState } from "./state/uiState.js";
 
-// Existing event listeners
-translateBtn.addEventListener('click', onTranslateClick);
-getProgressBtn.addEventListener('click', onProgressClick);
+import { renderWelcomeView } from "./views/welcomeView.js";
+import { renderIdleReadyView } from "./views/idleReadyView.js";
+import { renderIdleUnsupportedView } from "./views/idleUnsupportedView.js";
+import { renderInProgressView } from "./views/inProgressView.js";
+import { renderCompleteView } from "./views/completeView.js";
+import {
+  showWarningOverlay,
+  removeWarningOverlayIfAny,
+} from "./views/warningOverlay.js";
 
 
-document.getElementById('openOptionsPage').addEventListener('click', openOptionsPage);
+let appRoot = null;
+let currentTab = null;
+let currentUiState = null;
+let progressTimer = null;
+let skipGlossary = false;
+let lastPopupError = null;
 
-// New API key event listener
-saveApiKeyBtn.addEventListener('click', onSaveApiKey);
-
-// Load existing API key on popup load
-loadApiKey();
-
-async function loadApiKey() {
-  try {
-    const result = await chrome.storage.local.get('api_keys');
-    if (result.api_keys?.google) {
-      providerKeyInput.value = result.api_keys.google;
-    }
-  } catch (error) {
-    console.error('[Popup] Failed to load API key:', error);
-  }
-}
-
-async function onSaveApiKey() {
-  const apiKey = providerKeyInput.value.trim();
-
-  if (!apiKey) {
-    showApiKeyStatus('Please enter an API key', 'error');
-    return;
-  }
-
-  try {
-    // Get existing keys
-    const result = await chrome.storage.local.get('api_keys');
-    const existingKeys = result.api_keys || {};
-
-    // Update key
-    existingKeys.google = apiKey;
-
-    // Save back to storage
-    await chrome.storage.local.set({ api_keys: existingKeys });
-
-    showApiKeyStatus('API key saved successfully!', 'success');
-  } catch (error) {
-    console.error('[Popup] Failed to save API key:', error);
-    showApiKeyStatus('Failed to save: ' + error.message, 'error');
-  }
-}
-
-function showApiKeyStatus(message, type) {
-  apiKeyStatus.textContent = message;
-  apiKeyStatus.className = type;
-  apiKeyStatus.style.display = 'block';
-
-  setTimeout(() => {
-    apiKeyStatus.style.display = 'none';
-  }, 3000);
-}
-
-function setStatus(text) {
-  statusEl.textContent = text;
-}
-
-async function onTranslateClick() {
-  translateBtn.disabled = true;
-  setStatus('Starting pipeline in this tab...');
-
-  try {
-    const tab = await getActiveTab();
-    if (!tab?.id) {
-      throw new Error('No active tab found');
-    }
-
-    // Fire-and-forget: we don't await pipeline completion.
-    // The content script handles the long-running work.
-    await sendMessageToTab(tab.id, { type: 'pipeline.start', payload: { source: 'popup' } }, { awaitResponse: false });
-
-    setStatus('Pipeline started. You can watch progress on the page.');
-  } catch (err) {
-    console.error('[Popup] Failed to start pipeline:', err);
-    setStatus(`Error: ${err.message || String(err)}`);
-  } finally {
-    // Re-enable so the user can press again if desired
-    translateBtn.disabled = false;
-  }
-}
-
-async function onProgressClick() {
-  try {
-    statusDiv.textContent = "Fetching progress...";
-
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab?.id) {
-      statusDiv.textContent = "Error: No active tab found";
-      return;
-    }
-
-    // Send message to the content script in that tab
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: "getProgressState"
-    });
-
-    if (response?.success) {
-      statusDiv.textContent = "Progress data retrieved!";
-      displayProgressData(response.data);
-    } else {
-      statusDiv.textContent = "Error: Invalid response from content script";
-    }
-  } catch (error) {
-    statusDiv.textContent = `Error: ${error.message}`;
-    console.error("Failed to get progress:", error);
-  }
-}
-
-function displayProgressData(data) {
-  // Show both sections
-  simpleSection.style.display = "block";
-  rawSection.style.display = "block";
-
-  // Display raw JSON
-  rawJsonDiv.textContent = JSON.stringify(data, null, 2);
-
-  // Display simple formatted version
-  let html = "";
-
-  // Global progress
-  if (data.global) {
-    html += `<strong>Global Progress:</strong><br>`;
-    html += `Progress: ${(data.global.progress * 100).toFixed(1)}%<br>`;
-    html += `Total: ${data.global.total} | Completed: ${data.global.completed} | Remaining: ${data.global.remaining}<br>`;
-    html += `Errors: ${data.global.errors}<br>`;
-    html += `<br>`;
-  }
-
-  // Individual stages
-  html += `<strong>Stages:</strong><br>`;
-  for (const [stageId, stage] of Object.entries(data)) {
-    if (stageId === "global") continue;
-
-    html += `<br><strong>${stage.label || stageId}</strong><br>`;
-    html += `Status: ${stage.done ? "✓ Done" : "In Progress"}<br>`;
-    html += `Completed: ${stage.completed}/${stage.total}`;
-
-    if (!stage.done) {
-      html += ` (${(stage.progress * 100).toFixed(1)}%)<br>`;
-      html += `Speed: ${stage.speed} tasks/sec | ETA: ${stage.eta}s<br>`;
-      html += `Elapsed: ${stage.elapsed}s<br>`;
-    } else {
-      html += `<br>`;
-    }
-
-    if (stage.errorCount > 0) {
-      html += `<span style="color: #d00;">Errors: ${stage.errorCount}</span><br>`;
-    }
-  }
-
-  simpleFormatDiv.innerHTML = html;
-}
-
-// Utils
-function getActiveTab() {
-  return new Promise((resolve, reject) => {
-    try {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const err = chrome.runtime.lastError;
-        if (err) return reject(err);
-        resolve(tabs && tabs[0]);
-      });
-    } catch (e) {
-      reject(e);
+// Entry point
+window.addEventListener("DOMContentLoaded", () => {
+  appRoot = document.getElementById("app");
+  initPopup().catch((err) => {
+    console.error("[popup] init failed", err);
+    if (appRoot) {
+      appRoot.textContent = "Failed to load popup.";
     }
   });
+});
+
+// Listen for async warnings from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "validation.warning" && message.warning) {
+    // Show overlay; continuation is wired in initPopup/refresh
+    if (currentTab?.id) {
+      handleWarningFromContentScript(message.warning).catch((err) =>
+        console.error("[popup] warning handler failed", err),
+      );
+    }
+    sendResponse({ ok: true });
+    return false;
+  }
+});
+
+/**
+ * Main initialization: load API keys, tab, config, pipeline state, then render.
+ */
+async function initPopup() {
+  currentTab = await getActiveTab();
+  await refresh();
 }
 
 /**
- * Sends a message to a specific tab.
- * By default we send and do not wait for a response (popup should not hang).
- * Set opts.awaitResponse = true if you want to await the content script's reply.
+ * Refreshes the view by recomputing UI state from latest data.
  */
-function sendMessageToTab(tabId, message, opts = { awaitResponse: false }) {
-  return new Promise((resolve, reject) => {
+async function refresh() {
+  if (!appRoot) return;
+
+  clearProgressTimer();
+  appRoot.innerHTML = `<h1 class="loading-title">Loading…</h1>`;
+
+  const [apiKeys, config] = await Promise.all([
+    getApiKeys(),
+    getConfigFromDisk(),
+  ]);
+
+  const hasApiKeys = apiKeys && Object.keys(apiKeys).length > 0;
+
+  let siteSupported = false;
+  let pipelineState = null;
+
+  if (currentTab?.id) {
+    // Ask content script if this site is supported
     try {
-      if (opts.awaitResponse) {
-        chrome.tabs.sendMessage(tabId, message, (response) => {
-          const err = chrome.runtime.lastError;
-          if (err) return reject(err);
-          resolve(response);
-        });
-      } else {
-        // Fire-and-forget: provide a no-op callback to surface lastError if it occurs immediately
-        chrome.tabs.sendMessage(tabId, message, () => {
-          const err = chrome.runtime.lastError;
-          if (err) return reject(err);
-          resolve(undefined);
-        });
-      }
-    } catch (e) {
-      reject(e);
+      siteSupported = await querySiteSupported(currentTab.id);
+    } catch (err) {
+      console.warn("[popup] querySiteSupported failed:", err);
+      siteSupported = false; // conservative fallback
     }
-  });
+
+    // And also fetch pipeline state
+    try {
+      pipelineState = await getPipelineState(currentTab.id);
+    } catch {
+      pipelineState = null;
+    }
+  }
+
+  const uiState = computeUiState({ hasApiKeys, siteSupported, pipelineState });
+  currentUiState = uiState;
+
+  const renderContext = {
+    root: appRoot,
+    apiKeys,
+    config,
+    siteSupported,
+    pipelineState,
+    tab: currentTab,
+    popupError: lastPopupError,
+    skipGlossary,
+    onOpenOptions: handleOpenOptions,
+    onTranslate: handleTranslateClick,
+    onShowGlossary: handleShowGlossaryClick,
+    onShowPreview: handleShowPreviewClick,
+    onToggleSkipGlossary: handleToggleSkipGlossary,
+  };
+
+  renderView(uiState, renderContext);
+
+  if (pipelineState?.status === "warning_pending" && pipelineState.warning) {
+    await handleWarningFromContentScript(pipelineState.warning);
+  }
+
+  if (uiState === UiState.IN_PROGRESS && currentTab?.id) {
+    startProgressTimer(currentTab.id);
+  }
 }
 
-function openOptionsPage() {
-  // Modern way (MV3-safe)
-  if (chrome.runtime.openOptionsPage) {
-    chrome.runtime.openOptionsPage();
-  } else {
-    // Fallback, just in case
-    const url = chrome.runtime.getURL('options/options.html');
-    window.open(url, '_blank');
+/**
+ * Renders the appropriate sub-view for the current UI state.
+ */
+function renderView(uiState, context) {
+  const { root, pipelineState } = context;
+
+  if (!root) return;
+
+  switch (uiState) {
+    case UiState.WELCOME:
+      renderWelcomeView(root, {
+        onOpenOptions: context.onOpenOptions,
+      });
+      break;
+
+    case UiState.IDLE_SUPPORTED:
+      renderIdleReadyView(root, {
+        config: context.config,
+        popupError: context.popupError,
+        skipGlossary: context.skipGlossary,
+        onOpenOptions: context.onOpenOptions,
+        onTranslate: () => context.onTranslate(context.tab),
+        onShowGlossary: () => context.onShowGlossary(context.tab),
+        onToggleSkipGlossary: context.onToggleSkipGlossary,
+      });
+      break;
+
+    case UiState.IDLE_UNSUPPORTED:
+      renderIdleUnsupportedView(root, {
+        config: context.config,
+        popupError: context.popupError,
+        skipGlossary: context.skipGlossary,
+        onOpenOptions: context.onOpenOptions,
+        onTranslate: () => context.onTranslate(context.tab),
+        onShowGlossary: () => context.onShowGlossary(context.tab),
+        onShowPreview: () => context.onShowPreview(context.tab),
+        onToggleSkipGlossary: context.onToggleSkipGlossary,
+      });
+      break;
+
+    case UiState.IN_PROGRESS:
+      renderInProgressView(root, {
+        pipelineState: pipelineState,
+      });
+      break;
+
+    case UiState.COMPLETE_SUCCESS:
+      renderCompleteView(root, {
+        kind: "success",
+        pipelineState: pipelineState,
+      });
+      break;
+
+    case UiState.COMPLETE_ERROR:
+      renderCompleteView(root, {
+        kind: "error",
+        pipelineState: pipelineState,
+      });
+      break;
+
+    default:
+      root.textContent = "Unknown state.";
+      break;
   }
+}
+
+/**
+ * Starts polling the content script for pipeline state every second.
+ */
+function startProgressTimer(tabId) {
+  clearProgressTimer();
+
+  progressTimer = setInterval(async () => {
+    try {
+      const pipelineState = await getPipelineState(tabId);
+      const hasApiKeys = true;
+
+      let siteSupported = false;
+      if (currentTab?.id) {
+        try {
+          siteSupported = await querySiteSupported(currentTab.id);
+        } catch {
+          siteSupported = false;
+        }
+      }
+
+      const uiState = computeUiState({
+        hasApiKeys,
+        siteSupported,
+        pipelineState,
+      });
+      currentUiState = uiState;
+
+      renderView(uiState, {
+        root: appRoot,
+        apiKeys: null,
+        config: null,
+        siteSupported,
+        pipelineState,
+        tab: currentTab,
+        popupError: lastPopupError,
+        skipGlossary,
+        onOpenOptions: handleOpenOptions,
+        onTranslate: handleTranslateClick,
+        onShowGlossary: handleShowGlossaryClick,
+        onShowPreview: handleShowPreviewClick,
+        onToggleSkipGlossary: handleToggleSkipGlossary,
+      });
+
+      if (uiState !== UiState.IN_PROGRESS) {
+        clearProgressTimer();
+      }
+    } catch (err) {
+      console.error("[popup] progress polling failed", err);
+      clearProgressTimer();
+    }
+  }, 1000);
+}
+
+function clearProgressTimer() {
+  if (progressTimer != null) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+}
+
+/**
+ * Handles click on "Translate".
+ */
+async function handleTranslateClick(tab) {
+  if (!tab?.id) return;
+  lastPopupError = null;
+
+  try {
+    await startPipeline(tab.id, {
+      source: "popup",
+      overrides: {
+        skipGlossary, // Update set to false if skip glossary toggle enabled
+      },
+    });
+    // The actual state transition will be picked up via polling / refresh.
+    await refresh();
+  } catch (err) {
+    console.error("[popup] failed to start pipeline", err);
+    lastPopupError = err?.message || "Failed to start translation.";
+    await refresh();
+  }
+}
+
+/**
+ * Handles click on "Show Glossary".
+ */
+async function handleShowGlossaryClick(tab) {
+  if (!tab?.id) return;
+  try {
+    await showGlossaryWidget(tab.id);
+  } catch (err) {
+    console.error("[popup] show glossary failed", err);
+  }
+}
+
+/**
+ * Handles click on "Display Preview" (unsupported sites).
+ */
+async function handleShowPreviewClick(tab) {
+  if (!tab?.id) return;
+  try {
+    await showPreview(tab.id);
+  } catch (err) {
+    console.error("[popup] show preview failed", err);
+  }
+}
+
+/**
+ * Handles "Open Options" click.
+ */
+function handleOpenOptions() {
+  openOptionsPage();
+}
+
+/**
+ * Handles toggle of "Skip Glossary Generation/Update".
+ */
+function handleToggleSkipGlossary(checked) {
+  skipGlossary = Boolean(checked);
+}
+
+/**
+ * Displays warning overlay for validation warnings,
+ * and hooks up continue/cancel behavior.
+ */
+async function handleWarningFromContentScript(warning) {
+  if (!appRoot || !currentTab?.id) return;
+
+  showWarningOverlay(appRoot, warning, {
+    onContinue: async () => {
+      try {
+        await continuePipeline(currentTab.id);
+        removeWarningOverlayIfAny();
+        await refresh();
+      } catch (err) {
+        console.error("[popup] continue pipeline failed", err);
+      }
+    },
+    onCancel: async () => {
+      removeWarningOverlayIfAny();
+      // User cancelled; do nothing else. The pipeline stays not started.
+      await refresh();
+    },
+  });
 }
