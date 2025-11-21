@@ -5,11 +5,12 @@
 import { runPipeline } from './pipeline/pipeline.js';
 import { getTranslationConfig, validateConfig } from './config/config.js';
 import { extractText, replaceText, buildGlossaryKeys } from './dom-adapter.js';
-import { getGlossary, saveGlossary } from './glossary.js';
+import { getGlossary, saveGlossary } from './ui/glossary.js';
 import { isSiteSupported } from "../domains/registry.js";
 import { getProgressTracker } from "./progress-tracking.js";
 import { POPUP_MSG_TYPE } from "../common/messaging.js";
-import { openGlossaryEditor } from "./glossary-manager.js";
+import { openGlossaryEditor } from "./ui/glossary-manager.js";
+import { showTextPreview } from "./ui/preview-manager.js";
 
 // --- Lifecycle State Management ---
 const PipelineStatus = {
@@ -113,13 +114,18 @@ if (window.hasLLMTranslatorLoaded) {
       const sourceLang = message.sourceLang || 'ja';
       const targetLang = message.targetLang || 'en';
 
-      console.log(`[Main] Opening glossary for ${sourceLang} -> ${targetLang}`);
-
-      openGlossaryEditor(sourceLang, targetLang).catch(err => {
-        console.error("Failed to open editor", err);
-      });
-
+      openGlossaryEditor(sourceLang, targetLang).catch(err => console.error(err));
       sendResponse({ success: true });
+    }
+
+    if (message.type === POPUP_MSG_TYPE.display_preview) {
+      try {
+        showTextPreview();
+        sendResponse({ success: true });
+      } catch (e) {
+        console.error('Preview failed', e);
+        sendResponse({ success: false, error: e.message });
+      }
     }
 
     return false;

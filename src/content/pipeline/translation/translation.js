@@ -1,4 +1,4 @@
-/**
+note/**
  * Stage 4: Translate text chunks
  */
 import { getPromptBuilder } from "../../prompts/index.js";

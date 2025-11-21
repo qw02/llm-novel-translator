@@ -30,7 +30,7 @@
     </aside>
 
     <main id="tab-container">
-        <!-- Welcome tab -->
+        <!-- Welcome message tab -->
         <section id="tab-welcome" class="tab active">
             <div id="welcome-docs">
                 <h2>Welcome</h2>
@@ -166,7 +166,7 @@
 
             <!-- 1 & 2. Glossary generation + update -->
             <section class="stage" id="stage-glossary">
-                <h3>1 & 2. Glossary Generation and Update</h3>
+                <h3>1 / 2. Glossary Generation and Update</h3>
 
                 <label>
                     <input type="checkbox" id="glossary-enabled">
@@ -355,7 +355,50 @@
 
         <section id="tab-custom-instructions" class="tab" hidden>
             <h2>Custom Instructions</h2>
-            <p>TODO</p>
+
+            <p class="instructions-description">
+                Custom instructions allow you to provide additional context or specific
+                requirements for translations between particular language pairs. These
+                instructions are passed to the translation model to guide its output.
+            </p>
+
+            <div id="custom-instructions-quick-access">
+                <!-- Quick access buttons for existing pairs will be inserted here -->
+            </div>
+
+            <div class="language-pair-selectors">
+                <label>
+                    Source language:
+                    <select id="custom-source-lang"></select>
+                </label>
+                <label>
+                    Target language:
+                    <select id="custom-target-lang"></select>
+                </label>
+            </div>
+
+            <div class="instructions-editor">
+                <label for="custom-instructions-text">
+                    Instructions for this language pair:
+                </label>
+                <textarea
+                        id="custom-instructions-text"
+                        rows="12"
+                        placeholder="Enter custom instructions for this language pair..."
+                ></textarea>
+            </div>
+
+            <div id="custom-instructions-status" class="status-message" aria-live="polite"></div>
+
+            <div class="tab-actions">
+                <div class="actions-left">
+                    <button id="custom-instructions-save" type="button">Save</button>
+                    <button id="custom-instructions-discard" type="button">Discard</button>
+                </div>
+                <div class="actions-right">
+                    <button id="custom-instructions-delete" type="button" class="btn-danger">Delete</button>
+                </div>
+            </div>
         </section>
     </main>
 </div>
@@ -367,6 +410,15 @@
             <button type="button" data-unsaved-action="save">Save</button>
             <button type="button" data-unsaved-action="discard">Discard</button>
             <button type="button" data-unsaved-action="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+<div id="pair-switch-dialog" class="unsaved-dialog" hidden>
+    <div class="unsaved-dialog-content">
+        <p>You have unsaved changes. Discard them and switch to another language pair?</p>
+        <div class="unsaved-dialog-actions">
+            <button type="button" data-pair-action="discard">Discard</button>
+            <button type="button" data-pair-action="cancel">Cancel</button>
         </div>
     </div>
 </div>

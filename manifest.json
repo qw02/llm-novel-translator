@@ -14,8 +14,7 @@
     "https://api.anthropic.com/*",
     "https://api.deepseek.com/*",
     "https://api.x.ai/*",
-    "https://generativelanguage.googleapis.com/*",
-    "http://localhost/*"
+    "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
     "service_worker": "src/background/main.js",

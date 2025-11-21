@@ -23,20 +23,31 @@ export class GlossaryEditor {
    * Initialize and render the editor with data.
    * @param {Object} seriesData
    * @param {Object} globalData
-   * @param {Object} meta - { title: string, subtitle: string }
+   * @param {Object} meta - { title, subtitle, initialTab, hideSeriesTab }
    */
   render(seriesData, globalData, meta) {
-    // Deep copy to prevent mutation before save
     this.seriesData = JSON.parse(JSON.stringify(seriesData || { entries: [] }));
     this.globalData = JSON.parse(JSON.stringify(globalData || { entries: [] }));
     this.meta = meta || this.meta;
 
-    // 1. Inject Styles
+    // 1. Set Initial Tab State
+    if (this.meta.initialTab) {
+      this.activeTab = this.meta.initialTab;
+    } else {
+      // Default fallback
+      this.activeTab = 'series';
+    }
+
+    // 2. Inject Styles (Same as before)
     const styleEl = document.createElement('style');
     styleEl.textContent = this.getStyles();
     this.container.appendChild(styleEl);
 
-    // 2. Build Layout
+    // 3. Determine Tab Visibility
+    const hideSeries = this.meta.hideSeriesTab;
+    const seriesTabStyle = hideSeries ? 'display: none;' : '';
+
+    // 4. Build Layout
     const wrapper = document.createElement('div');
     wrapper.className = 'dict-editor-wrapper';
 
@@ -47,8 +58,11 @@ export class GlossaryEditor {
           <span class="dict-subtitle">${this.meta.subtitle || ''}</span>
         </div>
         <div class="dict-tabs">
-          <button class="dict-tab active" data-tab="series">Series Glossary</button>
-          <button class="dict-tab" data-tab="global">Global Glossary</button>
+          <button class="dict-tab ${this.activeTab === 'series' ? 'active' : ''}" 
+                  data-tab="series" 
+                  style="${seriesTabStyle}">Series Glossary</button>
+          <button class="dict-tab ${this.activeTab === 'global' ? 'active' : ''}" 
+                  data-tab="global">Global Glossary</button>
         </div>
         <div class="dict-editor-controls">
           <input type="text" placeholder="Search..." class="dict-search-input">
@@ -60,30 +74,30 @@ export class GlossaryEditor {
       </div>
       
       <div class="dict-editor-footer">
-        <button class="dict-btn dict-btn-success dict-add-btn">Add Entry</button>
-        <div class="dict-footer-actions">
-          <button class="dict-btn dict-btn-primary dict-save-btn">Save All</button>
-          <button class="dict-btn dict-btn-secondary dict-cancel-btn">Cancel</button>
-        </div>
+         <!-- ... Footer remains same ... -->
+         <button class="dict-btn dict-btn-success dict-add-btn">Add Entry</button>
+         <div class="dict-footer-actions">
+           <button class="dict-btn dict-btn-primary dict-save-btn">Save All</button>
+           <button class="dict-btn dict-btn-secondary dict-cancel-btn">Cancel</button>
+         </div>
       </div>
     `;
 
     this.container.appendChild(wrapper);
 
-    // 3. Bind Elements
+    // ... (Binding elements logic remains the same) ...
     this.elements = {
       content: wrapper.querySelector('.dict-editor-content'),
       tabs: wrapper.querySelectorAll('.dict-tab'),
+      // ... other bindings ...
       searchInput: wrapper.querySelector('.dict-search-input'),
       addBtn: wrapper.querySelector('.dict-add-btn'),
       saveBtn: wrapper.querySelector('.dict-save-btn'),
       cancelBtn: wrapper.querySelector('.dict-cancel-btn'),
     };
 
-    // 4. Initial Draw
+    // Initial Draw
     this.refreshEntries();
-
-    // 5. Event Listeners
     this.attachListeners();
   }
 

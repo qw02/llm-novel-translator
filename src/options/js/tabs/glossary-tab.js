@@ -79,9 +79,9 @@ class GlossaryTabController {
 
     html += `<div class="tree-section"><h4>Series Glossaries</h4>`;
     for (const [domain, seriesMap] of Object.entries(domainMap)) {
-      html += `<​details><summary>${domain}</summary><div class="tree-indent">`;
+      html += `<details><summary>${domain}</summary><div class="tree-indent">`;
       for (const [series, variants] of Object.entries(seriesMap)) {
-        html += `<​details><summary>${series}</summary><ul class="tree-indent">`;
+        html += `<details><summary>${series}</summary><ul class="tree-indent">`;
         variants.forEach(v => {
           html += `
             <li>
@@ -89,9 +89,9 @@ class GlossaryTabController {
               <a href="#" class="delete-link" data-key="${v.originalKey}" style="color:red; margin-left:10px; font-size: 0.8em;">[Del]</a>
             </li>`;
         });
-        html += `</ul><​/details>`;
+        html += `</ul></details>`;
       }
-      html += `</div><​/details>`;
+      html += `</div></details>`;
     }
     html += `</div>`;
 
@@ -117,35 +117,39 @@ class GlossaryTabController {
   }
 
   async openEditor(key) {
-    const meta = GlossaryKeyService.parseKey(key); // Re-parse to get details
+    const meta = GlossaryKeyService.parseKey(key);
 
-    // NOTE: In Options page, we treat "Series" and "Global" slightly differently.
-    // If the user clicks a Series key, we might want to load the corresponding Global key too,
-    // just like the content script does.
+    // Check if we are in "Global Only" mode
+    const isGlobalOnly = meta.type === 'global';
 
     // Construct keys
     const seriesKey = key;
     const globalKey = GlossaryKeyService.buildGlobalKey(meta.sourceLang, meta.targetLang);
 
-    const [seriesData, globalData] = await Promise.all([
-      GlossaryRepository.load(seriesKey),
-      GlossaryRepository.load(globalKey)
-    ]);
+
+    // If Global Only, we don't need to load a series key,
+    // but we need to load the global data.
+    // NOTE: If isGlobalOnly is true, 'key' IS the globalKey.
+    const loadPromises = [];
+
+    if (isGlobalOnly) {
+      loadPromises.push(Promise.resolve({ entries: [] })); // Empty series data
+      loadPromises.push(GlossaryRepository.load(key));     // Load the global key user clicked
+    } else {
+      loadPromises.push(GlossaryRepository.load(seriesKey));
+      loadPromises.push(GlossaryRepository.load(globalKey));
+    }
+
+    const [seriesData, globalData] = await Promise.all(loadPromises);
 
     const mountPoint = this.root.querySelector('#glossary-editor-mount');
-    mountPoint.innerHTML = ''; // clear previous
+    mountPoint.innerHTML = '';
 
     const editor = new GlossaryEditor(mountPoint, {
       onSave: async (newSeries, newGlobal) => {
-        // In options page, we save what we loaded.
-        // Note: If the user selected a "Global" key initially, seriesKey might be the global key.
-        // We should handle that logic.
-
-        if (meta.type === 'global') {
-          // If we opened a global file directly, seriesData is actually the global file
-          // and we likely don't have a "series" file to save.
-          // To keep the UI generic, let's just save based on the keys we derived.
-          await GlossaryRepository.save(globalKey, newGlobal);
+        if (isGlobalOnly) {
+          // Only save the global part
+          await GlossaryRepository.save(key, newGlobal);
         } else {
           await GlossaryRepository.save(seriesKey, newSeries);
           await GlossaryRepository.save(globalKey, newGlobal);
@@ -153,16 +157,21 @@ class GlossaryTabController {
       },
       onClose: () => {
         this.toggleView('explorer');
-      }
+      },
     });
 
+    // RENDER with the new flags
     editor.render(
-      meta.type === 'global' ? { entries: [] } : seriesData, // Hide series data if editing global only
-      meta.type === 'global' ? seriesData : globalData, // If global mode, the loaded data is put here
+      seriesData,
+      globalData,
       {
-        title: meta.type === 'global' ? 'Global Glossary' : 'Series Glossary',
-        subtitle: `${meta.sourceLang} -> ${meta.targetLang}`
-      }
+        title: isGlobalOnly ? 'Global Glossary Editor' : 'Series Glossary Editor',
+        subtitle: `${meta.sourceLang} -> ${meta.targetLang}`,
+
+        // FIX: Set active tab and hide series tab if not needed
+        initialTab: isGlobalOnly ? 'global' : 'series',
+        hideSeriesTab: isGlobalOnly,
+      },
     );
 
     this.toggleView('editor');
