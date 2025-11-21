@@ -1,0 +1,98 @@
+/* Glossary Explorer Styles */
+.glossary-view {
+    margin-top: 20px;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.glossary-actions {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.glossary-tree {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    font-family: monospace; /* Helps align the hierarchy */
+}
+
+.tree-section {
+    margin-bottom: 20px;
+}
+
+.tree-section h4 {
+    margin: 0 0 10px 0;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.tree-indent {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 1px solid #eee;
+}
+
+/* Details/Summary styling for the tree */
+details > summary {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    list-style: none; /* Hide default triangle in some browsers if desired, or keep it */
+    color: #333;
+    font-weight: 600;
+}
+
+details > summary:hover {
+    background-color: #eaeaea;
+}
+
+details[open] > summary {
+    margin-bottom: 5px;
+}
+
+/* List items in the tree */
+.glossary-tree ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.glossary-tree li {
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Links */
+.edit-link {
+    text-decoration: none;
+    color: #007bff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.edit-link:hover {
+    background: #e7f1ff;
+    text-decoration: underline;
+}
+
+.delete-link {
+    opacity: 0.6;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.delete-link:hover {
+    opacity: 1;
+    font-weight: bold;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

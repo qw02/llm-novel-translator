@@ -139,15 +139,19 @@ export async function continuePipeline(tabId) {
 /**
  * Asks content script to show the glossary widget.
  */
-export async function showGlossaryWidget(tabId) {
-  await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.glossary_showWidget });
+export async function showGlossaryWidget(tabId, sourceLang, targetLang) {
+  await sendMessageToTab(tabId, {
+    type: POPUP_MSG_TYPE.glossary_showWidget,
+    sourceLang,
+    targetLang
+  });
 }
 
 /**
  * Asks content script to show a text preview (for unsupported sites).
  */
 export async function showPreview(tabId) {
-  await sendMessageToTab(tabId, { type: "preview.show" });
+  await sendMessageToTab(tabId, { type: POPUP_MSG_TYPE.display_preview });
 }
 
 /**

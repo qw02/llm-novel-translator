@@ -379,8 +379,12 @@ async function handleTranslateClick(tab) {
  */
 async function handleShowGlossaryClick(tab) {
   if (!tab?.id) return;
+
+  const src = currentSourceLang || currentConfig?.sourceLang || "ja";
+  const tgt = currentTargetLang || currentConfig?.targetLang || "en";
+
   try {
-    await showGlossaryWidget(tab.id);
+    await showGlossaryWidget(tab.id, src, tgt);
   } catch (err) {
     console.error("[popup] show glossary failed", err);
   }

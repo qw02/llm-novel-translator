@@ -1,5 +1,6 @@
 import { apiKeysTabController } from './tabs/api-keys.js';
 import { modelsTabController } from './tabs/models.js';
+import { glossaryTabController } from "./tabs/glossary-tab.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebarButtons = Array.from(
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabControllers = {
     'api-keys': apiKeysTabController,
     'models': modelsTabController,
-    // 'glossary': glossaryTabController,
+    'glossary': glossaryTabController,
     // 'custom-instructions': customInstructionsTabController,
   };
 

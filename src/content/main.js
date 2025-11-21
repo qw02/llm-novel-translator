@@ -9,6 +9,7 @@ import { getGlossary, saveGlossary } from './glossary.js';
 import { isSiteSupported } from "../domains/registry.js";
 import { getProgressTracker } from "./progress-tracking.js";
 import { POPUP_MSG_TYPE } from "../common/messaging.js";
+import { openGlossaryEditor } from "./glossary-manager.js";
 
 // --- Lifecycle State Management ---
 const PipelineStatus = {
@@ -107,6 +108,21 @@ if (window.hasLLMTranslatorLoaded) {
       }
       return false;
     }
+
+    if (message.type === POPUP_MSG_TYPE.glossary_showWidget) {
+      const sourceLang = message.sourceLang || 'ja';
+      const targetLang = message.targetLang || 'en';
+
+      console.log(`[Main] Opening glossary for ${sourceLang} -> ${targetLang}`);
+
+      openGlossaryEditor(sourceLang, targetLang).catch(err => {
+        console.error("Failed to open editor", err);
+      });
+
+      sendResponse({ success: true });
+    }
+
+    return false;
   });
 }
 

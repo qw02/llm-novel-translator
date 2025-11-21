@@ -16,4 +16,5 @@ export const POPUP_MSG_TYPE = {
   pipeline_start: 'pipeline.start',
   pipeline_continue: 'pipeline.continue',
   glossary_showWidget: 'glossary.showWidget',
+  display_preview: 'preview.show'
 };
