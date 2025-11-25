@@ -71,44 +71,20 @@ export const PROVIDER_CONFIGS = {
     },
   },
 
-  anthropic: {
-    endpoint: 'https://api.anthropic.com/v1/messages',
-    models: [
-      {
-        id: '2-1',
-        model: 'claude-3-5-sonnet-20241022',
-        label: 'Claude 3.5 Sonnet',
-        tokens: 8192,
-      },
-      {
-        id: '2-2',
-        model: 'claude-3-5-haiku-20241022',
-        label: 'Claude 3.5 Haiku',
-      },
-    ],
-    limits: {
-      stage1: 'all',
-      stage2: ['2-2'],
-      stage3a: ['2-2'],
-      stage3b: 'all',
-      stage4: 'all',
-    },
-  },
-
   deepseek: {
     endpoint: 'https://api.deepseek.com/v1',
     models: [
       {
         id: '4-1',
         model: 'deepseek-chat',
-        label: 'DeepSeek V3.2 Exp (R: Off)'
+        label: 'DeepSeek V3.2 Exp (Non-reasoning)'
       },
-      // {
-      //   id: '4-3',
-      //   model: 'deepseek-reasoner',
-      //   label: 'DeepSeek V3.2 Exp (R: On)',
-      //   tokens: 8192,
-      // },
+      {
+        id: '4-2',
+        model: 'deepseek-reasoner',
+        label: 'DeepSeek V3.2 Exp (Reasoning)',
+        tokens: 8192,
+      },
     ],
     limits: {
       stage1: 'all',
@@ -176,33 +152,24 @@ export const PROVIDER_CONFIGS = {
     models: [
       {
         id: '5-1',
-        model: 'grok-2-latest',
-        label: 'Grok 2',
+        model: 'grok-4-1-fast-reasoning',
+        label: 'Grok 4.1 Fast (Reasoning)',
       },
       {
         id: '5-2',
-        model: 'grok-2-mini-latest',
-        label: 'Grok 2 Mini',
+        model: 'grok-4-1-fast-non-reasoning',
+        label: 'Grok 4.1 Fast (Non-reasoning)',
+      },
+      {
+        id: '5-3',
+        model: 'grok-4-0709',
+        label: 'Grok 4',
       },
     ],
     limits: {
       stage1: 'all',
       stage2: ['5-2'],
       stage3a: ['5-2'],
-      stage3b: 'all',
-      stage4: 'all',
-    },
-  },
-
-  ollama: {
-    endpoint: 'http://localhost:11434/api/chat',
-    models: [
-      // Empty - user must configure custom models
-    ],
-    limits: {
-      stage1: 'all',
-      stage2: 'all',
-      stage3a: 'all',
       stage3b: 'all',
       stage4: 'all',
     },
@@ -236,7 +203,5 @@ export const PROVIDER_TYPE_MAP = {
   openrouter: 'openai',      // Uses OpenAI-compatible SDK
   deepseek: 'openai',        // Uses OpenAI-compatible SDK
   xai: 'openai',             // Uses OpenAI-compatible SDK
-  anthropic: 'anthropic',
   google: 'google',
-  ollama: 'ollama',
 };

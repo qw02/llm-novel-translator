@@ -1,7 +1,6 @@
 import { buildGlossaryKeys } from '../dom-adapter.js'; // Existing adapter
 import { GlossaryRepository } from '../../common/glossary-store.js';
 import { GlossaryEditor } from '../../common/glossary-ui.js';
-import { LANGS } from "../../common/languages.js";
 import { createShadowOverlay } from './ui-overlay-helper.js';
 
 let activeGlossaryClose = null;

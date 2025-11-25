@@ -1,6 +1,5 @@
 const promptCache = new Map();
 
-// Eagerly load all prompt modules
 const promptModules = import.meta.glob(
   ['./**/*.js', '!./**/__tests__/**', '!./**/*.test.js'],
   { eager: true },
@@ -56,7 +55,6 @@ export async function getPromptBuilder(langPair, stage) {
     throw new Error(`[Prompts] Invalid builder for ${langPair}/${stage}: must export default { build(...args) }`);
   }
 
-  console.log(`[Prompts] Loaded ${stage} for ${langPair} (level: ${fallbackLevel})`);
   promptCache.set(cacheKey, builder);
   return builder;
 }

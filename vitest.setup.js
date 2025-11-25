@@ -23,7 +23,6 @@ chromeMock.storage = {
     get: vi.fn((keys) => {
       return new Promise((resolve) => {
         // Mock implementation: return empty object or whatever is set
-        // For now, just return empty object or null for keys
         const result = {};
         if (typeof keys === 'string') {
           result[keys] = null;

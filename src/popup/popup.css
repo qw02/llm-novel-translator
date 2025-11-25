@@ -337,3 +337,67 @@ body {
     background: #ffffff;
     min-width: 120px;
 }
+
+/* Container for the markdown content */
+#welcome-docs {
+    max-width: 800px;
+    line-height: 1.6;
+    color: #333;
+}
+
+#welcome-docs h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+#welcome-docs h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+#welcome-docs p {
+    margin-bottom: 1rem;
+}
+
+#welcome-docs ul, #welcome-docs ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+#welcome-docs li {
+    margin-bottom: 0.25rem;
+}
+
+#welcome-docs pre {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+#welcome-docs code {
+    background: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+#welcome-docs blockquote {
+    border-left: 4px solid #ddd;
+    margin-left: 0;
+    padding-left: 1rem;
+    color: #666;
+}
+
+#welcome-docs a {
+    color: #2196F3;
+    text-decoration: none;
+}
+
+#welcome-docs a:hover {
+    text-decoration: underline;
+}

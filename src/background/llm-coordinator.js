@@ -6,6 +6,7 @@ import { OpenAIProvider } from './providers/openai-provider.js';
 import { DeepSeekProvider } from './providers/deepseek-provider.js';
 import { GoogleProvider } from './providers/google-provider.js';
 import { ConfigManager } from "./config/config-manager.js";
+import { XaiProvider } from "./providers/xai-provider.js";
 
 /**
  * Registry mapping provider types to their implementation classes.
@@ -16,6 +17,7 @@ const PROVIDER_REGISTRY = {
   openai: OpenAIProvider,
   deepseek: DeepSeekProvider,
   google: GoogleProvider,
+  xai: XaiProvider,
 };
 
 /**
@@ -42,8 +44,6 @@ export class LLMCoordinator {
 
     // Config manager for multi-source resolution
     this.configManager = new ConfigManager();
-
-    console.log('[LLMCoordinator] Initialized with providers:', Object.keys(PROVIDER_REGISTRY));
   }
 
   /**

@@ -1,3 +1,5 @@
+// ./options/js/tabs/custom-instructions.js
+
 import { LANGS } from '../../../common/languages.js';
 
 // Storage key
@@ -41,6 +43,9 @@ export class CustomInstructionsTabController {
     // Pending pair switch (when user clicks quick access or changes selectors with unsaved changes)
     this.pendingPairKey = null;
 
+    // Flag to prevent recursive selector changes during swaps
+    this.isSwapping = false;
+
     this.isInitialized = false;
     this.isDirty = false;
   }
@@ -73,11 +78,11 @@ export class CustomInstructionsTabController {
   attachListeners() {
     // Language selector changes
     this.sourceLangSelect.addEventListener('change', () => {
-      this.onLanguageSelectorChange();
+      this.onLanguageSelectorChange('source');
     });
 
     this.targetLangSelect.addEventListener('change', () => {
-      this.onLanguageSelectorChange();
+      this.onLanguageSelectorChange('target');
     });
 
     // Textarea changes
@@ -142,14 +147,15 @@ export class CustomInstructionsTabController {
 
       this.renderQuickAccessButtons();
 
-      // Load the first available pair, or default to first language pair
+      // Load the first available pair, or default to first two languages
       const pairs = Object.keys(this.allInstructions);
       if (pairs.length > 0) {
         this.loadPair(pairs[0], false);
       } else {
-        // No saved pairs yet, default to first combo
-        const defaultSource = this.sourceLangSelect.value;
-        const defaultTarget = this.targetLangSelect.value;
+        // No saved pairs yet, default to first two languages
+        const languages = getLanguageList();
+        const defaultSource = languages[0].code;
+        const defaultTarget = languages[1].code;
         const defaultPairKey = `${defaultSource}_${defaultTarget}`;
         this.loadPair(defaultPairKey, false);
       }
@@ -199,10 +205,42 @@ export class CustomInstructionsTabController {
     });
   }
 
-  onLanguageSelectorChange() {
-    const source = this.sourceLangSelect.value;
-    const target = this.targetLangSelect.value;
-    const pairKey = `${source}_${target}`;
+  onLanguageSelectorChange(changedSelector) {
+    // Prevent recursive changes during swap
+    if (this.isSwapping) return;
+
+    const newSource = this.sourceLangSelect.value;
+    const newTarget = this.targetLangSelect.value;
+
+    // Check if source and target are now the same
+    if (newSource === newTarget) {
+      // Auto-swap logic
+      this.isSwapping = true;
+
+      if (changedSelector === 'source') {
+        // User changed source to match target, so swap target to old source
+        const [oldSource, oldTarget] = this.currentPairKey.split('_');
+        this.targetLangSelect.value = oldSource;
+      } else {
+        // User changed target to match source, so swap source to old target
+        const [oldSource, oldTarget] = this.currentPairKey.split('_');
+        this.sourceLangSelect.value = oldTarget;
+      }
+
+      this.isSwapping = false;
+
+      // Now get the swapped pair
+      const swappedSource = this.sourceLangSelect.value;
+      const swappedTarget = this.targetLangSelect.value;
+      const swappedPairKey = `${swappedSource}_${swappedTarget}`;
+
+      // Attempt to switch to the swapped pair
+      this.attemptPairSwitch(swappedPairKey);
+      return;
+    }
+
+    // Normal case: different languages selected
+    const pairKey = `${newSource}_${newTarget}`;
 
     if (pairKey === this.currentPairKey) {
       // No change
@@ -274,11 +312,20 @@ export class CustomInstructionsTabController {
 
   async save() {
     const pairKey = this.currentPairKey;
+    const source = this.sourceLangSelect.value;
+    const target = this.targetLangSelect.value;
+
+    // Validation: prevent same source and target
+    if (source === target) {
+      this.setStatus('Error: Source and target languages must be different.', 'error');
+      throw new Error('Cannot save custom instructions: source and target languages are the same');
+    }
+
     const text = this.currentText.trim();
 
     // Confirmation dialog
-    const sourceName = LANGS[this.sourceLangSelect.value] || this.sourceLangSelect.value;
-    const targetName = LANGS[this.targetLangSelect.value] || this.targetLangSelect.value;
+    const sourceName = LANGS[source] || source;
+    const targetName = LANGS[target] || target;
     const confirmed = confirm(
       `Save custom instructions for ${sourceName} → ${targetName}?`
     );

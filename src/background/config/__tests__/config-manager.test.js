@@ -1,6 +1,8 @@
+vi.mock('../../utils/api-key-manager.js');
+
+import { getAllApiKeys } from "../../utils/api-key-manager.js";
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ConfigManager } from '../config-manager.js';
-import * as ApiKeyManager from '../../utils/api-key-manager.js';
 import { PROVIDER_CONFIGS } from '../defaults.js';
 
 // Mock ApiKeyManager
@@ -19,8 +21,10 @@ describe('ConfigManager', () => {
 
     describe('resolveConfig', () => {
         it('should resolve hardcoded model config', async () => {
-            const llmId = '101-1'; // DeepSeek model from defaults
+            const llmId = '1-1'; // DeepSeek model from defaults
             const customParams = { temperature: 0.9 };
+
+            getAllApiKeys.mockResolvedValue({});
 
             // Mock user params
             chrome.storage.local.get.mockResolvedValue({ userParams: {} });
@@ -29,7 +33,7 @@ describe('ConfigManager', () => {
 
             expect(config.providerType).toBe('openrouter');
             expect(config.endpoint).toBe(PROVIDER_CONFIGS.openrouter.endpoint);
-            expect(config.params.model).toBe('deepseek/deepseek-v3.2-exp');
+            expect(config.params.model).toBe('moonshotai/kimi-k2-0905');
             expect(config.params.temperature).toBe(0.9);
         });
 
@@ -63,7 +67,7 @@ describe('ConfigManager', () => {
 
         it('should include cached models if showAll is true', async () => {
             // Mock API keys to simulate available providers
-            ApiKeyManager.getAllApiKeys.mockResolvedValue({ openai: 'sk-key' });
+            getAllApiKeys.mockResolvedValue({ openai: 'sk-key' });
 
             // Mock cached models
             const cachedModels = [{ id: 'cached-gpt', model: 'gpt-cached', label: 'Cached GPT' }];
@@ -82,7 +86,7 @@ describe('ConfigManager', () => {
 
     describe('refreshModelList', () => {
         it('should skip providers without API keys', async () => {
-            ApiKeyManager.getAllApiKeys.mockResolvedValue({}); // No keys
+            getAllApiKeys.mockResolvedValue({}); // No keys
 
             const mockProviderClass = vi.fn();
             const providerRegistry = { openai: mockProviderClass };

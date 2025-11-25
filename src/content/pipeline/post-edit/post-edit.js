@@ -23,13 +23,10 @@ import { PostEditProcessor } from "./edit-processor.js";
  * @returns {Promise<Array>} Texts with post-edited translations and debugging info
  */
 export async function postEditText(config, translatedTexts, translationMetadata) {
-  console.log('[PostEdit] Starting post-editing stage');
-
   // Filter to only successful translations
   const validMetadata = translationMetadata.filter(meta => meta.success);
 
   if (validMetadata.length === 0) {
-    console.log('[PostEdit] No successful translations to post-edit');
     return translatedTexts;
   }
 

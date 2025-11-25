@@ -10,8 +10,6 @@ import { translateText } from "./translation/translation.js";
 import { postEditText } from "./post-edit/post-edit.js";
 
 export async function runPipeline(texts, glossary, config) {
-  console.log('[Pipeline] Starting translation pipeline');
-
   const progressTracker = getProgressTracker();
 
   try {
@@ -26,10 +24,8 @@ export async function runPipeline(texts, glossary, config) {
 
     // Stage 3: Text Splitting
     const intervals = await segmentText(config, texts);
-    console.log(`[Pipeline] Using intervals: ${JSON.stringify(intervals)}`);
 
     // Stage 4: Text Translation
-    console.log('[Pipeline] Stage 4: Text Translation');
     const { translatedTexts, translationMetadata } = await translateText(config, texts, updatedGlossary ?? glossary, intervals);
 
     // If the post-edit step is not run, return it without modification
@@ -37,11 +33,9 @@ export async function runPipeline(texts, glossary, config) {
 
     // Stage 5: Post Editing
     if (config.postEdit) {
-      console.log('[Pipeline] Stage 5: Post Editing');
       finalTranslations = await postEditText(config, translatedTexts, translationMetadata);
     }
 
-    console.log('[Pipeline] Pipeline completed successfully');
     return { translatedText: finalTranslations, glossary: updatedGlossary ?? glossary }
 
   } catch (error) {

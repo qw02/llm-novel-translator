@@ -1,7 +1,12 @@
 import { DomainAdapter } from './DomainAdapter.js';
+
+// For dev testing only
 import { LocalFileTestAdapter } from './sites/local-file-test.js';
-import { KakuyomuAdapter } from "./sites/kakuyomu.js";
+
 import { FallbackGenericAdapter } from './sites/fallback-generic.js';
+
+import { KakuyomuAdapter } from "./sites/kakuyomu.js";
+import { SyosetuAdapter } from "./sites/syosetu.js";
 
 /**
  * Simple wildcard matcher for URL patterns used by domain adapters.
@@ -34,7 +39,8 @@ export function urlMatchesPattern(url, pattern) {
  */
 const ADAPTER_CLASSES = [
   LocalFileTestAdapter,
-  KakuyomuAdapter
+  KakuyomuAdapter,
+  SyosetuAdapter,
 ];
 
 /**

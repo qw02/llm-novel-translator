@@ -1,7 +1,6 @@
 const API_KEY_PROVIDERS = [
   'openrouter',
   'openai',
-  'anthropic',
   'deepseek',
   'google',
   'xai'

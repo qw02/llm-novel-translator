@@ -7,13 +7,12 @@
  * {
  *   api_keys: {
  *     openai: 'sk-...',
- *     anthropic: 'sk-ant-...',
  *     google: '...',
  *     ...
  *   }
  * }
  *
- * @param {string} provider - The provider name (e.g., 'openai', 'anthropic')
+ * @param {string} provider - The provider name (e.g., 'openai', 'deepseek')
  * @returns {Promise<string>} The API key
  * @throws {Error} If the API key is not found
  */

@@ -142,9 +142,9 @@ export class DomainAdapter {
   }
 
   /**
-   * Write translated text back into the page.
+   * Write translated text back into the page, using unique classes set by extractor
    *
-   * This method is fully domain-specific. It may:
+   * Can be overridden by domain specific logic. It may:
    *  - Replace text content in-place.
    *  - Insert new elements and leave the original untouched.
    *  - Ignore showOriginal for sites that do not support it.
@@ -156,16 +156,24 @@ export class DomainAdapter {
    *  - Every item corresponds to a ParagraphData returned by extractText().
    *  - item.translatedText is present and valid.
    *
-   * Adapters therefore do not need to implement any fallback behaviour
-   * for missing translatedText; that situation should be treated as an error.
-   *
-   * @abstract
    * @param {import('./DomainAdapter.js').TranslatedParagraph[]} items
    * @param {import('./DomainAdapter.js').DomainReplaceConfig} [config]
    * @returns {void}
    */
   replaceText(items, config) {
-    throw new Error('DomainAdapter.replaceText() must be implemented by a subclass');
+    for (const item of items) {
+      if (!item.translatedText) {
+        continue
+      }
+
+      const selector = '.' + CSS.escape(item.id);
+      const el = document.querySelector(selector);
+      if (!el) {
+        continue;
+      }
+
+      el.textContent = item.translatedText;
+    }
   }
 
   /**

@@ -1,5 +1,5 @@
 /**
- * Entry point for content script - receives messages from popup and coordinates everything
+ * Entry point for content script
  */
 
 import { runPipeline } from './pipeline/pipeline.js';
@@ -19,7 +19,7 @@ const PipelineStatus = {
   WARNING_PENDING: 'WARNING_PENDING',
   RUNNING: 'RUNNING',
   COMPLETE_SUCCESS: 'COMPLETE_SUCCESS',
-  COMPLETE_ERROR: 'COMPLETE_ERROR'
+  COMPLETE_ERROR: 'COMPLETE_ERROR',
 };
 
 // The master state object
@@ -27,16 +27,15 @@ const pipelineContext = {
   status: PipelineStatus.IDLE,
   error: null,   // For hard errors
   warning: null, // For validation warnings
-  startTime: null
+  startTime: null,
 };
 
+// Temp data store while waiting for the confirmation signal to continue from popup
 let pendingContext = null;
 
 // Check if the global flag exists. If it does, we stop immediately.
-if (window.hasLLMTranslatorLoaded) {
-  console.log('[Main] Content script is already active. Skipping re-initialization.');
-} else {
-  // Mark as loaded immediately
+// Popup should not attempt load, but just in case.
+if (!window.hasLLMTranslatorLoaded) {
   window.hasLLMTranslatorLoaded = true;
   console.log('[Main] Content script loaded and ready.');
 
@@ -63,7 +62,7 @@ if (window.hasLLMTranslatorLoaded) {
           sendResponse({ ok: false, error: error.message });
         });
 
-      return true; // Keep channel open for async response
+      return true;
     }
 
     // --- 2. Continue Request (User confirmed warning) ---
@@ -87,7 +86,7 @@ if (window.hasLLMTranslatorLoaded) {
 
     if (message.type === POPUP_MSG_TYPE.pipeline_getState) {
       sendResponse({ success: true, state: pipelineContext });
-      return false; // Synchronous response
+      return false;
     }
 
     if (message.type === POPUP_MSG_TYPE.get_progress_state) {
@@ -102,7 +101,7 @@ if (window.hasLLMTranslatorLoaded) {
 
     if (message.type === POPUP_MSG_TYPE.site_supported) {
       try {
-        const supported = isSiteSupported(); // Use current loc if url not provided
+        const supported = isSiteSupported();
         sendResponse({ ok: true, supported });
       } catch (err) {
         sendResponse({ ok: false, error: err.message });
@@ -142,10 +141,7 @@ async function handlePipelineStart(payload) {
   const extractedText = extractText();
 
   // Step 2: Get Config (applying any overrides from popup, e.g. skipGlossary)
-  console.log('[Main] Step 2: Aggregating configuration...');
   const config = await getTranslationConfig(payload?.overrides);
-  console.log("Config loaded");
-  console.log(config);
 
   // Step 3: Validation
   const validation = await validateConfig(config, extractedText);
@@ -184,26 +180,28 @@ async function handlePipelineStart(payload) {
  * Start translation pipeline
  */
 async function executePipelineCore(extractedText, config) {
+  // Enable warning listener
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
   try {
     pipelineContext.status = PipelineStatus.RUNNING;
     pipelineContext.error = null;
     pipelineContext.warning = null;
     pendingContext = null;
 
-    // Read in glossary
+    // Read in glossary from disk
     const glossaryStorageKeys = buildGlossaryKeys(config.sourceLang, config.targetLang);
     const glossary = await getGlossary(glossaryStorageKeys.seriesKey);
 
     // console.log('@@ DEBUG Skipping pipeline logic in `main.js`');
+    // console.log(extractedText)
     // return;
 
-    // --- Run the Pipeline ---
     const { translatedText, glossary: updatedGlossary } = await runPipeline(extractedText, glossary, config);
 
-    // Save glossary
+    // Save updated glossary (if enabled) to disk
     await saveGlossary(glossaryStorageKeys.seriesKey, updatedGlossary);
 
-    // Replace Text
     replaceText(translatedText);
 
     pipelineContext.status = PipelineStatus.COMPLETE_SUCCESS;
@@ -212,5 +210,15 @@ async function executePipelineCore(extractedText, config) {
     pipelineContext.error = { message: err.message };
     console.error('[Main] Error in pipeline execution:', error);
     throw error;
+  } finally {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
   }
 }
+
+// Emit warning for tab close when pipeline is running
+const handleBeforeUnload = (event) => {
+  event.preventDefault();
+  // Chrome requires returnValue to be set.
+  event.returnValue = '';
+  return '';
+};

@@ -16,14 +16,13 @@
     "@types/chrome": "^0.1.28",
     "concurrently": "^9.2.1",
     "glob": "11.1.0",
+    "marked": "^17.0.1",
     "vite": "^7.1.7",
     "vitest": "^4.0.8"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.68.0",
     "@google/genai": "^1.29.0",
     "franc": "^6.2.0",
-    "ollama": "^0.6.2",
     "openai": "^6.8.1",
     "p-queue": "^9.0.0"
   }

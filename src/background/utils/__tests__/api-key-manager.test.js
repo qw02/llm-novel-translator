@@ -40,7 +40,7 @@ describe('api-key-manager', () => {
 
     describe('getAllApiKeys', () => {
         it('should return all stored api keys', async () => {
-            const mockKeys = { openai: 'sk-key-1', anthropic: 'sk-key-2' };
+            const mockKeys = { openai: 'sk-key-1', deepseek: 'sk-key-2' };
             chrome.storage.local.get.mockResolvedValue({ api_keys: mockKeys });
 
             const keys = await getAllApiKeys();

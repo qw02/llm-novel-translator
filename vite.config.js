@@ -1,6 +1,40 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { copyFileSync } from 'fs';
+import { marked } from 'marked';
+
+// Custom Markdown Plugin
+function markdownPlugin() {
+  return {
+    name: 'markdown-loader',
+    transform(code, id) {
+      if (!id.endsWith('.md')) return null;
+
+      // Configure renderer to handle links
+      const renderer = new marked.Renderer();
+
+      // Override link rendering
+      renderer.link = function({ href, title, text }) {
+        // Check if external (starts with http or https)
+        const isExternal = /^https?:\/\//.test(href);
+
+        if (isExternal) {
+          return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${title || ''}">${text}</a>`;
+        }
+
+        // Internal links (anchors)
+        return `<a href="${href}" title="${title || ''}">${text}</a>`;
+      };
+
+      // Parse the markdown
+      const html = marked.parse(code, { renderer });
+
+      // Export as a JS string
+      return `export default ${JSON.stringify(html)};`;
+    },
+  };
+}
+
 
 export default defineConfig({
   build: {
@@ -22,6 +56,7 @@ export default defineConfig({
     minify: false,
   },
   plugins: [
+    markdownPlugin(),
     {
       name: 'copy-manifest',
       closeBundle() {

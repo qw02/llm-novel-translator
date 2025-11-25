@@ -55,11 +55,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     // Attempt to send a "ping" message to see if the script is already there.
     // If the script isn't there, this will throw an error, which we catch to trigger injection.
     await chrome.tabs.sendMessage(tab.id, { type: POPUP_MSG_TYPE.ping });
-    console.log("Content script already loaded.");
   } catch (error) {
     // If we land here, the script hasn't been injected yet.
-    console.log("Injecting content script...");
-
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['src/content/main.js']

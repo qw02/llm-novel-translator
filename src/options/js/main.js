@@ -2,6 +2,7 @@ import { apiKeysTabController } from './tabs/api-keys.js';
 import { modelsTabController } from './tabs/models.js';
 import { glossaryTabController } from "./tabs/glossary-tab.js";
 import { customInstructionsTabController } from "./tabs/custom-instructions.js";
+import { welcomeTabController } from './tabs/welcome.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebarButtons = Array.from(
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const unsavedDialog = document.getElementById('unsaved-dialog');
 
   const tabControllers = {
+    'welcome': welcomeTabController,
     'api-keys': apiKeysTabController,
     'models': modelsTabController,
     'glossary': glossaryTabController,
@@ -139,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   showTab('welcome');
+  void onTabShown('welcome');
   setupUnsavedDialogHandlers();
 
   window.addEventListener('beforeunload', (event) => {

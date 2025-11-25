@@ -110,7 +110,6 @@ describe('ModelRegistry', () => {
         it('should clear all model caches', async () => {
             chrome.storage.local.get.mockResolvedValue({
                 model_cache_openai: [],
-                model_cache_anthropic: [],
                 other_key: 'value'
             });
 
@@ -118,7 +117,7 @@ describe('ModelRegistry', () => {
 
             await registry.clearAllCaches();
 
-            expect(chrome.storage.local.remove).toHaveBeenCalledWith(['model_cache_openai', 'model_cache_anthropic']);
+            expect(chrome.storage.local.remove).toHaveBeenCalledWith(['model_cache_openai']);
             expect(registry.cache.size).toBe(0);
         });
     });

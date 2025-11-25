@@ -5,9 +5,12 @@ export default {
    * Generates the prompt for a chunking task.
    * @param {Array<{text: string, index: number}>} indexedParagraphs - The paragraphs for this batch.
    * @param offset - The offset to subtract for mapping indices to lower range.
+   * @param {Object} config - Configuration.
+   * @param {string} [config.sourceLang] - Language of original raw text
+   * @param {string} [config.targetLang] - Language of translation
    * @returns {{system: string, user: string}}
    */
-  build(indexedParagraphs, offset = 0) {
+  build(indexedParagraphs, offset = 0, config) {
     const system = `
 You are an expert text analyst specializing in literary structure. Your primary task is to segment a long-form Japanese text into semantically coherent chunks, preparing it for a downstream translation process. The goal is to create chunks that are logical units of meaning, such as a complete scene, a distinct block of dialogue, or a self-contained descriptive passage.
 

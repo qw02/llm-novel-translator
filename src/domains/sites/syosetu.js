@@ -1,14 +1,13 @@
 import { DomainAdapter } from '../DomainAdapter.js';
 import { TextPreProcessor } from "../../content/TextPreProcessor.js";
 
-export class KakuyomuAdapter extends DomainAdapter {
+export class SyosetuAdapter extends DomainAdapter {
   /**
-   * Only match the specific local test file.
-   * You can relax this pattern later if needed.
    * @type {string[]}
    */
   static matchPatterns = [
-    'https://kakuyomu.jp/works/*/episodes/*',
+    'https://ncode.syosetu.com/*/*/',
+    'https://novel18.syosetu.com/*/*/',
   ];
 
   /**
@@ -16,28 +15,19 @@ export class KakuyomuAdapter extends DomainAdapter {
    * @returns {string}
    */
   getId() {
-    return 'kakuyomu';
+    return 'syosetu';
   }
 
   /**
-   * Series id for the test page.
-   * For a real site you could derive this from the URL or DOM.
-   * Here we simply use the file name as a stable pseudo-series id.
+   * Series id from URL
    *
    * @returns {string}
    */
   getSeriesId() {
     const { pathname, hostname } = window.location;
     const segments = pathname.split('/').filter(Boolean);
-    // Expected: ["works", "{series}", "episodes", "{chapter}", ...]
-    if (segments.length >= 4 && segments[0] === 'works' && segments[2] === 'episodes') {
-      return segments[1]; // "{series}"
-    }
-
-    // Slightly more defensive: find "a" anywhere in the path
-    const idx = segments.indexOf('works');
-    if (idx !== -1 && segments[idx + 1]) {
-      return segments[idx + 1];
+    if (segments.length >= 2) {
+      return segments[0];
     }
 
     // Fallback: stable-but-generic series id
@@ -50,7 +40,7 @@ export class KakuyomuAdapter extends DomainAdapter {
   extractText() {
     const paragraphs = [];
 
-    const textContainers = document.querySelectorAll('.js-episode-body');
+    const textContainers = document.querySelectorAll('.js-novel-text');
 
     let index = 0;
 
@@ -66,7 +56,7 @@ export class KakuyomuAdapter extends DomainAdapter {
           .trim()
           .getText();
 
-        if (p.id && !p.classList.contains('blank') && processedText) {
+        if (p.id && processedText) {
           const id = this.ensureElementParagraphId(p, index, { injectIfMissing: true });
 
           paragraphs.push({

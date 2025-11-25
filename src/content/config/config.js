@@ -22,6 +22,26 @@ class TranslationConfig {
   }
 }
 
+/**
+ * Load custom instructions for a specific language pair.
+ * @param {string} sourceLang - Source language BCP-47 code (e.g., 'ja', 'en')
+ * @param {string} targetLang - Target language BCP-47 code (e.g., 'en', 'es')
+ * @returns {Promise<string>} - Custom instructions text, or empty string if not found
+ */
+export async function getCustomInstructions(sourceLang, targetLang) {
+  const pairKey = `${sourceLang}_${targetLang}`;
+
+  try {
+    const result = await chrome.storage.local.get('customInstructions');
+    const allInstructions = result.customInstructions || {};
+
+    return allInstructions[pairKey] || '';
+  } catch (error) {
+    console.error('[Content] Failed to load custom instructions:', error);
+    return '';
+  }
+}
+
 export async function getTranslationConfig(popupOverrides) {
   // Load from disk
   const { translation_config } = await chrome.storage.local.get('translation_config');
@@ -36,13 +56,10 @@ export async function getTranslationConfig(popupOverrides) {
   // Add getters
   const config = new TranslationConfig(rawConfig);
 
-  console.log(popupOverrides);
-
   // Add overrides from popup UI
   if (popupOverrides.skipGlossary && config.updateGlossary) {
     config.updateGlossary = false;
   }
-
 
   if (popupOverrides.popupSourceLang) {
     config.sourceLang = popupOverrides.popupSourceLang;
@@ -50,6 +67,12 @@ export async function getTranslationConfig(popupOverrides) {
 
   if (popupOverrides.popupTargetLang) {
     config.targetLang = popupOverrides.popupTargetLang;
+  }
+
+  // Load in custom instructions if exist
+  const customInstructions = await getCustomInstructions(config.sourceLang, config.targetLang);
+  if (customInstructions) {
+    config.customInstruction = customInstructions;
   }
 
   return config;
@@ -65,7 +88,6 @@ export async function getTranslationConfig(popupOverrides) {
  * @returns {Promise<{ok: boolean, error?: string, warning?: string}>}
  */
 export async function validateConfig(config, text) {
-  console.log('Starting validation...');
   let warnings = [];
 
   // --- 1. Hard Validation (Blocking Errors) ---

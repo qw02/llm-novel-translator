@@ -13,7 +13,6 @@ export function computeUiState({ hasApiKeys, siteSupported, pipelineState }) {
   }
 
   const status = pipelineState?.status || "IDLE";
-  console.log(status)
 
   if (status === "RUNNING" || status === "VALIDATING") {
     return UiState.IN_PROGRESS;
