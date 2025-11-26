@@ -1,5 +1,5 @@
 export default {
-  build(existingDict, newUpdate) {
+  build(existingDict, newUpdate, config) {
     const system = `
 You are in charge of merging and updating the glossary or dictionary for a translation system using a RAG pipeline.
 
@@ -37,7 +37,7 @@ Output Format (strict)
 Canonicalization & Style Rules
 - Keys:
   - keys must be raw Japanese strings that could appear in source text (kanji/kana). Do NOT add English or romaji to keys.
-  - Prefer to keep previously-seen variants (kanji, kana, nicknames). Do not remove earlier keys unless they are clearly wrong or non-Japanese.
+  - Prefer to keep previously-seen variants (kanji, kana, nicknames). Do not remove earlier keys unless they are clearly wrong.
 - Value:
   - Include both English and Japanese in the form: English (日本語)
   - Keep information directly useful for translation only. Trim verbose or narrative text.
@@ -144,7 +144,7 @@ Output:
 Final Reminder
 - Return only valid JSON with the allowed actions.
 - Use the minimal set of actions necessary.
-- When in doubt, prefer { "action": "none" }.    
+- When in doubt, prefer { "action": "none" }.
 `.trim();
 
     const user = `

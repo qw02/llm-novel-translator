@@ -10,7 +10,8 @@ import { translateText } from "./translation/translation.js";
 import { postEditText } from "./post-edit/post-edit.js";
 
 export async function runPipeline(texts, glossary, config) {
-  const progressTracker = getProgressTracker();
+  // Init object
+  getProgressTracker();
 
   try {
     let updatedGlossary = undefined;

@@ -31,7 +31,7 @@ export async function generateGlossary(config, textSegments) {
     const promptBuilder = await getPromptBuilder(config.languagePair, 'glossary-generate');
 
     // Create prompts for each chunk
-    const prompts = chunks.map(chunk => promptBuilder.build(chunk));
+    const prompts = chunks.map(chunk => promptBuilder.build(chunk, config));
 
     // Run inference in parallel
     const results = await client.requestBatch(prompts);

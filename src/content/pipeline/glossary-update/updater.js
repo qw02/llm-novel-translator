@@ -38,8 +38,9 @@ export class AsyncMutex {
  * Updater class that handles the complex locking and scheduling logic
  */
 export class GlossaryUpdater {
-  constructor(client, promptBuilder) {
+  constructor(client, promptBuilder, config) {
     this.client = client;
+    this.config = config;
     this.promptBuilder = promptBuilder;
     this.nextId = 1;
     this._mutex = new AsyncMutex();
@@ -213,7 +214,7 @@ export class GlossaryUpdater {
     };
 
     // Use the prompt builder to generate the prompt
-    return this.promptBuilder.build(existingDict, newUpdates);
+    return this.promptBuilder.build(existingDict, newUpdates, this.config);
   }
 
   /**

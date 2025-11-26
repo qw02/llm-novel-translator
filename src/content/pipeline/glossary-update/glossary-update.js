@@ -27,7 +27,7 @@ export async function updateGlossary(config, existingGlossary, newEntries) {
   try {
     const promptBuilder = await getPromptBuilder(config.languagePair, 'glossary-update');
 
-    const updater = new GlossaryUpdater(client, promptBuilder);
+    const updater = new GlossaryUpdater(client, promptBuilder, config);
     const result = await updater.update(existingGlossary, newEntries);
 
     return result;

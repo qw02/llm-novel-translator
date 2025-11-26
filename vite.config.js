@@ -49,7 +49,7 @@ export default defineConfig({
       output: {
         entryFileNames: chunk => {
           if (chunk.name === 'background') return 'src/background/main.js';
-          return 'src/[name]/[name].js'; // Standardize output
+          return 'src/[name]/[name].js';
         },
       }
     },

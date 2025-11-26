@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LLM Novel Translator (BYOK)",
   "version": "1.0.0",
-  "description": "Translates webnovels with LLM using a RAG pipeline.",
+  "description": "Translates webnovels with LLMs using popular API providers.",
   "permissions": [
     "storage",
     "activeTab",

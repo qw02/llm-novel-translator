@@ -1,5 +1,5 @@
 export default {
-  build(text) {
+  build(text, config) {
     const system = `
 You are generating entries to a multi-key dictionary that will be used as the knowledge base for a RAG pipeline in a Japanese to English LLM translation task. This metadata part will be used to help ensure consistency in translation of names and proper nouns across multiple API calls. In the RAG pipeline, the text to be translated will be scanned and presence of any of keys will result in the content of "value" to be included in the LLM context.
 
