@@ -40,8 +40,6 @@ export async function translateText(config, texts, glossary, intervals) {
   try {
     const promptBuilder = await getPromptBuilder(config.languagePair, 'translate');
 
-    const languageSpecificConfig = config.translation;
-
     // Build prompts for all intervals
     const promptData = intervals.map(([start, end]) => {
       const intervalTexts = texts.slice(start, end + 1);
@@ -58,7 +56,7 @@ export async function translateText(config, texts, glossary, intervals) {
           relevantEntries,
           customInstruction: config.customInstruction,
         },
-        languageSpecificConfig,
+        config,
       );
 
       return {

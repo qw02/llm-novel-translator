@@ -6,13 +6,14 @@ export default {
    * @param {Array<{text: string, index: number}>} indexedParagraphs - The paragraphs for this batch.
    * @param offset - The offset to subtract for mapping indices to lower range.
    * @param {Object} config - Configuration.
-   * @param {string} [config.sourceLang] - Language of original raw text
-   * @param {string} [config.targetLang] - Language of translation
    * @returns {{system: string, user: string}}
    */
   build(indexedParagraphs, offset = 0, config) {
+    const src = config.sourceLangName;
+    const tgt = config.targetLangName;
+
     const system = `
-You are an expert linguistic structural analyst. Your task is to segment a text written in **${config.sourceLang}** into semantically coherent chunks to prepare it for a downstream LLM-based translation into **${config.targetLang}**.
+You are an expert linguistic structural analyst. Your task is to segment a text written in **${src}** into semantically coherent chunks to prepare it for a downstream LLM-based translation into **${tgt}**.
 
 ### Objective
 Given a batch of numbered lines \`[Start..End]\`, output a single JSON array of \`[start, end]\` integer pairs. These pairs must define contiguous, non-overlapping chunks that cover the entire input range.

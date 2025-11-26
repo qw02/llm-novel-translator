@@ -34,6 +34,7 @@ export async function runPipeline(texts, glossary, config) {
 
     // Stage 5: Post Editing
     if (config.postEdit) {
+      console.log('5');
       finalTranslations = await postEditText(config, translatedTexts, translationMetadata);
     }
 

@@ -37,7 +37,7 @@ export async function segmentWithChunking(config, texts) {
     const batches = createChunkingBatches(texts, config);
 
     const prompts = batches.map(batch =>
-      promptBuilder.build(batch.paragraphs, batch.offset),
+      promptBuilder.build(batch.paragraphs, batch.offset, config),
     );
 
     const results = await client.requestBatch(prompts);

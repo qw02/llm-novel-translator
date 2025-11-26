@@ -1,7 +1,7 @@
 export default {
   build(text, config) {
-    const sourceLang = config.sourceLang;
-    const targetLang = config.targetLang;
+    const sourceLang = config.sourceLangName;
+    const targetLang = config.targetLangName;
 
     const system = `
 You are generating entries for a multi-key dictionary that will be used as the knowledge base for a RAG pipeline in a ${sourceLang} to ${targetLang} LLM translation task. This metadata part will be used to help ensure consistency in the translation of names, proper nouns, and specific terminology across multiple API calls. In the RAG pipeline, the text to be translated will be scanned, and the presence of any string in the "keys" array will result in the content of "value" being included in the LLM context.

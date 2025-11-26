@@ -207,7 +207,7 @@ async function executePipelineCore(extractedText, config) {
     pipelineContext.status = PipelineStatus.COMPLETE_SUCCESS;
   } catch (error) {
     pipelineContext.status = PipelineStatus.COMPLETE_ERROR;
-    pipelineContext.error = { message: err.message };
+    pipelineContext.error = { message: error};
     console.error('[Main] Error in pipeline execution:', error);
     throw error;
   } finally {

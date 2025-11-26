@@ -1,7 +1,7 @@
 export default {
   build(existingDict, newUpdate, config) {
-    const sourceLang = config.sourceLang;
-    const targetLang = config.targetLang;
+    const sourceLang = config.sourceLangName;
+    const targetLang = config.targetLangName;
 
     const system = `
 You are in charge of merging and updating the glossary or dictionary for a translation system using a RAG pipeline.

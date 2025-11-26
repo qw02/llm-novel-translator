@@ -10,7 +10,7 @@ export default {
       narrative,
       honorifics,
       nameOrder,
-    } = config;
+    } = config.translation;
 
     // ========================================
     // SYSTEM PROMPT ASSEMBLY
@@ -124,7 +124,7 @@ Dialogue Handling:
 - Dialogue lines are enclosed in Japanese quotation marks (e.g., 「 」, 『 』).
 - Use the preceding lines and metadata to determine who is speaking the current dialogue line. Assume speakers often alternate in back-and-forth conversation unless context indicates otherwise.
 - In the translation, replace them with smart quotation marks (“”).
-Pronoun Usage:Ensure correct English pronouns (he, she, it, they, etc.) are used. You should use character information from metadata if they are available.
+Pronoun Usage: Ensure correct English pronouns (he, she, it, they, etc.) are used. You should use character information from metadata if they are available.
 Narrative Voice: ${narrativeInstruction}
 Interpret Parentheses: Text within parentheses \`()\` might originate from HTML ruby annotations (furigana) or be authorial asides. Interpret their function contextually. Omit them in the translation, if they are purely phonetic (furigana).
 Natural English: Prioritize fluent, natural-sounding English. Avoid overly literal translations. Adapt sentence structure as needed while preserving meaning and intent.
