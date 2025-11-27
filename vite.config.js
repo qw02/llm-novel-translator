@@ -10,12 +10,10 @@ function markdownPlugin() {
     transform(code, id) {
       if (!id.endsWith('.md')) return null;
 
-      // Configure renderer to handle links
       const renderer = new marked.Renderer();
 
       // Override link rendering
       renderer.link = function({ href, title, text }) {
-        // Check if external (starts with http or https)
         const isExternal = /^https?:\/\//.test(href);
 
         if (isExternal) {
@@ -26,10 +24,8 @@ function markdownPlugin() {
         return `<a href="${href}" title="${title || ''}">${text}</a>`;
       };
 
-      // Parse the markdown
       const html = marked.parse(code, { renderer });
 
-      // Export as a JS string
       return `export default ${JSON.stringify(html)};`;
     },
   };

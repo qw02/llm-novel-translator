@@ -1,4 +1,5 @@
 import { ja_en_settings } from '../lang-settings/ja_en.js';
+import { LANGS } from "../../../common/languages.js";
 
 // Map of pair keys to their settings modules
 const PAIR_SETTINGS_MAP = {
@@ -16,14 +17,10 @@ const STAGES = {
   postEdit: { index: 5, providerSelectId: 'provider-postedit', modelSelectId: 'model-postedit' },
 };
 
-// Placeholder list of supported languages for the dropdowns.
-// You can later replace this with an import from your LANGS map.
-const SUPPORTED_LANGS = [
-  { code: 'ja', label: 'Japanese' },
-  { code: 'en', label: 'English' },
-  { code: 'zh-Hans', label: 'Chinese (Simplified)' },
-  { code: 'zh-Hant', label: 'Chinese (Traditional)' },
-];
+const SUPPORTED_LANGS = Object.entries(LANGS).map(([code, label]) => ({
+  code,
+  label,
+}));
 
 // Deep clone helper
 function deepClone(obj) {

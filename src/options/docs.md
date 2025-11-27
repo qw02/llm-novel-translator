@@ -1,11 +1,66 @@
-# Welcome to Web Novel Translator
+# LLM Novel Translator (BYOK)
 
-## Quick Start
-1. Go to [OpenAI](https://platform.openai.com) to get your key.
-2. Enter it in the API Keys tab.
+Welcome to the **LLM Novel Translator** extension! This tool is designed to help you read web novels in your preferred language using the power of Large Language Models (LLMs).
 
-## Configuration
-See the [Models](#models) section below for details.
+## Introduction
 
-## <a id="models"></a>Models
-You can configure specific models...
+This extension operates on a **Bring Your Own Key (BYOK)** model. It does not have a central server that processes your translations. Instead, it connects directly from your browser to the LLM providers (like OpenAI, Google, OpenRouter, etc.) using the API keys you provide. This ensures your privacy and gives you full control over the models and costs.
+
+## API Keys
+
+To use this extension, you **must** provide at least one API key.
+
+1.  Go to the **API Keys** tab in the sidebar.
+2.  Enter your API key for your preferred provider(s).
+3.  Click **Save**.
+
+### Recommended Provider
+If you don't have an API key or are unsure which one to use, we recommend **[OpenRouter](https://openrouter.ai/)**. They offer a wide range of models from various providers (including free and low-cost options) with a single API key.
+
+## Quick Start Guide
+
+1.  **Set API Key**: Enter and save your API key in the **API Keys** tab.
+2.  **Language Config**: (Optional) Go to **Model / Translation Config** and set your default **Source** and **Target** languages.
+3.  **Verify Settings**: Scroll down in the **Model / Translation Config** tab to ensure the models for "Glossary Generation", "Text Segmentation", and "Translation" are selected and is what you intend to be used.
+4.  **Save**: Click **Save** at the bottom of the page.
+5.  **Ready!** The extension is now ready to use.
+
+## Usage
+
+### Supported Websites
+For websites with built-in support (where the extension knows how to extract the novel text):
+1.  Navigate to the novel chapter page.
+2.  Click the extension icon in your browser toolbar.
+3.  Click **Translate** in the popup window.
+
+### Other Websites
+For any other website:
+1.  **Highlight** the text you want to translate.
+2.  Click the extension icon.
+3.  Click **Translate**.
+
+## Model / Translation Config
+
+In the **Model / Translation Config** tab, you can customize which LLM models are used for different stages of the translation pipeline. You can mix and match providers (e.g., use a cheaper model for glossary updates and a high-quality model for the final translation).
+
+### Estimated Costs
+*Note: These are rough estimates and may vary based on the model pricing and text length.*
+
+> [!NOTE]
+> **Placeholder for Cost Estimates**
+> (I will fill this section in with detailed cost examples for different model combinations.)
+
+## Privacy & Cost
+
+### Why is there no free tier?
+This extension is designed to be **serverless** and **privacy-focused**. We do not run a proxy server to handle your requests, which means we cannot offer a free tier subsidized by other paying users. You pay the AI providers directly for the usage, and you are fully in control of which model is being used.
+
+### Privacy
+Your API keys and translation data are stored locally in your browser and are sent directly to the AI providers you choose. No data is sent to the extension developers.
+
+[Privacy Policy](https://github.com/qw02/llm-novel-translator/blob/master/PRIVACY.md)
+
+## Open Source
+This extension is open source! You can view the code, report issues, or contribute on GitHub.
+
+[GitHub Repository](https://github.com/qw02/llm-novel-translator)
