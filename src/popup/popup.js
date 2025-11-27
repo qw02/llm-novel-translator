@@ -11,7 +11,7 @@ import {
   showGlossaryWidget,
   showPreview,
   getPopupLanguageOverrides,
-  setPopupLanguageOverrides,
+  setPopupLanguageOverrides, cancelPipeline,
 } from "./extensionApi.js";
 
 import { UiState, computeUiState } from "./state/uiState.js";
@@ -461,7 +461,14 @@ async function handleWarningFromContentScript(warning) {
     },
     onCancel: async () => {
       removeWarningOverlayIfAny();
-      await refresh(); // Reverts to idle state
+
+      try {
+        await cancelPipeline(currentTab.id);
+      } catch (err) {
+        console.warn("Failed to send cancel signal", err);
+      }
+
+      await refresh();
     },
   });
 }

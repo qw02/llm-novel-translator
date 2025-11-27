@@ -16,7 +16,7 @@ export default {
 You are an expert linguistic structural analyst. Your task is to segment a text written in **${src}** into semantically coherent chunks to prepare it for a downstream LLM-based translation into **${tgt}**.
 
 ### Objective
-Given a batch of numbered lines \`[Start..End]\`, output a single JSON array of \`[start, end]\` integer pairs. These pairs must define contiguous, non-overlapping chunks that cover the entire input range.
+- Given a batch of numbered paragraphs [Start..End], output a single JSON array of [start, end] integer pairs that define contiguous, non-overlapping chunks optimized for translation coherence.
 
 ### Input Format
 - <text> consists of lines prefixed by an index: \`[123] [content]\`.
@@ -34,18 +34,17 @@ Given a batch of numbered lines \`[Start..End]\`, output a single JSON array of 
 
 **1. Target Size (Token Economy)**
 The downstream translation process works best with semantically meaningful chunks of text.
-- **Target:** Aim for chunks roughly equivalent to **300 tokens** (approx. **800–1500 characters** or **15–40 lines** depending on density).
-- **Bias:** It is better to create a chunk that is **too large** than one that is too small. Do not fragment text into small 1-3 sentence blocks.
-- **Minimum:** Avoid creating chunks with less than ~300 characters unless it is the very end of the file.
+- **Target:** Aim for chunks roughly equivalent to **150 tokens** (approx. **100** CJK characters or latin words** or **5-15 lines** depending on density).
+- **Minimum:** Avoid creating chunks with less than ~50 characters or words unless it is the very end of the file.
 
 **2. Semantic Coherence**
 Group text based on flow.
 - **Scene Consistency:** Keep a full scene or a long exchange of dialogue in one chunk if possible.
-- **Dialogue:** Do not split short back-and-forth dialogue. Only split dialogue if the conversation is massive (>50 lines).
+- **Dialogue:** Do not split short back-and-forth dialogue. Only split dialogue if the conversation is massive (>10 lines).
 - **Separators:** **Never** isolate scene separators (e.g., \`***\`, \`---\`, \`===\`) into their own chunk. Always attach them to the **beginning** of the *next* chunk to provide context that a new scene is starting.
 
 **3. Split Priorities**
-When a block becomes too large (>2000 characters) and requires splitting, choose boundaries in this order:
+When a block becomes too large and requires splitting, choose boundaries in this order:
 1.  **Strong:** At a scene break separator (include the separator in the *new* chunk).
 2.  **Medium:** At a major shift in POV, topic, or from dialogue to narration.
 3.  **Weak:** Between paragraphs.
@@ -60,11 +59,11 @@ When a block becomes too large (>2000 characters) and requires splitting, choose
 [102]
 [103] "Is anyone there?" shouted the hero.
 [104] No answer came.
-... (20 lines of dialogue and description) ...
-[124] He sighed and sat down.
-[125] The sun began to set.
+... (10 lines of dialogue and description) ...
+[114] He sighed and sat down.
+[115] The sun began to set.
 \`\`\`
-*Output:* \`[[101, 125]]\`
+*Output:* \`[[101, 115]]\`
 *(Logic: Even though this is 25 lines, it flows as one scene. Do not split it into small pieces like [101, 110]. Keep it together to hit the token target.)*
 
 **Example 2: Handling Scene Separators**
@@ -94,10 +93,9 @@ When a block becomes too large (>2000 characters) and requires splitting, choose
 [318] ----------------
 [319] "Not enough," he muttered.
 \`\`\`
-*Output:* \`[[300, 319]]\`
-*(Logic: Keep the list headers, content, and immediate reaction together. Do not split the list.)*
-    
-    `.trim();
+*Output:* \`[[301, 318]]\`
+*(Logic: Keep the list headers and content together. Do not split the list.)*
+`.trim();
 
     const formattedText = getChunkingUserParts(indexedParagraphs, offset);
 

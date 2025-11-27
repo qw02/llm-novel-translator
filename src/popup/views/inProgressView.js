@@ -2,39 +2,32 @@ import { clearElement, createSection, createButton } from "../ui/dom.js";
 
 let isDetailsOpen = false;
 
-function formatPercent(globalProgress) {
-  if (!globalProgress && globalProgress !== 0) return "0%";
-  return `${Math.round(globalProgress * 100)}%`;
+function formatPercent(val) {
+  return typeof val === "number" ? `${Math.round(val * 100)}%` : "0%";
 }
 
-function buildSimpleProgressText(progressData) {
-  if (!progressData || !progressData.global) return "No progress data.";
+function buildSimpleProgressText(data) {
+  if (!data || !data.global) return "Waiting for pipeline...";
 
   const lines = [];
-  const g = progressData.global;
+  const g = data.global;
 
   lines.push(`Global Progress: ${(g.progress * 100).toFixed(1)}%`);
-  lines.push(
-    `Total: ${g.total} | Completed: ${g.completed} | Remaining: ${g.remaining}`
-  );
+  lines.push(`Total: ${g.total} | Completed: ${g.completed} | Remaining: ${g.remaining}`);
   lines.push(`Errors: ${g.errors}`);
   lines.push("");
 
   lines.push("Stages:");
-  for (const [stageId, stage] of Object.entries(progressData)) {
+  for (const [stageId, stage] of Object.entries(data)) {
     if (stageId === "global") continue;
-    const label = stage.label || stageId;
 
     lines.push("");
-    lines.push(`${label}`);
+    lines.push(`${stage.label || stageId}`);
     lines.push(`Status: ${stage.done ? "✓ Done" : "In Progress"}`);
     lines.push(`Completed: ${stage.completed}/${stage.total}`);
 
     if (!stage.done) {
-      const pct =
-        typeof stage.progress === "number"
-        ? (stage.progress * 100).toFixed(1)
-        : "0.0";
+      const pct = typeof stage.progress === "number" ? (stage.progress * 100).toFixed(1) : "0.0";
       lines.push(`Progress: ${pct}%`);
       lines.push(`Speed: ${stage.speed} tasks/sec | ETA: ${stage.eta}s`);
       lines.push(`Elapsed: ${stage.elapsed}s`);
@@ -86,7 +79,6 @@ export function renderInProgressView(root, { pipelineState, progressData }) {
   const buttons = document.createElement("div");
   buttons.className = "button-row";
 
-  // Set initial text based on sticky state
   const detailsToggle = createButton(
     isDetailsOpen ? "Hide detailed" : "View detailed",
     { variant: "secondary" }
@@ -97,22 +89,18 @@ export function renderInProgressView(root, { pipelineState, progressData }) {
 
   const simpleText = document.createElement("div");
   simpleText.className = "code-block";
-  simpleText.style.display = "none";
 
+  simpleText.style.display = isDetailsOpen ? "block" : "none";
   simpleText.textContent = buildSimpleProgressText(progressData);
+
   body.appendChild(simpleText);
 
   detailsToggle.addEventListener("click", () => {
     isDetailsOpen = !isDetailsOpen;
 
-    // Update UI
-    if (isDetailsOpen) {
-      simpleText.style.display = "block";
-      detailsToggle.textContent = "Hide detailed";
-    } else {
-      simpleText.style.display = "none";
-      detailsToggle.textContent = "View detailed";
-    }
+    // Update DOM to reflect new state
+    simpleText.style.display = isDetailsOpen ? "block" : "none";
+    detailsToggle.textContent = isDetailsOpen ? "Hide detailed" : "View detailed";
   });
 
   const footer = document.createElement("div");

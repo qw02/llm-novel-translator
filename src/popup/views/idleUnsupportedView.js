@@ -86,16 +86,18 @@ export function renderIdleUnsupportedView(
     body.appendChild(errNotice);
   }
 
-  const buttonsTop = document.createElement("div");
-  buttonsTop.className = "button-row";
 
   const previewBtn = createButton("Display Preview", {
     variant: "secondary",
     onClick: onShowPreview,
   });
 
-  buttonsTop.appendChild(previewBtn);
-  body.appendChild(buttonsTop);
+
+  const instructionsDiv = document.createElement("div");
+  const ins = document.createElement("span");
+  ins.textContent = "Highlight the text you want to translate on the webpage, then click either 'Display Preview' or 'Translate'.";
+  instructionsDiv.appendChild(ins);
+  body.appendChild(instructionsDiv);
 
   const buttonsBottom = document.createElement("div");
   buttonsBottom.className = "button-row";
@@ -111,6 +113,7 @@ export function renderIdleUnsupportedView(
   });
 
   buttonsBottom.appendChild(glossaryBtn);
+  buttonsBottom.appendChild(previewBtn);
   buttonsBottom.appendChild(translateBtn);
 
   body.appendChild(buttonsBottom);

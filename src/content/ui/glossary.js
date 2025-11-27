@@ -1,13 +1,26 @@
+import { MSG_TYPE } from "../../common/messaging.js";
+
 export async function getGlossary(seriesId) {
-  const result = await chrome.storage.local.get({
-    [seriesId]: { entries: [] },
+  const response = await chrome.runtime.sendMessage({
+    type: MSG_TYPE.get_glossary,
+    seriesId
   });
 
-  return result[seriesId];
+  if (response._error) {
+    throw new Error(response._error);
+  }
+
+  return response;
 }
 
 export async function saveGlossary(seriesId, glossary) {
-  await chrome.storage.local.set({
-    [seriesId]: glossary
+  const response = await chrome.runtime.sendMessage({
+    type: MSG_TYPE.save_glossary,
+    seriesId,
+    glossary
   });
+
+  if (response._error) {
+    throw new Error(response._error);
+  }
 }

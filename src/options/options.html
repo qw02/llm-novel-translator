@@ -42,6 +42,7 @@
         <section id="tab-api-keys" class="tab" hidden>
             <h2>API Keys</h2>
             <p>Enter your API keys for the providers you use.</p>
+            <p>Your API keys are saved locally. To remove, clear the corresponding fields and press save.</p>
 
             <div class="api-keys-grid">
                 <div class="api-key-row">
@@ -110,10 +111,29 @@
 
         <!-- Translation / Models config -->
         <section id="tab-models" class="tab" hidden>
+            <!-- Default languages -->
+            <h2>Language Config</h2>
+            <p>Set the default language to use. Can be overridden for individual pages in the pop-up menu.</p>
+            <p>Depending on the language pair, some additional settings may be shown.</p>
+            <div class="language-selectors">
+                <label>
+                    Source language:
+                    <select id="source-lang"></select>
+                </label>
+                <label>
+                    Target language:
+                    <select id="target-lang"></select>
+                </label>
+            </div>
+            <div id="translation-pair-settings">
+                <!-- Pair-specific UI will be injected here based on `${source}_${target}` -->
+            </div>
+
             <h2>Model / Translation Config</h2>
 
             <!-- Simple vs Advanced mode -->
             <div class="mode-toggle">
+                <p>Show or hide advanced settings</p>
                 <span>Configuration mode:</span>
                 <label>
                     <input type="radio" name="config-mode" id="mode-simple" value="simple" checked>
@@ -128,7 +148,8 @@
             <!-- Advanced-only settings -->
             <div id="advanced-settings" hidden>
                 <h3>Advanced Options</h3>
-
+                <p>Tick to retrieve the list of available models from the provider(s).</p>
+                <p>When unchecked, only the recommended models to use for each stage are displayed. Models with a ★ are recommended for use.</p>
                 <div class="advanced-row">
                     <label>
                         <input type="checkbox" id="show-all-models">
@@ -137,6 +158,7 @@
                     <button type="button" id="refresh-models">Refresh model list</button>
                 </div>
 
+                <p>Size of text (CJK characters or words) to use when generating the glossary data. Default: 2000.</p>
                 <div class="advanced-row">
                     <label for="glossary-chunk-size">Glossary chunk size:</label>
                     <select id="glossary-chunk-size">
@@ -165,6 +187,7 @@
                 <div id="glossary-models" class="stage-models">
                     <div class="stage-block">
                         <h4>Glossary Generation</h4>
+                        <p>Model to use for generating the glossary.</p>
                         <label>
                             Provider:
                             <select id="provider-glossary-generate"
@@ -181,6 +204,7 @@
 
                     <div class="stage-block">
                         <h4>Glossary Update</h4>
+                        <p>Model to use to integrate new entries to the existing glossary. A less-powerful / cost-efficient model is recommended.</p>
                         <label>
                             Provider:
                             <select id="provider-glossary-update"
@@ -200,6 +224,9 @@
             <!-- 3. Text segmentation -->
             <section class="stage" id="stage-segmentation">
                 <h3>3. Text Segmentation</h3>
+                <p>Choose how the text is split-up for translation. Using 'Chunked' is recommended.</p>
+                <p>For less powerful translation models (e.g., ~10b dense / 30b MoEs), 'Single Line' may work better.</p>
+                <p>The setting 'Entire Page' will send everything in a single API call. This can reduce cost at the expanse of potentially lower quality translations.</p>
 
                 <label for="segmentation-method">Segmentation method:</label>
                 <select id="segmentation-method">
@@ -211,6 +238,7 @@
                 <div id="segmentation-model-container" class="stage-models">
                     <div class="stage-block">
                         <h4>Segmentation Model</h4>
+                        <p>Model to use for analyzing the text and determining how to split it for translation.</p>
                         <label>
                             Provider:
                             <select id="provider-text-chunking"
@@ -228,6 +256,7 @@
 
                 <!-- Advanced-only chunk settings -->
                 <div id="segmentation-advanced-settings" class="advanced-row" hidden>
+                    <p>Number of CJk chars or words in one block. Default: 1500</p>
                     <label for="chunk-size">Chunk size:</label>
                     <select id="chunk-size">
                         <option value="500">500</option>
@@ -238,9 +267,9 @@
                         <option value="5000">5,000</option>
                     </select>
 
+                    <p>Number of lines to overlap. This can help prevent text from being cut off in incorrect locations. Default: 10</p>
                     <label for="overlap-count">Overlap lines:</label>
                     <select id="overlap-count">
-                        <option value="0">0</option>
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
@@ -255,6 +284,7 @@
                 <div class="stage-models">
                     <div class="stage-block">
                         <h4>Translation Model</h4>
+                        <p>Model used to translate the text.</p>
                         <label>
                             Provider:
                             <select id="provider-translation"
@@ -270,17 +300,6 @@
                     </div>
                 </div>
 
-                <div class="language-selectors">
-                    <label>
-                        Source language:
-                        <select id="source-lang"></select>
-                    </label>
-                    <label>
-                        Target language:
-                        <select id="target-lang"></select>
-                    </label>
-                </div>
-
                 <div id="translation-common-settings">
                     <label for="context-lines">Context lines:</label>
                     <select id="context-lines">
@@ -292,15 +311,13 @@
                         <option value="10">10</option>
                     </select>
                 </div>
-
-                <div id="translation-pair-settings">
-                    <!-- Pair-specific UI will be injected here based on `${source}_${target}` -->
-                </div>
             </section>
 
             <!-- 5. Post-edit -->
             <section class="stage" id="stage-postedit">
                 <h3>5. Post-Edit / Quality Check</h3>
+                <p>Enable to run an additional step of editing to catch potential translation errors. This is usually not needed and can increase cost significantly.</p>
+                <p>Recommended setting: off</p>
 
                 <label>
                     <input type="checkbox" id="postedit-enabled">

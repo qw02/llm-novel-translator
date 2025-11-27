@@ -11,6 +11,8 @@ import { getProgressTracker } from "./progress-tracking.js";
 import { POPUP_MSG_TYPE } from "../common/messaging.js";
 import { openGlossaryEditor } from "./ui/glossary-manager.js";
 import { showTextPreview } from "./ui/preview-manager.js";
+import { applyCSS } from "./style-manager.js";
+import { DomainAdapter } from "../domains/DomainAdapter.js";
 
 // --- Lifecycle State Management ---
 const PipelineStatus = {
@@ -46,7 +48,6 @@ if (!window.hasLLMTranslatorLoaded) {
       return false;
     }
 
-    // --- 1. Start Request ---
     if (message.type === POPUP_MSG_TYPE.pipeline_start) {
 
       // Reset any old pending context
@@ -65,7 +66,7 @@ if (!window.hasLLMTranslatorLoaded) {
       return true;
     }
 
-    // --- 2. Continue Request (User confirmed warning) ---
+    // Continue Request (User confirmed warning) ---
     if (message.type === POPUP_MSG_TYPE.pipeline_continue) {
 
       if (!pendingContext) {
@@ -82,6 +83,15 @@ if (!window.hasLLMTranslatorLoaded) {
         });
 
       return true;
+    }
+
+    if (message.type === POPUP_MSG_TYPE.pipeline_cancel) {
+      pipelineContext.status = PipelineStatus.IDLE;
+      pipelineContext.warning = null;
+      pipelineContext.error = null;
+      pendingContext = null; // Clear the pending job
+      sendResponse({ ok: true });
+      return false;
     }
 
     if (message.type === POPUP_MSG_TYPE.pipeline_getState) {
@@ -148,11 +158,15 @@ async function handlePipelineStart(payload) {
 
   // --- Branch A: Hard Error ---
   if (!validation.ok) {
+    pipelineContext.status = PipelineStatus.IDLE;
     throw new Error(`Unable to start translation pipeline: ${validation.error ?? 'Validation failed'}`);
   }
 
   // --- Branch B: Warning (Pause Execution) ---
   if (validation.ok && validation.warning) {
+    pipelineContext.status = PipelineStatus.WARNING_PENDING;
+    pipelineContext.warning = validation.warning;
+
     // Save state to memory
     pendingContext = { extractedText, config };
 
@@ -203,6 +217,8 @@ async function executePipelineCore(extractedText, config) {
     await saveGlossary(glossaryStorageKeys.seriesKey, updatedGlossary);
 
     replaceText(translatedText);
+
+    await applyCSS(config.targetLang, DomainAdapter.CSS_EXT_CLASS);
 
     pipelineContext.status = PipelineStatus.COMPLETE_SUCCESS;
   } catch (error) {

@@ -136,6 +136,10 @@ export async function continuePipeline(tabId) {
   }
 }
 
+export async function cancelPipeline(tabId) {
+  await sendMessageToTab(tabId, { type: "pipeline.cancel" });
+}
+
 /**
  * Asks content script to show the glossary widget.
  */

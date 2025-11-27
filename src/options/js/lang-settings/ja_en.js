@@ -30,22 +30,26 @@ export const ja_en_settings = {
     const wrapper = document.createElement('div');
     wrapper.className = 'pair-settings-ja-en';
 
-    // Narrative person
+    // Narrative
     const narrativeRow = document.createElement('div');
     narrativeRow.className = 'pair-setting-row';
 
+    const narrativeHint = document.createElement('p');
+    narrativeHint.textContent = `Select if the translation should output in first or third person writing. 'Auto' is recommended.`;
+
     const narrativeLabel = document.createElement('label');
     narrativeLabel.setAttribute('for', 'pair-narrative');
-    narrativeLabel.textContent = 'Narrative person:';
+    narrativeLabel.textContent = 'Narrative:';
 
     const narrativeSelect = document.createElement('select');
     narrativeSelect.id = 'pair-narrative';
     narrativeSelect.innerHTML = `
-      <option value="auto">Auto-detect</option>
+      <option value="auto">Auto</option>
       <option value="first">First person</option>
       <option value="third">Third person</option>
     `;
 
+    narrativeRow.appendChild(narrativeHint);
     narrativeRow.appendChild(narrativeLabel);
     narrativeRow.appendChild(narrativeSelect);
 

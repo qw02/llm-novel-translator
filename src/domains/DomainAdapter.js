@@ -76,6 +76,8 @@ export class DomainAdapter {
    */
   static PARAGRAPH_CLASS_PREFIX = 'tl_ext';
 
+  static CSS_EXT_CLASS = 'tl-ext-css-0713';
+
   /**
    * URL patterns this adapter matches.
    *
@@ -173,6 +175,7 @@ export class DomainAdapter {
       }
 
       el.textContent = item.translatedText;
+      el.classList.add(DomainAdapter.CSS_EXT_CLASS);
     }
   }
 

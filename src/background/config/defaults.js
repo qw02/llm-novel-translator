@@ -181,7 +181,7 @@ export const PROVIDER_CONFIGS = {
  * These are applied if not specified in model config, user overrides, or custom params.
  */
 export const DEFAULT_PARAMS = {
-  max_tokens: 2048,
+  max_tokens: 4096,
 };
 
 /**

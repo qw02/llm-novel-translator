@@ -3,6 +3,12 @@
  * Minimal message router that delegates to appropriate handlers.
  */
 import { LLMCoordinator } from "./llm-coordinator.js";
+import {
+  getGlossaryFromDB,
+  saveGlossaryToDB,
+  deleteGlossaryFromDB,
+  scanAllKeysFromDB,
+} from './indexeddb-storage.js';
 
 const BG_MSG_TYPES = {
   llm_request: 'llm_request',
@@ -10,6 +16,10 @@ const BG_MSG_TYPES = {
   get_models: 'get_models',
   refresh_models: 'refresh_models',
   clear_model_cache: 'clear_model_cache',
+  get_glossary: 'idb.get_glossary',
+  save_glossary: 'idb.save_glossary',
+  delete_glossary: 'idb.delete_glossary',
+  scan_glossary_keys: 'idb.scan_glossary_keys',
 };
 
 // Initialize coordinator for LLM external calls
@@ -65,6 +75,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ ok: false, error: error.message });
       });
     return true; // Keep channel open for async response
+  }
+
+  // --- Glossary / IndexedDB Handlers ---
+  // Load
+  if (message.type === BG_MSG_TYPES.get_glossary) {
+    getGlossaryFromDB(message.seriesId)
+      .then(result => sendResponse(result)) // Returns object or { entries: [] }
+      .catch(error => sendResponse({ _error: error.message }));
+    return true;
+  }
+
+  // Save
+  if (message.type === BG_MSG_TYPES.save_glossary) {
+    saveGlossaryToDB(message.seriesId, message.glossary)
+      .then(() => sendResponse({ _success: true }))
+      .catch(error => sendResponse({ _error: error.message }));
+    return true;
+  }
+
+  // Delete
+  if (message.type === BG_MSG_TYPES.delete_glossary) {
+    deleteGlossaryFromDB(message.seriesId)
+      .then(() => sendResponse({ ok: true }))
+      .catch(error => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  // Scan Keys
+  if (message.type === BG_MSG_TYPES.scan_glossary_keys) {
+    scanAllKeysFromDB()
+      .then(keys => sendResponse({ ok: true, data: keys }))
+      .catch(error => sendResponse({ ok: false, error: error.message }));
+    return true;
   }
 
   // Unknown message type

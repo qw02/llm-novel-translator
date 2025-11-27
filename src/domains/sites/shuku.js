@@ -75,21 +75,4 @@ export class ShukuAdapter extends DomainAdapter {
 
     return paragraphs;
   }
-
-  replaceText(items, config) {
-    super.replaceText(items, config);
-
-    // Fix layout, enable warpping for latin scripts
-    const container = document.querySelector('.article-content');
-
-    if (container) {
-      const paragraphs = container.querySelectorAll('p');
-
-      paragraphs.forEach((p) => {
-        p.style.wordBreak = 'normal';
-        p.style.overflowWrap = 'normal';
-        p.style.whiteSpace = 'normal';
-      });
-    }
-  }
 }

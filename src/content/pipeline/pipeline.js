@@ -17,14 +17,18 @@ export async function runPipeline(texts, glossary, config) {
     let updatedGlossary = undefined;
     if (config.updateGlossary) {
       // Stage 1: Glossary Generation
+      console.log(`Starting glossary generation.`);
       const newEntries = await generateGlossary(config, texts);
+      console.log(`Generated ${newEntries.length} new entries.`);
 
       // Stage 2: Glossary Update
       updatedGlossary = await updateGlossary(config, glossary, newEntries);
+      console.log(`Completed updated, glossary now has ${updatedGlossary.length ?? glossary.length} entries.`);
     }
 
     // Stage 3: Text Splitting
     const intervals = await segmentText(config, texts);
+    console.log(`Translating using the segments: ${JSON.stringify(intervals)}`);
 
     // Stage 4: Text Translation
     const { translatedTexts, translationMetadata } = await translateText(config, texts, updatedGlossary ?? glossary, intervals);
