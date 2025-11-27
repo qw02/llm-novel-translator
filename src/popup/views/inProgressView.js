@@ -21,16 +21,13 @@ function buildSimpleProgressText(data) {
   for (const [stageId, stage] of Object.entries(data)) {
     if (stageId === "global") continue;
 
-    lines.push("");
     lines.push(`${stage.label || stageId}`);
     lines.push(`Status: ${stage.done ? "✓ Done" : "In Progress"}`);
     lines.push(`Completed: ${stage.completed}/${stage.total}`);
 
     if (!stage.done) {
       const pct = typeof stage.progress === "number" ? (stage.progress * 100).toFixed(1) : "0.0";
-      lines.push(`Progress: ${pct}%`);
-      lines.push(`Speed: ${stage.speed} tasks/sec | ETA: ${stage.eta}s`);
-      lines.push(`Elapsed: ${stage.elapsed}s`);
+      lines.push(`Progress: ${pct}%  |  Speed: ${stage.speed} tasks/sec, ETA: ${stage.eta}s  |  Elapsed: ${stage.elapsed}s`);
     }
 
     if (stage.errorCount > 0) {

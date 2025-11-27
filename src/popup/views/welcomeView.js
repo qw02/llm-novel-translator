@@ -3,17 +3,16 @@ import { clearElement, createSection, createButton, createNotice } from "../ui/d
 export function renderWelcomeView(root, { onOpenOptions }) {
   clearElement(root);
 
-  const { section, body } = createSection("Welcome", "Web Novel Translator");
+  const { section, body } = createSection("Welcome", "LLM Novel Translator (BYOK)");
 
   const intro = document.createElement("p");
   intro.className = "text-small";
-  intro.textContent =
-    "No API keys are configured yet. To start translating, please open the options page and add your LLM provider keys.";
+  intro.textContent = "No API keys are configured yet. Please open the options page and add an API key for at least 1 provider.";
   body.appendChild(intro);
 
   const hint = createNotice(
     "muted",
-    "After saving your settings in the options page, reopen this popup."
+    "After saving your settings in the options page, reopen this popup.",
   );
   body.appendChild(hint);
 

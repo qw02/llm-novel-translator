@@ -11,7 +11,7 @@ export function renderCompleteView(root, { kind, pipelineState }) {
   if (isSuccess) {
     const msg = document.createElement("p");
     msg.className = "text-small";
-    msg.textContent = "The translation pipeline has finished. There are no further actions.";
+    msg.textContent = "The translation has finished.";
     body.appendChild(msg);
 
     const badge = document.createElement("span");
@@ -38,7 +38,7 @@ export function renderCompleteView(root, { kind, pipelineState }) {
 
   const hint = document.createElement("span");
   hint.className = "text-small text-muted";
-  hint.textContent = "Close this popup; there is nothing else to run.";
+  hint.textContent = "Close this popup; there is nothing else to run. If there are issues, refresh the page to try again.";
 
   footer.appendChild(hint);
   body.appendChild(footer);
