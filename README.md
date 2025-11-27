@@ -28,10 +28,10 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
 *   **🛡️ Privacy-First**: No central server. All logic runs in your browser, and requests are sent directly to the AI provider.
 *   **🔌 Multi-Provider Support**: Works with:
     *   [OpenRouter](https://openrouter.ai/) (Recommended for access to all models)
-    *   OpenAI
-    *   Google Gemini
-    *   DeepSeek
-    *   xAI (Grok)
+    *   [OpenAI](https://platform.openai.com/docs/overview)
+    *   [Google Gemini](https://aistudio.google.com/api-keys)
+    *   [DeepSeek](https://platform.deepseek.com/)
+    *   [xAI (Grok)](https://console.x.ai/)
 *   **⚙️ Granular Control**: Configure different models for different tasks (e.g., use a cheaper model for glossary extraction and a smarter model for final translation).
 
 ## 🚀 Usage
@@ -60,7 +60,7 @@ This project is built with **Vite** and **Vanilla JS** (using ES Modules). It us
 ### Setup
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/llm-novel-translator.git
+git clone https://github.com/qw02/llm-novel-translator.git
 cd llm-novel-translator
 
 # Install dependencies
@@ -83,11 +83,10 @@ npm run test:ui
 
 ## 📂 Project Structure
 
-*   `src/background`: Service worker logic (API handling, glossary management).
-*   `src/content`: Content scripts for page interaction and text extraction.
+*   `src/background`: Service worker logic (API handling, IndexedDB interface).
+*   `src/content`: Content scripts for page interaction, text extraction and the main translation pipeline logic.
 *   `src/popup`: Extension popup UI.
 *   `src/options`: Options page for configuration.
-*   `src/lib`: Shared utilities and helpers.
 *   `dist`: Compiled output (generated after build).
 
 ## 🔒 Privacy
@@ -95,7 +94,7 @@ npm run test:ui
 This extension is designed to be completely serverless regarding our infrastructure.
 *   **No Data Collection**: We do not collect your API keys, translation text, or reading history.
 *   **Direct Connection**: Your browser connects directly to the API endpoints of the providers you configure (e.g., `api.openai.com`).
-*   **Local Storage**: Configuration and glossary data are stored in your browser's local storage (`chrome.storage.local`).
+*   **Local Storage**: Configuration and glossary data are stored in your browser's local storage (`chrome.storage.local`, `IndexedDB`).
 
 ## 📄 License
 
