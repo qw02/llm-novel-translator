@@ -133,7 +133,7 @@ export async function validateConfig(config, text) {
       );
     }
 
-      // Case B: Match, but Low Confidence
+    // Case B: Match, but Low Confidence
     // The language matches, but there is significant noise (mixed languages, code snippets, etc.)
     else if (langAnalysis.confidence < CONFIDENCE_THRESHOLD) {
       const percentage = Math.floor(langAnalysis.confidence * 100);

@@ -11,23 +11,19 @@ export const PROVIDER_CONFIGS = {
   openrouter: {
     endpoint: 'https://openrouter.ai/api/v1',
     models: [
-      {
-        id: '1-1',
-        model: 'moonshotai/kimi-k2-0905',
-        label: 'Kimi K2 0905',
-        providers: ['DeepInfra', 'Chutes'],
-      },
-      {
-        id: '1-2',
-        model: 'deepseek/deepseek-v3.2-exp',
-        label: 'DS V3.2 E [For Test]',
-        providers: ['DeepInfra', 'NovitaAI', 'GMICloud', 'DeepSeek'],
-      },
+      { id: '1-1', model: 'deepseek/deepseek-v3.2-exp', label: 'DeepSeek V3.2', providers: ['DeepInfra', 'SiliconFlow', 'NovitaAI', 'GMICloud', 'DeepSeek'] },
+      { id: '1-2', model: 'moonshotai/kimi-k2-0905', label: 'Kimi K2', providers: ['DeepInfra', 'Chutes'] },
+      { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 4 Pro', 'providers': ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low' },
+      { id: '1-4', model: 'google/gemini-2.5-flash-preview-09-2025', label: 'Gemini 2.5 Flash 2.5', 'providers': ['Google AI Studio', 'Google'] },
+      { id: '1-5', model: 'google/gemini-2.5-flash-lite-preview-06-17', label: 'Gemini 2.5 Flash-Lite', 'providers': ['Google AI Studio', 'Google'] },
+      { id: '1-6', model: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast', 'providers': ['xAI'], reasoning: true, tokens: 8192 },
+      { id: '1-7', model: 'z-ai/glm-4.6', label: 'GLM 4.6', 'providers': ['z-ai'], tokens: 8192 },
+      { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5' },
     ],
     limits: {
       stage1: 'all',
-      stage2: 'all',
-      stage3: 'all',
+      stage2: ['1-1', '1-4', '1-5'],
+      stage3: ['1-1', '1-4', '1-5', '1-6'],
       stage4: 'all',
       stage5: 'all',
     },
@@ -37,35 +33,35 @@ export const PROVIDER_CONFIGS = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     models: [
       {
-        id: '3-1',
-        model: 'gpt-5',
-        label: 'GPT-5 (R: Low)',
+        id: '2-1',
+        model: 'gpt-5.1',
+        label: 'GPT-5.1 (Low)',
         reasoning: 'low',
       },
       {
-        id: '3-2',
-        model: 'gpt-5',
-        label: 'GPT-5 (R: High)',
+        id: '2-2',
+        model: 'gpt-5.1',
+        label: 'GPT-5.1 (High)',
         reasoning: 'high',
         tokens: 8192,
       },
       {
-        id: '3-3',
+        id: '2-3',
         model: 'gpt-5-mini',
-        label: 'GPT-5 Mini (R: Off)',
+        label: 'GPT-5 Mini (Minimal)',
         reasoning: 'minimal',
       },
       {
-        id: '3-4',
+        id: '2-4',
         model: 'gpt-5-nano',
-        label: 'GPT-5 Nano (R: Off)',
+        label: 'GPT-5 Nano (Minimal)',
         reasoning: 'minimal',
       },
     ],
     limits: {
       stage1: 'all',
-      stage2: ['3-4'],
-      stage3a: ['3-3', '3-4'],
+      stage2: ['2-3', '2-4'],
+      stage3a: ['2-3', '2-4'],
       stage3b: 'all',
       stage4: 'all',
     },
@@ -75,12 +71,12 @@ export const PROVIDER_CONFIGS = {
     endpoint: 'https://api.deepseek.com/v1',
     models: [
       {
-        id: '4-1',
+        id: '3-1',
         model: 'deepseek-chat',
-        label: 'DeepSeek V3.2 Exp (Non-reasoning)'
+        label: 'DeepSeek V3.2 Exp (Non-reasoning)',
       },
       {
-        id: '4-2',
+        id: '3-2',
         model: 'deepseek-reasoner',
         label: 'DeepSeek V3.2 Exp (Reasoning)',
         tokens: 8192,
@@ -88,60 +84,22 @@ export const PROVIDER_CONFIGS = {
     ],
     limits: {
       stage1: 'all',
-      stage2: ['4-1'],
-      stage3a: ['4-1'],
+      stage2: ['3-1'],
+      stage3a: ['3-1'],
       stage3b: 'all',
       stage4: 'all',
     },
   },
 
-  google: {
-    endpoint: 'handled-by-sdk',
+  // TODO: Add support elsewhere in code
+  nanogpt: {
     models: [
-      {
-        id: '6-1',
-        model: 'gemini-2.5-pro',
-        label: 'Gemini Pro 2.5 (R: Med)',
-        reasoning: 'medium',
-        tokens: 8192,
-      },
-      {
-        id: '6-2',
-        model: 'gemini-2.5-pro',
-        label: 'Gemini Pro 2.5 (R: Low)',
-        reasoning: 'low',
-      },
-      {
-        id: '6-3',
-        model: 'gemini-2.5-flash-lite-preview-09-2025',
-        label: 'Gemini Flash-Lite 2.5 (R: Med)',
-        reasoning: 'medium',
-        tokens: 8192,
-      },
-      {
-        id: '6-4',
-        model: 'gemini-2.5-flash-lite-preview-09-2025',
-        label: 'Gemini Flash-Lite 2.5 (R: Off)',
-        reasoning: 'minimal',
-      },
-      {
-        id: '6-5',
-        model: 'gemini-2.5-flash-preview-09-2025',
-        label: 'Gemini Flash 2.5 (R: Med)',
-        reasoning: 'medium',
-        tokens: 8192,
-      },
-      {
-        id: '6-6',
-        model: 'gemini-2.5-flash-preview-09-2025',
-        label: 'Gemini Flash 2.5 (R: Off)',
-        reasoning: 'minimal',
-      },
+      { id: '4-1', model: 'deepseek-ai/deepseek-v3.2-exp', label: '[NG] DeepSeek V3.2 (R: Off)' },
     ],
     limits: {
       stage1: 'all',
-      stage2: ['6-4', '6-6'],
-      stage3a: ['6-3', '6-4', '6-5', '6-6'],
+      stage2: 'all',
+      stage3a: 'all',
       stage3b: 'all',
       stage4: 'all',
     },
@@ -174,6 +132,59 @@ export const PROVIDER_CONFIGS = {
       stage4: 'all',
     },
   },
+
+  google: {
+    endpoint: 'handled-by-sdk',
+    models: [
+      {
+        id: '6-1',
+        model: 'gemini-2.5-pro',
+        label: 'Gemini Pro 2.5 (Medium)',
+        reasoning: 'medium',
+        tokens: 8192,
+      },
+      {
+        id: '6-2',
+        model: 'gemini-2.5-pro',
+        label: 'Gemini Pro 2.5 (Low)',
+        reasoning: 'low',
+      },
+      {
+        id: '6-3',
+        model: 'gemini-2.5-flash-lite-preview-09-2025',
+        label: 'Gemini Flash-Lite 2.5 (Medium)',
+        reasoning: 'medium',
+        tokens: 8192,
+      },
+      {
+        id: '6-4',
+        model: 'gemini-2.5-flash-lite-preview-09-2025',
+        label: 'Gemini Flash-Lite 2.5 (Non-reasoning)',
+        reasoning: 'minimal',
+      },
+      {
+        id: '6-5',
+        model: 'gemini-2.5-flash-preview-09-2025',
+        label: 'Gemini Flash 2.5 (Medium)',
+        reasoning: 'medium',
+        tokens: 8192,
+      },
+      {
+        id: '6-6',
+        model: 'gemini-2.5-flash-preview-09-2025',
+        label: 'Gemini Flash 2.5 (Non-reasoning)',
+        reasoning: 'minimal',
+      },
+    ],
+    limits: {
+      stage1: 'all',
+      stage2: ['6-4', '6-6'],
+      stage3a: ['6-3', '6-4', '6-5', '6-6'],
+      stage3b: 'all',
+      stage4: 'all',
+    },
+  },
+
 };
 
 /**

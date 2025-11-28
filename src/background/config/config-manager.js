@@ -309,8 +309,6 @@ export class ConfigManager {
     // Start with base defaults
     const params = {
       model: modelConfig.model,
-      temperature: DEFAULT_PARAMS.temperature,
-      top_p: DEFAULT_PARAMS.top_p,
       max_tokens: DEFAULT_PARAMS.max_tokens,
     };
 
