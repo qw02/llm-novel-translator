@@ -31,11 +31,18 @@ export async function translateText(config, texts, glossary, intervals) {
     return { translatedTexts: texts, translationMetadata: [] };
   }
 
-  const client = new LLMClient({
+  const llmClientConfig = {
     llmId: config.llm.translation,
     stageId: "4",
     stageLabel: "Translation",
-  });
+  }
+
+  // Increase max tokens if we are processing the entire block of text in a single call
+  if (config.textSegmentation.method === 'entire') {
+    llmClientConfig.customParam = { max_tokens: 8192 }
+  }
+
+  const client = new LLMClient(llmClientConfig);
 
   try {
     const promptBuilder = await getPromptBuilder(config.languagePair, 'translate');

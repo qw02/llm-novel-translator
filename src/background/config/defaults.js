@@ -91,7 +91,7 @@ export const PROVIDER_CONFIGS = {
     },
   },
 
-  // TODO: Add support elsewhere in code
+  // ENHANCEMENT: Add support for NanoGPT as provider
   nanogpt: {
     models: [
       { id: '4-1', model: 'deepseek-ai/deepseek-v3.2-exp', label: '[NG] DeepSeek V3.2 (R: Off)' },

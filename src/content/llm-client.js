@@ -15,8 +15,9 @@ class LLMClient {
    * @param {string} params.llmId - Unique label for a LLM to be used
    * @param {string} params.stageId - Stage identifier for progress tracking
    * @param {string} params.stageLabel - Human-readable stage name
+   * @param {Object} params.customParams - Additional LLM payload parameters (temp, max_tokens, etc.) use for all requests.
    */
-  constructor({ llmId, stageId, stageLabel }) {
+  constructor({ llmId, stageId, stageLabel, customParams = {} }) {
     this.clientId = `client_${nextClientId++}_${Date.now()}`;
     this.llmId = llmId;
     this.stageId = stageId;
@@ -29,13 +30,13 @@ class LLMClient {
     this.progressTracker = getProgressTracker();
     this.progressTracker.createStage(this.stageId, stageLabel);
 
-    this.customParams = {};
+    this.customParams = customParams;
     this._setDefaultParams();
   }
 
 
   _setDefaultParams() {
-    this.customParams.temperature = 0.6;
+    this.customParams.temperature = 0.8;
   }
 
   /**
