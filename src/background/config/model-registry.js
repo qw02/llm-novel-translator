@@ -1,3 +1,5 @@
+import { log } from "../../common/logger.js";
+
 /**
  * Manages dynamic model lists from providers.
  *
@@ -35,7 +37,6 @@ export class ModelRegistry {
 
     if (cached && Array.isArray(cached)) {
       this.cache.set(provider, cached);
-      console.log(`[ModelRegistry] Loaded ${cached.length} models for ${provider} from cache`);
       return cached;
     }
 
@@ -52,7 +53,6 @@ export class ModelRegistry {
     const key = `model_cache_${provider}`;
     await chrome.storage.local.set({ [key]: models });
     this.cache.set(provider, models);
-    console.log(`[ModelRegistry] Cached ${models.length} models for ${provider}`);
   }
 
   /**
@@ -63,8 +63,6 @@ export class ModelRegistry {
    * @returns {Promise<Array<Object>>} Updated model list
    */
   async refreshModels(provider) {
-    console.log(`[ModelRegistry] Refreshing models for ${provider}`);
-
     try {
       // Get provider instance
       const providerInstance = this.providerInstances?.get(provider);
@@ -74,7 +72,7 @@ export class ModelRegistry {
 
       // Check if provider supports dynamic model fetching
       if (typeof providerInstance.getAvailableModels !== 'function') {
-        console.log(`[ModelRegistry] Provider ${provider} does not support dynamic model fetching`);
+        log(`[ModelRegistry] Provider ${provider} does not support dynamic model fetching`);
         return [];
       }
 
@@ -92,7 +90,7 @@ export class ModelRegistry {
       // Fallback to cached models
       const cached = await this.loadFromCache(provider);
       if (cached) {
-        console.log(`[ModelRegistry] Using cached models for ${provider} (fetch failed)`);
+        log(`[ModelRegistry] Using cached models for ${provider} (fetch failed)`);
         return cached;
       }
 
@@ -153,7 +151,6 @@ export class ModelRegistry {
     const key = `model_cache_${provider}`;
     await chrome.storage.local.remove(key);
     this.cache.delete(provider);
-    console.log(`[ModelRegistry] Cleared cache for ${provider}`);
   }
 
   /**
@@ -167,7 +164,5 @@ export class ModelRegistry {
     // Remove all cache keys
     await chrome.storage.local.remove(cacheKeys);
     this.cache.clear();
-
-    console.log(`[ModelRegistry] Cleared all model caches (${cacheKeys.length} providers)`);
   }
 }

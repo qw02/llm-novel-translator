@@ -39,12 +39,6 @@ export class DeepSeekProvider extends BaseProvider {
         max_tokens: params.max_tokens ?? 4096,
       };
 
-      console.log(`[DeepSeek] Sending request:`, {
-        model: params.model,
-        messageCount: messages.length,
-        reasoning: params.reasoning,
-      });
-
       const response = await this.client.chat.completions.create(requestPayload);
 
       const normalized = this.normalizeResponse(response);

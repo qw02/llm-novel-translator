@@ -7,6 +7,7 @@ import { DeepSeekProvider } from './providers/deepseek-provider.js';
 import { GoogleProvider } from './providers/google-provider.js';
 import { ConfigManager } from "./config/config-manager.js";
 import { XaiProvider } from "./providers/xai-provider.js";
+import { log } from "../common/logger.js";
 
 /**
  * Registry mapping provider types to their implementation classes.
@@ -61,7 +62,7 @@ export class LLMCoordinator {
     const { clientId, llmId, systemPrompt, userMessage, customParams = {} } = payload;
     const requestId = this.nextRequestId++;
 
-    console.log(`[LLMCoordinator] Request ${requestId} from client ${clientId}:`, {
+    log(`[LLMCoordinator] Request ${requestId} from client ${clientId}:`, {
       llmId,
       customParams,
     });
@@ -100,8 +101,6 @@ export class LLMCoordinator {
         ok: true,
         data: result,
       });
-
-      console.log(`[LLMCoordinator] Request ${requestId} completed successfully`);
 
     } catch (error) {
       this._untrackRequest(clientId, requestId);
@@ -227,8 +226,6 @@ export class LLMCoordinator {
     }
 
     // Create new provider instance
-    console.log(`[LLMCoordinator] Creating new provider: ${providerType}`);
-
     const ProviderClass = PROVIDER_REGISTRY[providerType];
     if (!ProviderClass) {
       throw new Error(`No provider implementation found for: ${providerType}`);
@@ -241,7 +238,7 @@ export class LLMCoordinator {
     const provider = new ProviderClass({ endpoint, apiKey });
     this.providers.set(key, provider);
 
-    console.log(`[LLMCoordinator] Provider ${providerType} initialized`);
+    log(`[LLMCoordinator] Provider ${providerType} initialized`);
 
     return provider;
   }
@@ -258,8 +255,6 @@ export class LLMCoordinator {
     if (this.queues.has(providerType)) {
       return this.queues.get(providerType);
     }
-
-    console.log(`[LLMCoordinator] Creating queue for provider: ${providerType}`);
 
     const queue = new PQueue({
       concurrency: RATE_LIMIT_CONFIG.concurrency,

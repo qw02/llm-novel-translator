@@ -1,5 +1,6 @@
 import { PROVIDER_CONFIGS, DEFAULT_PARAMS } from './defaults.js';
 import { getApiKey, getAllApiKeys } from '../utils/api-key-manager.js';
+import { log } from "../../common/logger.js";
 
 /**
  * Manages configuration from multiple sources and model list caching.
@@ -24,8 +25,6 @@ export class ConfigManager {
 
     // In-memory cache for model lists: Map<provider, models[]>
     this.modelCache = new Map();
-
-    console.log('[ConfigManager] Initialized');
   }
 
   /**
@@ -111,7 +110,6 @@ export class ConfigManager {
       }
     }
 
-    console.log(`[ConfigManager] Returning ${models.length} models (showAll: ${showAll})`);
     return models;
   }
 
@@ -170,8 +168,6 @@ export class ConfigManager {
       skipped: [],
     };
 
-    console.log('[ConfigManager] Refreshing model lists for providers:', Object.keys(apiKeys));
-
     for (const [provider, apiKey] of Object.entries(apiKeys)) {
       try {
         const ProviderClass = providerRegistry[provider];
@@ -197,13 +193,12 @@ export class ConfigManager {
 
         // Check if provider implements getAvailableModels
         if (typeof providerInstance.getAvailableModels !== 'function') {
-          console.log(`[ConfigManager] Provider ${provider} does not implement getAvailableModels`);
+          log(`[ConfigManager] Provider ${provider} does not implement getAvailableModels`);
           results.skipped.push(provider);
           continue;
         }
 
         // Fetch models from provider
-        console.log(`[ConfigManager] Fetching models from ${provider}...`);
         const models = await providerInstance.getAvailableModels();
 
         // Save to cache
@@ -213,15 +208,13 @@ export class ConfigManager {
         this.modelCache.set(provider, models);
 
         results.success.push({ provider, count: models.length });
-        console.log(`[ConfigManager] Cached ${models.length} models from ${provider}`);
-
       } catch (error) {
         console.error(`[ConfigManager] Failed to refresh models for ${provider}:`, error.message);
         results.failed.push({ provider, error: error.message });
       }
     }
 
-    console.log('[ConfigManager] Refresh complete:', results);
+    log('[ConfigManager] Refresh complete:', results);
     return results;
   }
 
@@ -231,15 +224,12 @@ export class ConfigManager {
    * @returns {Promise<void>}
    */
   async clearModelCache() {
-    console.log('[ConfigManager] Clearing model cache...');
-
     // Get all providers that have cached models
     const storage = await chrome.storage.local.get(null);
     const cacheKeys = Object.keys(storage).filter(key => key.startsWith('model_cache_'));
 
     if (cacheKeys.length > 0) {
       await chrome.storage.local.remove(cacheKeys);
-      console.log(`[ConfigManager] Removed ${cacheKeys.length} cached model lists`);
     }
 
     // Clear in-memory cache
@@ -357,7 +347,6 @@ export class ConfigManager {
   async _loadUserParams() {
     const result = await chrome.storage.local.get('userParams');
     this.userParams = result.userParams || {};
-    console.log('[ConfigManager] Loaded user params:', this.userParams);
   }
 
   /**
@@ -380,7 +369,6 @@ export class ConfigManager {
 
     if (cached) {
       this.modelCache.set(provider, cached);
-      console.log(`[ConfigManager] Loaded ${cached.length} cached models for ${provider}`);
     }
 
     return cached;
@@ -397,6 +385,5 @@ export class ConfigManager {
   async _saveModelCache(provider, models) {
     const key = `model_cache_${provider}`;
     await chrome.storage.local.set({ [key]: models });
-    console.log(`[ConfigManager] Saved ${models.length} models to cache for ${provider}`);
   }
 }

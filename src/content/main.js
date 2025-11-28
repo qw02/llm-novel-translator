@@ -13,6 +13,7 @@ import { openGlossaryEditor } from "./ui/glossary-manager.js";
 import { showTextPreview } from "./ui/preview-manager.js";
 import { applyCSS } from "./style-manager.js";
 import { DomainAdapter } from "../domains/DomainAdapter.js";
+import { log } from "../common/logger.js";
 
 // --- Lifecycle State Management ---
 const PipelineStatus = {
@@ -39,7 +40,7 @@ let pendingContext = null;
 // Popup should not attempt load, but just in case.
 if (!window.hasLLMTranslatorLoaded) {
   window.hasLLMTranslatorLoaded = true;
-  console.log('[Main] Content script loaded and ready.');
+  log('[Main] Content script loaded and ready.');
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Stops duplicate loading of content script when popup opens again
@@ -206,10 +207,6 @@ async function executePipelineCore(extractedText, config) {
     // Read in glossary from disk
     const glossaryStorageKeys = buildGlossaryKeys(config.sourceLang, config.targetLang);
     const glossary = await getGlossary(glossaryStorageKeys.seriesKey);
-
-    // console.log('@@ DEBUG Skipping pipeline logic in `main.js`');
-    // console.log(extractedText)
-    // return;
 
     const { translatedText, glossary: updatedGlossary } = await runPipeline(extractedText, glossary, config);
 

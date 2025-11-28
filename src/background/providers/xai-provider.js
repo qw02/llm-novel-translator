@@ -35,11 +35,6 @@ export class XaiProvider extends BaseProvider {
         max_completion_tokens: params.max_tokens ?? 4096,
       };
 
-      console.log(`[xAI] Sending request:`, {
-        model: params.model,
-        messageCount: messages.length,
-      });
-
       const response = await this.client.chat.completions.create(requestPayload);
 
       const normalized = this.normalizeResponse(response);

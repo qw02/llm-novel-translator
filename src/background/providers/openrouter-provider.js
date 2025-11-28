@@ -64,13 +64,6 @@ export class OpenRouterProvider extends BaseProvider {
         requestPayload.reasoning = reasoningConfig;
       }
 
-      // Log the request for debugging
-      console.log(`[OpenRouter] Sending request:`, {
-        model: params.model,
-        messageCount: messages.length,
-        hasReasoning: !!reasoningConfig,
-      });
-
       // Make API call
       const response = await this.client.chat.completions.create(requestPayload);
 
@@ -87,8 +80,6 @@ export class OpenRouterProvider extends BaseProvider {
 
   async getAvailableModels() {
     try {
-      console.log('[OpenRouter] Fetching available models from API...');
-
       const response = await this.client.models.list();
 
       const models = [];
@@ -105,7 +96,6 @@ export class OpenRouterProvider extends BaseProvider {
         }
       }
 
-      console.log(`[OpenAI] Found ${models.length} chat models`);
       return models;
 
     } catch (error) {

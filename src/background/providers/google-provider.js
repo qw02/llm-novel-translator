@@ -50,13 +50,6 @@ export class GoogleProvider extends BaseProvider {
         };
       }
 
-      console.log(`[Google] Sending request:`, {
-        model: params.model,
-        messageCount: userMessages.length,
-        hasSystemInstruction: !!systemInstruction,
-        thinkingBudget: thinkingBudget !== null ? thinkingBudget : 'default',
-      });
-
       const response = await this.ai.models.generateContent({
         model: params.model,
         contents: contents,

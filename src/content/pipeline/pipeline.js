@@ -8,6 +8,7 @@ import { updateGlossary } from './glossary-update/glossary-update.js';
 import { segmentText } from './text-segmentation/text-segmentation.js';
 import { translateText } from "./translation/translation.js";
 import { postEditText } from "./post-edit/post-edit.js";
+import { log } from "../../common/logger.js";
 
 export async function runPipeline(texts, glossary, config) {
   // Init object
@@ -17,18 +18,18 @@ export async function runPipeline(texts, glossary, config) {
     let updatedGlossary = undefined;
     if (config.updateGlossary) {
       // Stage 1: Glossary Generation
-      console.log(`Starting glossary generation.`);
+      log(`Starting glossary generation.`);
       const newEntries = await generateGlossary(config, texts);
-      console.log(`Generated ${newEntries.length} new entries.`);
+      log(`Generated ${newEntries.length} new entries.`);
 
       // Stage 2: Glossary Update
       updatedGlossary = await updateGlossary(config, glossary, newEntries);
-      console.log(`Completed updated, glossary now has ${updatedGlossary.length ?? glossary.length} entries.`);
+      log(`Completed update, glossary now has ${updatedGlossary?.length ?? glossary.length} entries.`);
     }
 
     // Stage 3: Text Splitting
     const intervals = await segmentText(config, texts);
-    console.log(`Translating using the segments: ${JSON.stringify(intervals)}`);
+    log(`Translating using the segments: ${JSON.stringify(intervals)}`);
 
     // Stage 4: Text Translation
     const { translatedTexts, translationMetadata } = await translateText(config, texts, updatedGlossary ?? glossary, intervals);
@@ -38,7 +39,7 @@ export async function runPipeline(texts, glossary, config) {
 
     // Stage 5: Post Editing
     if (config.postEdit) {
-      console.log('5');
+      log('Starting post-edit QC step.');
       finalTranslations = await postEditText(config, translatedTexts, translationMetadata);
     }
 

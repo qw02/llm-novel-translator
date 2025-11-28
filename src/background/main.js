@@ -9,6 +9,7 @@ import {
   deleteGlossaryFromDB,
   scanAllKeysFromDB,
 } from './indexeddb-storage.js';
+import { log } from "../common/logger.js";
 
 const BG_MSG_TYPES = {
   llm_request: 'llm_request',
@@ -115,8 +116,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-console.log('[Background] Service worker started');
-
-self.addEventListener('beforeunload', () => {
-  console.log('[Background] Service worker terminating...');
-});
+log('[Background] Service worker started');

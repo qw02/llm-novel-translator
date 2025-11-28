@@ -44,12 +44,6 @@ export class OpenAIProvider extends BaseProvider {
         requestPayload.reasoning_effort = params.reasoning;
       }
 
-      console.log(`[OpenAI] Sending request:`, {
-        model: params.model,
-        messageCount: messages.length,
-        reasoning: params.reasoning,
-      });
-
       const response = await this.client.chat.completions.create(requestPayload);
 
       const normalized = this.normalizeResponse(response);
@@ -69,8 +63,6 @@ export class OpenAIProvider extends BaseProvider {
    */
   async getAvailableModels() {
     try {
-      console.log('[OpenAI] Fetching available models from API...');
-
       const response = await this.client.models.list();
       const models = [];
 
@@ -86,7 +78,6 @@ export class OpenAIProvider extends BaseProvider {
         }
       }
 
-      console.log(`[OpenAI] Found ${models.length} chat models`);
       return models;
 
     } catch (error) {

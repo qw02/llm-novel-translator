@@ -1,3 +1,5 @@
+import { log } from "../../common/logger.js";
+
 /**
  * Abstract base class for all LLM providers.
  *
@@ -50,7 +52,7 @@ export class BaseProvider {
   async getAvailableModels() {
     // Default implementation: return empty array
     // Subclasses should override if they support dynamic model listing
-    console.log(`[${this.providerType}] getAvailableModels() not implemented, skipping`);
+    log(`[${this.providerType}] getAvailableModels() not implemented, skipping`);
     return [];
   }
 
@@ -110,9 +112,6 @@ export class BaseProvider {
    * @protected
    */
   logInteraction(messages, completion, reasoning) {
-    // TODO: Check debug flag form storage
-    // >> Option bool set from options page
-
     const systemMsg = messages.find(m => m.role === 'system')?.content || '';
     const userMsg = messages.find(m => m.role === 'user')?.content || '';
 
@@ -140,8 +139,8 @@ export class BaseProvider {
       .map(section => `${section.title}:\n${section.content}`)
       .join('\n' + '-'.repeat(80) + '\n');
 
-    console.log(
-      '[Background] LLM Request log' + '\n' +
+    log(
+      'LLM Request log' + '\n' +
       '='.repeat(80) + '\n' +
       `[${this.providerType}]` + '\n' +
       logText + '\n' +
