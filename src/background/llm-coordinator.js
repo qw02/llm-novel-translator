@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { PROVIDER_CONFIGS, PROVIDER_TYPE_MAP, RATE_LIMIT_CONFIG } from './config/defaults.js';
+import { PROVIDER_CONFIGS, RATE_LIMIT_CONFIG } from './config/defaults.js';
 import { getApiKey } from './utils/api-key-manager.js';
 import { OpenRouterProvider } from './providers/openrouter-provider.js';
 import { OpenAIProvider } from './providers/openai-provider.js';

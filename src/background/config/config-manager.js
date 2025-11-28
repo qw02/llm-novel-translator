@@ -1,5 +1,5 @@
 import { PROVIDER_CONFIGS, DEFAULT_PARAMS } from './defaults.js';
-import { getApiKey, getAllApiKeys } from '../utils/api-key-manager.js';
+import { getAllApiKeys } from '../utils/api-key-manager.js';
 import { log } from "../../common/logger.js";
 
 /**

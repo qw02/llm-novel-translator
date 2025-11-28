@@ -193,15 +193,3 @@ export const RATE_LIMIT_CONFIG = {
   intervalCap: 10,       // Max 10 requests per interval
   interval: 1000,        // Interval in milliseconds (1 second)
 };
-
-/**
- * Maps provider type to its SDK type for provider instantiation.
- * Used by LLMCoordinator to determine which provider class to use.
- */
-export const PROVIDER_TYPE_MAP = {
-  openai: 'openai',
-  openrouter: 'openai',      // Uses OpenAI-compatible SDK
-  deepseek: 'openai',        // Uses OpenAI-compatible SDK
-  xai: 'openai',             // Uses OpenAI-compatible SDK
-  google: 'google',
-};

@@ -1,5 +1,3 @@
-// src/background/utils/api-key-manager.js
-
 /**
  * Retrieves the API key for a given provider from chrome.storage.local.
  *
