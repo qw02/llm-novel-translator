@@ -43,6 +43,10 @@ chromeMock.storage = {
       });
     }),
   },
+  onChanged: {  // Add this
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  },
 }
 
 globalThis.chrome = chromeMock
