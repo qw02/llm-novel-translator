@@ -1,14 +1,14 @@
 import { DomainAdapter } from '../DomainAdapter.js';
 import { TextPreProcessor } from "../../content/TextPreProcessor.js";
 
-export class KakuyomuAdapter extends DomainAdapter {
+export class AO3Adapter extends DomainAdapter {
   /**
    * Only match the specific local test file.
    * You can relax this pattern later if needed.
    * @type {string[]}
    */
   static matchPatterns = [
-    'https://kakuyomu.jp/works/*/episodes/*',
+    'https://archiveofourown.org/works/*/chapters/*',
   ];
 
   /**
@@ -16,7 +16,7 @@ export class KakuyomuAdapter extends DomainAdapter {
    * @returns {string}
    */
   getId() {
-    return 'kakuyomu';
+    return 'ao3';
   }
 
   /**
@@ -29,8 +29,8 @@ export class KakuyomuAdapter extends DomainAdapter {
   getSeriesId() {
     const { pathname, hostname } = window.location;
     const segments = pathname.split('/').filter(Boolean);
-    // Expected: ["works", "{series}", "episodes", "{chapter}", ...]
-    if (segments.length >= 4 && segments[0] === 'works' && segments[2] === 'episodes') {
+    // Expected: ["works", "{series}", "chapters", "{chapter}", ...]
+    if (segments.length >= 4 && segments[0] === 'works' && segments[2] === 'chapters') {
       return segments[1]; // "{series}"
     }
 
@@ -50,23 +50,17 @@ export class KakuyomuAdapter extends DomainAdapter {
   extractText() {
     const paragraphs = [];
 
-    const textContainers = document.querySelectorAll('.js-episode-body');
-
     let index = 0;
 
-    textContainers.forEach(container => {
-      const pElements = Array.from(container.querySelectorAll('p'));
-
-      pElements.forEach(p => {
+    document.querySelector('[role="article"]')
+      .querySelectorAll('p')
+      .forEach(p => {
         const processedText = new TextPreProcessor(p.textContent)
           .normalizeText()
-          .processRubyAnnotations()
-          .removeBrTags()
-          .removeNonTextChars()
           .trim()
           .getText();
 
-        if (p.id && !p.classList.contains('blank') && processedText) {
+        if (processedText) {
           const id = this.ensureElementParagraphId(p, index, { injectIfMissing: true });
 
           paragraphs.push({
@@ -77,8 +71,8 @@ export class KakuyomuAdapter extends DomainAdapter {
 
           index += 1;
         }
-      });
-    });
+      })
+
 
     return paragraphs;
   }

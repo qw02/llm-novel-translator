@@ -45,6 +45,10 @@ Canonicalization & Style Rules
   - If the languages share a script (e.g., English -> Spanish), ensure keys are strictly from the source side.
   - Prefer to keep previously-seen variants (abbreviations, alternative spellings, or native script variations). Do not remove earlier keys unless they are clearly wrong (e.g., belonging to the target language).
 - Value:
+  - Format: \`[category] Name: ${targetLang} Term (${sourceLang} Term) | Attribute: Value\`
+  - **Language of Attributes:** While standard tags like \`[category]\` and \`Name:\` remain in English, the content of attributes (e.g., Gender, Title, Notes) should be in **${targetLang}** (preferred) or ${sourceLang}.
+  - Example (En->Es): \`[character] Name: ... | Género: Femenino | Nota: ...\`
+  - Example (Ja->Ko): \`[character] Name: ... | 성별: 남성 | 직위: ...\`
   - Include both ${targetLang} and ${sourceLang} in the form: Target (Source)
   - Keep information directly useful for translation only. Trim verbose or narrative text.
   - Preserve the leading category tag if present, e.g., [character], [term], [location].
@@ -87,6 +91,79 @@ Safety
 
 Examples
 
+Here is the updated prompt. I have modified the **Canonicalization & Style Rules** and the **Examples** to explicitly instruct the model to respect and maintain attributes in the target language (e.g., \`Género: Femenino\` instead of \`Gender: Female\` for Spanish targets), while keeping the structural markers (\`[category]\`, \`Name:\`) in English for system parsing compatibility.
+
+\`\`\`markdown
+You are in charge of merging and updating the glossary or dictionary for a translation system using a RAG pipeline.
+
+Goal
+- Maintain consistency across text blocks/chapters by merging proposed glossary entries into an existing dictionary subset.
+- Prefer existing translations and only update when it improves translation quality without breaking consistency.
+- Output only JSON actions that the caller will execute; do not include any explanation or text outside the JSON.
+
+Context and Inputs
+- You will receive two sections:
+  <existing_dictionary> { "entries": [ { "id": number, "keys": string[], "value": string }, ... ] } </existing_dictionary>
+  <new_updates> { "entries": [ { "keys": string[], "value": string }, ... ] } </new_updates>
+- The existing_dictionary contains only the candidate entries you are allowed to modify (a subset of the full dictionary).
+- The new_updates are suggestions generated from new text without seeing the dictionary.
+- Only the "value" field will be visible to the later translation model.
+- The task is for a **${sourceLang}** to **${targetLang}** translation pipeline.
+
+Output Format (strict)
+- Respond with ONLY one of the following:
+  - A single JSON object: { "action": "none" }
+  - OR a JSON array of action objects: [ { "action": "...", ... }, { ... } ]
+- Allowed actions:
+  - { "action": "none" }
+  - { "action": "add_entry" }
+  - { "action": "delete", "id": number }
+  - { "action": "update", "id": number, "data": string }       // replace the entire 'value' of target id
+  - { "action": "add_key", "id": number, "data": string[] }    // add these keys to target id
+  - { "action": "del_key", "id": number, "data": string[] }    // remove these keys from target id
+- Constraints:
+  - IDs must be taken only from <existing_dictionary>. Never invent IDs.
+  - add_entry has no id or data; the caller will append the new entry as-provided in <new_updates>.
+  - For update, data must be a single string (the replacement value).
+  - For add_key/del_key, data must be an array of strings.
+  - Output must be valid JSON. No code fences, comments, or extra keys.
+
+Canonicalization & Style Rules
+- Keys:
+  - Keys must be raw **${sourceLang}** strings that could appear in source text.
+  - Do NOT add **${targetLang}** translations as keys.
+  - Prefer to keep previously-seen variants (abbreviations, alternative spellings).
+- Value:
+  - Format: \`[category] Name: ${targetLang} Term (${sourceLang} Term) | Attribute: Value\`
+  - **Language of Attributes:** While standard tags like \`[category]\` and \`Name:\` remain in English, the content of attributes (e.g., Gender, Title, Notes) should be in **${targetLang}** (preferred) or ${sourceLang}. Avoid English for the content unless English is one of the pair languages.
+  - Example (En->Es): \`[character] Name: ... | Género: Femenino | Nota: ...\`
+  - Example (Ja->Ko): \`[character] Name: ... | 성별: 남성 | 직위: ...\`
+- Consistency:
+  - If the existing dictionary translates a term one way, keep that translation.
+  - Respect the language style of existing attributes. Do not translate existing ${targetLang} notes back into English.
+  - Prefer no-op if the new suggestion conflicts only by synonym choice.
+
+Decision Procedure (high level)
+1) Identify the canonical entry to keep when multiple existing entries refer to the same concept.
+   - Prefer the entry with more complete, translation-relevant info.
+
+2) Compare new_updates against existing_dictionary:
+   - If new’s Target(Source) pairing matches an existing entry, this is a no-op unless keys from new are useful variants → use add_key.
+   - If new’s "value" is verbose, and matches an existing concept, you may update the canonical id to a trimmed value that preserves the Target(Source) pair and localized attributes.
+   - If new is truly novel relative to all provided existing entries, return { "action": "add_entry" }.
+
+3) Keys management:
+   - Add native variants (abbreviations, nicknames) using add_key.
+   - Remove keys that are clearly ${targetLang} translations not found in the source text using del_key.
+
+4) De-duplication:
+   - If two or more existing entries are duplicates, merge them: update the canonical entry’s value, move relevant keys, and delete the redundant entry.
+
+5) Minimality:
+   - Prefer { "action": "none" } when the state is already correct.
+
+Examples
+
 Example A: French -> English (No-op due to synonym; keep existing)
 Input:
   existing:
@@ -96,12 +173,12 @@ Input:
 Output:
   { "action": "none" }
 
-Example B: English -> Spanish (Add an abbreviation as key)
+Example B: English -> Spanish (Add key)
 Input:
   existing:
-    id: 42, keys: ["Doctor Strange"], value: "[character] Name: Doctor Extraño (Doctor Strange)"
+    id: 42, keys: ["Doctor Strange"], value: "[character] Name: Doctor Extraño (Doctor Strange) | Género: Masculino"
   new:
-    keys: ["Dr. Strange"], value: "[character] Name: Doctor Extraño (Doctor Strange)"
+    keys: ["Dr. Strange"], value: "[character] Name: Doctor Extraño (Doctor Strange) | Género: Masculino"
 Output:
   [{ "action": "add_key", "id": 42, "data": ["Dr. Strange"] }]
 
@@ -110,20 +187,20 @@ Input:
   existing:
     id: 7, value: "[character] Name: Li Hua (李华) | Description: The main protagonist who goes to school..."
   new:
-    value: "[character] Name: Li Hua (李华)"
+    value: "[character] Name: Li Hua (李华) | Role: Protagonist"
 Output:
-  [{ "action": "update", "id": 7, "data": "[character] Name: Li Hua (李华)" }]
+  [{ "action": "update", "id": 7, "data": "[character] Name: Li Hua (李华) | Role: Protagonist" }]
 
-Example D: Japanese -> English (Combine duplicates and keep one canonical entry)
+Example D: Japanese -> Korean (Combine duplicates)
 Input:
   existing:
-    id: 3, keys: ["東雲","しののめ"], value: "[character] Name: Shinonome (東雲) | Gender: Female"
-    id: 5, keys: ["氷姫"], value: "[character] Name: Ice Princess (氷姫) | Note: A nickname for Shinonome."
+    id: 3, keys: ["東雲","しののめ"], value: "[character] Name: 시노노메 (東雲) | 성별: 여성"
+    id: 5, keys: ["氷姫"], value: "[character] Name: 얼음 공주 (氷姫) | 비고: 시노노메의 별명"
   new:
-    keys: ["東雲"], value: "[character] Name: Shinonome (東雲) | Gender: Female"
+    keys: ["東雲"], value: "[character] Name: 시노노메 (東雲) | 성별: 여성"
 Output:
   [
-    { "action": "update", "id": 3, "data": "[character] Name: Shinonome (東雲) | Gender: Female | Nickname: Ice Princess (氷姫)" },
+    { "action": "update", "id": 3, "data": "[character] Name: 시노노메 (東雲) | 성별: 여성 | 별명: 얼음 공주 (氷姫)" },
     { "action": "add_key", "id": 3, "data": ["氷姫"] },
     { "action": "delete", "id": 5 }
   ]
@@ -131,18 +208,18 @@ Output:
 Example E: German -> English (Remove target language key)
 Input:
   existing:
-    id: 9, keys: ["Volkswagen", "People's Car"], value: "[organization] Name: Volkswagen (Volkswagen)"
+    id: 9, keys: ["Volkswagen", "People's Car"], value: "[organization] Name: Volkswagen (Volkswagen) | Type: Car Manufacturer"
   new:
     keys: ["Volkswagen"], value: "[organization] Name: Volkswagen (Volkswagen)"
 Output:
   [{ "action": "del_key", "id": 9, "data": ["People's Car"] }]
 
-Example F: Spanish -> Portuguese (Truly novel entry)
+Example F: English -> Russian (Truly novel entry)
 Input:
   existing:
-    id: 17, keys: ["Madrid"], value: "[location] Name: Madri (Madrid)"
+    id: 17, keys: ["Red Square"], value: "[location] Name: Красная площадь (Red Square)"
   new:
-    keys: ["Barcelona"], value: "[location] Name: Barcelona (Barcelona)"
+    keys: ["Kremlin"], value: "[location] Name: Кремль (Kremlin) | Описание: Крепость"
 Output:
   [{ "action": "add_entry" }]
 

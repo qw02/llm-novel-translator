@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LLM Novel Translator (BYOK)",
   "version": "1.0.0",
-  "description": "Translates webnovels with LLMs using popular API providers.",
+  "description": "LLM-powered web novel translation with context-aware glossary across chapters. BYOK—bring your own key, no middleman markup.",
   "permissions": [
     "storage",
     "activeTab",
@@ -20,14 +20,16 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Webpage Text Translator",
+    "default_title": "Novel Translator",
     "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "128": "icons/icon-128.png"
+      "128": "icons/icon-128.png",
+      "48": "icons/icon-48.png"
     }
   },
   "icons": {
-    "128": "icons/icon-128.png"
+    "128": "icons/icon-128.png",
+    "48": "icons/icon-48.png"
   },
   "options_page": "src/options/options.html"
 }

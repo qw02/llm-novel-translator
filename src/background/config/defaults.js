@@ -92,18 +92,18 @@ export const PROVIDER_CONFIGS = {
   },
 
   // ENHANCEMENT: Add support for NanoGPT as provider
-  nanogpt: {
-    models: [
-      { id: '4-1', model: 'deepseek-ai/deepseek-v3.2-exp', label: '[NG] DeepSeek V3.2 (R: Off)' },
-    ],
-    limits: {
-      stage1: 'all',
-      stage2: 'all',
-      stage3a: 'all',
-      stage3b: 'all',
-      stage4: 'all',
-    },
-  },
+  // nanogpt: {
+  //   models: [
+  //     { id: '4-1', model: 'deepseek-ai/deepseek-v3.2-exp', label: '[NG] DeepSeek V3.2 (R: Off)' },
+  //   ],
+  //   limits: {
+  //     stage1: 'all',
+  //     stage2: 'all',
+  //     stage3a: 'all',
+  //     stage3b: 'all',
+  //     stage4: 'all',
+  //   },
+  // },
 
   xai: {
     endpoint: 'https://api.x.ai/v1',

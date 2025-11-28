@@ -12,17 +12,25 @@ Rules and Guidelines:
    - Each entry should contain "keys" (array of ${sourceLang} terms/names/variations) and "value" (structured metadata string).
 
 2. Value String Format:
-   - Start with a category in square brackets (e.g., [character], [location], [organization], [term], [item]).
-   - Follow with "Key: Value" pairs separated by " | " (space, pipe, space).
-   - **CRITICAL NAME FORMAT**: The first key-value pair must be the Name. Write the full ${targetLang} translation first, followed by the original ${sourceLang} version in parentheses.
-     - Format: \`[category] Name: <${targetLang} Translation> (<${sourceLang} Original>) | ...\`
-   - Always include gender information for characters (Male, Female, Neutral/Unknown) as this is vital for grammatical correctness in many target languages.
-   - Include specific instructions (e.g., Tone, Formality) if relevant to the ${targetLang}.
+   - **System Control Tokens (Must remain in English):** 
+     - The Category Tag at the start (e.g., \`[character]\`, \`[location]\`, \`[organization]\`, \`[term]\`).
+     - The Label \`Name:\`.
+   - **Content & Attributes (Must be in ${targetLang}):**
+     - The translation of the name.
+     - All subsequent attribute keys (e.g., Gender, Title, Description) and their values. 
+     - This ensures the translator (user or LLM) reads the hints in the language they are writing in.
+
+   **Format Structure:**
+   \`[category] Name: <${targetLang} Translation> (<${sourceLang} Original>) | <${targetLang} Attribute Key>: <${targetLang} Value> | ...\`
 
 3. Entry Selection Criteria:
    - Focus on character names, location names, organization names, and specific terminology (fantasy/sci-fi/technical terms).
+   - Include gender/grammatical gender info for characters/nouns if ${targetLang} requires it.
    - Exclude generic common nouns unless they have a specific, non-standard translation in this context.
    - Include common variations, abbreviations, or nicknames in the "keys" array to ensure the RAG system catches them.
+   - Focus on character names, locations, organizations, and specific terminology.
+   - Include common variations or abbreviations in the "keys" array.
+
 
 4. LLM Compatibility:
    - Keep the total length concise.
@@ -39,29 +47,34 @@ Expected JSON Structure:
   ]
 }
 
-Example Output (demonstrating various language pairs):
+Example Output:
 
 {
   "entries": [
     {
-      // Example: Chinese -> English (Character with nickname)
+      // Example: Chinese -> English
       "keys": ["李云", "阿云"],
-      "value": "[character] Name: Li Yun (李云) | Gender: Male | Nickname: Ah Yun (阿云)"
+      "value": "[character] Name: Li Yun (李云) | Gender: Male | Role: Protagonist | Tone: Casual"
     },
     {
-      // Example: English -> Spanish (Location)
+      // Example: English -> Spanish
       "keys": ["The Whispering Woods", "Whispering Woods"],
-      "value": "[location] Name: El Bosque Susurrante (The Whispering Woods) | Mood: Ominous"
+      "value": "[location] Name: El Bosque Susurrante (The Whispering Woods) | Atmósfera: Siniestra | Tipo: Bosque encantado"
     },
     {
-      // Example: Japanese -> Korean (Organization)
-      "keys": ["魔法省", "日本魔法省"],
-      "value": "[organization] Name: 마법성 (魔法省) | Type: Government Body"
+      // Example: Japanese -> Korean
+      "keys": ["佐藤社長", "佐藤さん"],
+      "value": "[character] Name: 사토 사장님 (佐藤社長) | 성별: 남성 | 직위: 회사 대표 | 호칭: 존댓말 (Formal)"
     },
     {
-      // Example: French -> German (Technical/Fantasy Term)
+      // Example: French -> German
       "keys": ["L'Épée de Vérité"],
-      "value": "[item] Name: Das Schwert der Wahrheit (L'Épée de Vérité) | Gender: Neuter (German)"
+      "value": "[item] Name: Das Schwert der Wahrheit (L'Épée de Vérité) | Genus: Neutrum | Typ: Magische Waffe"
+    },
+    {
+      // Example: English -> Russian
+      "keys": ["Black Citadel"],
+      "value": "[organization] Name: Чёрная Цитадель (Black Citadel) | Род: Женский | Описание: Военная база"
     }
   ]
 }

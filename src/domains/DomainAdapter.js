@@ -164,7 +164,8 @@ export class DomainAdapter {
    */
   replaceText(items, config) {
     for (const item of items) {
-      if (!item.translatedText) {
+      // If null, text likely is combined with previous lines in the translation
+      if (item.translatedText === undefined) {
         continue
       }
 
@@ -174,8 +175,12 @@ export class DomainAdapter {
         continue;
       }
 
-      el.textContent = item.translatedText;
-      el.classList.add(DomainAdapter.CSS_EXT_CLASS);
+      if (item.translatedText === null) {
+        el.style.display = 'none';
+      } else {
+        el.textContent = item.translatedText;
+        el.classList.add(DomainAdapter.CSS_EXT_CLASS);
+      }
     }
   }
 

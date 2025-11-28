@@ -49,7 +49,6 @@ export default defineConfig({
         },
       }
     },
-    minify: false,
   },
   plugins: [
     markdownPlugin(),

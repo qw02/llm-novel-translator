@@ -44,25 +44,26 @@ let currentTargetLang = null;
 window.addEventListener("DOMContentLoaded", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  // We cannot inject into chrome:// or edge:// pages.
-  if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) {
-    console.warn("Cannot inject into system pages.");
+  if (isRestrictedPage(tab?.url)) {
+    window.close();
     return;
   }
 
   // Load the content script if needed
   try {
-    // Attempt to send a "ping" message to see if the script is already there.
-    // If the script isn't there, this will throw an error, which we catch to trigger injection.
     await chrome.tabs.sendMessage(tab.id, { type: POPUP_MSG_TYPE.ping });
-  } catch (error) {
-    // If we land here, the script hasn't been injected yet.
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['src/content/main.js']
-    });
+  } catch {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["src/content/main.js"],
+      });
+    } catch {
+      // Restricted page that slipped through URL check; close silently
+      window.close();
+      return;
+    }
   }
-
 
   appRoot = document.getElementById("app");
   initPopup().catch((err) => {
@@ -86,6 +87,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 });
+
+/**
+ * Returns true if the URL belongs to a restricted page where
+ * content scripts cannot be injected.
+ */
+const isRestrictedPage = (url) => {
+  if (!url) return true;
+
+  const restrictedPatterns = [
+    /^chrome:\/\//,
+    /^edge:\/\//,
+    /^about:/,
+    /^chrome-extension:\/\//,
+    /^https:\/\/chrome\.google\.com\/webstore/,
+    /^https:\/\/chromewebstore\.google\.com/,
+    /^https:\/\/microsoftedge\.microsoft\.com\/addons/,
+  ];
+
+  return restrictedPatterns.some((pattern) => pattern.test(url));
+};
 
 /**
  * Main initialization: load API keys, tab, config, pipeline state, then render.

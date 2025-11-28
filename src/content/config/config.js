@@ -118,7 +118,7 @@ export async function validateConfig(config, text) {
     // If data was insufficient (e.g. only numbers or symbols), we warn but allow proceed.
     warnings.push("Could not reliably detect the source language from the content.");
   } else {
-    const CONFIDENCE_THRESHOLD = 0.9; // 90% requirement
+    const CONFIDENCE_THRESHOLD = 0.6; // 60% requirement
 
     // Case A: Major Mismatch
     // The dominant language found by franc does not align with config.sourceLang

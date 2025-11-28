@@ -2,7 +2,7 @@ import { clearElement, createSection, createButton } from "../ui/dom.js";
 
 // MODULE-LEVEL STATE
 let isDetailsOpen = false;
-let detailsScrollTop = 0;
+let lastScrollTop = 0;
 
 function formatPercent(val) {
   return typeof val === "number" ? `${Math.round(val * 100)}%` : "0%";
@@ -22,40 +22,30 @@ function buildSimpleProgressText(data) {
   lines.push("Stages:");
   for (const [stageId, stage] of Object.entries(data)) {
     if (stageId === "global") continue;
-
     lines.push("");
     lines.push(`${stage.label || stageId}`);
     lines.push(`Status: ${stage.done ? "✓ Done" : "In Progress"}`);
     lines.push(`Completed: ${stage.completed}/${stage.total}`);
-
     if (!stage.done) {
       const pct = typeof stage.progress === "number" ? (stage.progress * 100).toFixed(1) : "0.0";
       lines.push(`Progress: ${pct}%`);
       lines.push(`Speed: ${stage.speed} tasks/sec | ETA: ${stage.eta}s`);
       lines.push(`Elapsed: ${stage.elapsed}s`);
     }
-
     if (stage.errorCount > 0) {
       lines.push(`Errors: ${stage.errorCount}`);
     }
   }
-
   return lines.join("\n");
 }
 
 export function renderInProgressView(root, { pipelineState, progressData }) {
-  // Save scroll position from existing element before clearing
-  const existingCodeBlock = root.querySelector(".code-block");
-  if (existingCodeBlock) {
-    detailsScrollTop = existingCodeBlock.scrollTop;
-  }
-
   clearElement(root);
 
   const { section, body } = createSection("Translating…", "Running pipeline");
-
   const globalProgress = progressData?.global?.progress ?? 0;
 
+  // --- Progress Bar ---
   const progressContainer = document.createElement("div");
   progressContainer.className = "progress-container";
 
@@ -71,19 +61,11 @@ export function renderInProgressView(root, { pipelineState, progressData }) {
 
   const labelRow = document.createElement("div");
   labelRow.className = "progress-label-row";
-
-  const left = document.createElement("span");
-  left.textContent = "Progress";
-
-  const right = document.createElement("span");
-  right.textContent = formatPercent(globalProgress);
-
-  labelRow.appendChild(left);
-  labelRow.appendChild(right);
+  labelRow.innerHTML = `<span>Progress</span><span>${formatPercent(globalProgress)}</span>`;
   progressContainer.appendChild(labelRow);
-
   body.appendChild(progressContainer);
 
+  // --- Details Section ---
   const buttons = document.createElement("div");
   buttons.className = "button-row";
 
@@ -100,34 +82,41 @@ export function renderInProgressView(root, { pipelineState, progressData }) {
   simpleText.style.display = isDetailsOpen ? "block" : "none";
   simpleText.textContent = buildSimpleProgressText(progressData);
 
+  // 1. LISTEN: Track user scrolling
+  simpleText.addEventListener("scroll", (e) => {
+    // Only update if visible
+    if (simpleText.style.display !== 'none') {
+      lastScrollTop = e.target.scrollTop;
+    }
+  });
+
   body.appendChild(simpleText);
 
-  // Restore scroll position after element is in DOM
-  if (isDetailsOpen) {
-    simpleText.scrollTop = detailsScrollTop;
-  }
-
+  // Toggle Logic
   detailsToggle.addEventListener("click", () => {
     isDetailsOpen = !isDetailsOpen;
-
-    simpleText.style.display = isDetailsOpen ? "block" : "none";
-    detailsToggle.textContent = isDetailsOpen ? "Hide detailed" : "View detailed";
-
-    // Reset scroll position when opening fresh
     if (isDetailsOpen) {
-      simpleText.scrollTop = detailsScrollTop;
+      simpleText.style.display = "block";
+      detailsToggle.textContent = "Hide detailed";
+      // Restore scroll when manually opening
+      simpleText.scrollTop = lastScrollTop;
+    } else {
+      simpleText.style.display = "none";
+      detailsToggle.textContent = "View detailed";
     }
   });
 
   const footer = document.createElement("div");
   footer.className = "footer-row";
-
   const hint = document.createElement("span");
   hint.className = "text-small text-muted";
   hint.textContent = "This may take several minutes depending on chapter length.";
-
   footer.appendChild(hint);
   body.appendChild(footer);
 
   root.appendChild(section);
+
+  if (isDetailsOpen) {
+    simpleText.scrollTop = lastScrollTop;
+  }
 }

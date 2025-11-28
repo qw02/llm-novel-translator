@@ -21,10 +21,10 @@ export class OpenRouterProvider extends BaseProvider {
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: this.endpoint,
-      // defaultHeaders: {
-      //   'HTTP-Referer': 'https://github.com/qw02/llm-novel-translator',
-      //   'X-Title': 'LLM Novel Translator',
-      // },
+      defaultHeaders: {
+        'HTTP-Referer': 'https://github.com/qw02/llm-novel-translator',
+        'X-Title': 'LLM Novel Translator',
+      },
     });
   }
 
