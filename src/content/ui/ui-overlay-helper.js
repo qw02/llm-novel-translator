@@ -21,7 +21,7 @@ export function createShadowOverlay() {
   // 2. The Window Host (The actual box)
   const host = document.createElement('div');
   host.style.cssText = `
-    width: 90%; max-width: 800px; height: 85vh; 
+    width: 75%; height: 85vh; 
     border-radius: 8px; overflow: hidden; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     pointer-events: auto; /* Re-enable clicks */

@@ -56,6 +56,8 @@ export class GlossaryEditor {
         <div class="dict-header-top">
           <h2>${this.meta.title}</h2>
           <span class="dict-subtitle">${this.meta.subtitle || ''}</span>
+          <p>You can manually edit the glossary entries here. The text for each entry in the bottom Definition / Translation area will be passed to the model when any of the keys appear in the raw text.</p>
+          <p>The series-specific glossary (only available for some sites) is only used for that particular series, while the global glossary is shared for all translations for that language pair.</p>
         </div>
         <div class="dict-tabs">
           <button class="dict-tab ${this.activeTab === 'series' ? 'active' : ''}" 
@@ -68,7 +70,7 @@ export class GlossaryEditor {
           <input type="text" placeholder="Search..." class="dict-search-input">
         </div>
       </div>
-      
+            
       <div class="dict-editor-content">
         <!-- Entries go here -->
       </div>
@@ -111,7 +113,7 @@ export class GlossaryEditor {
     container.innerHTML = '';
 
     if (data.entries.length === 0) {
-      container.innerHTML = `<div class="dict-empty-state">No entries found. Click "Add Entry" to create one.</div>`;
+      container.innerHTML = `<div class="dict-empty-state">No entries found. Click "Add Entry" to create one.<br>(If this is incorrect, try checking if the language pair shown above is correct)</div>`;
       return;
     }
 
@@ -270,6 +272,7 @@ export class GlossaryEditor {
       
       .dict-btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
       .dict-btn-small { padding: 4px 8px; font-size: 12px; border-radius: 3px; border: none; cursor: pointer; }
+      .dict-btn-primary { background: #007bff; color: white; }
       .dict-btn-primary { background: #007bff; color: white; }
       .dict-btn-secondary { background: #6c757d; color: white; }
       .dict-btn-success { background: #28a745; color: white; }

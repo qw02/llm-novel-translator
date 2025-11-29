@@ -40,6 +40,8 @@ export async function postEditText(config, translatedTexts, translationMetadata)
     const promptBuilder = await getPromptBuilder(config.languagePair, 'post-edit');
 
     const languageSpecificConfig = config.translation;
+    languageSpecificConfig.sourceLang = config.sourceLangName;
+    languageSpecificConfig.targetLang = config.targetLangName;
 
     // Build prompts for each valid chunk
     const promptData = validMetadata.map(meta => {

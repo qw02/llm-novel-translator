@@ -84,3 +84,7 @@ Your API keys and translation data are stored locally in your browser and are se
 This extension is open source! You can view the code, report issues, or contribute on GitHub.
 
 [GitHub Repository](https://github.com/qw02/llm-novel-translator)
+
+---
+
+*This extension is licensed under AGPL-3.0.*

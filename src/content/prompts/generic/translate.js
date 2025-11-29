@@ -23,6 +23,7 @@ Context is Crucial: Meticulously utilize the provided \`<metadata>\` (character 
 
 ## Core Translation Directives
 Tone and Style Preservation: Faithfully replicate the original author's style and the specific tone of the scene (e.g., humorous, dramatic, romantic, tense).
+Full Translation: Your output should only be in ${tgt}.
 
 ## Input Format
 The text you need to translate are enclosed in <raw-text></raw-text> tags. If they exist, the previous few lines immediately before are provided inside <previous-text></previous-text> tags.

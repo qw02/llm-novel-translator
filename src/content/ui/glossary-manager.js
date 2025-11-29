@@ -1,7 +1,8 @@
-import { buildGlossaryKeys } from '../dom-adapter.js'; // Existing adapter
+import { buildGlossaryKeys } from '../dom-adapter.js';
 import { GlossaryRepository } from '../../common/glossary-store.js';
 import { GlossaryEditor } from '../../common/glossary-ui.js';
 import { createShadowOverlay } from './ui-overlay-helper.js';
+import { LANGS } from "../../common/languages.js";
 
 let activeGlossaryClose = null;
 
@@ -40,6 +41,6 @@ export async function openGlossaryEditor(sourceLang, targetLang) {
 
   editor.render(seriesData, globalData, {
     title: 'Glossary Editor',
-    subtitle: `${sourceLang.toUpperCase()} -> ${targetLang.toUpperCase()}`
+    subtitle: `${LANGS[sourceLang]} -> ${LANGS[targetLang]}`
   });
 }

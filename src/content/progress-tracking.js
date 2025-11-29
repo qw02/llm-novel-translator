@@ -8,16 +8,17 @@ let globalTracker = null;
 /**
  * Gets or creates the global ProgressMetrics instance for this tab.
  */
-function getProgressTracker() {
+function getProgressTracker(totalStages) {
   if (!globalTracker) {
-    globalTracker = new ProgressMetrics();
+    globalTracker = new ProgressMetrics(totalStages);
   }
   return globalTracker;
 }
 
 class ProgressMetrics {
-  constructor() {
+  constructor(totalStages) {
     this.stages = new Map(); // stageId -> StageTracker
+    this.totalStages = totalStages || 5;
   }
 
   /**
@@ -70,9 +71,12 @@ class ProgressMetrics {
    */
   getState() {
     const state = {};
+    let globalProgress = 0;
     let globalTotal = 0;
     let globalCompleted = 0;
     let globalErrors = 0;
+
+    const stageWeight = 1 / this.totalStages;
 
     for (const [stageId, stage] of this.stages) {
       const stageData = stage.toJSON();
@@ -81,11 +85,21 @@ class ProgressMetrics {
       globalTotal += stageData.total || 0;
       globalCompleted += stageData.completed || 0;
       globalErrors += stageData.errorCount || 0;
+
+      // Calculate weighted progress for this stage
+      if (stageData.total > 0) {
+        // Cap at 1 in case completed somehow exceeds total
+        const stageProgress = Math.min(stageData.completed / stageData.total, 1);
+        globalProgress += stageProgress * stageWeight;
+      } else if (stageData.done) {
+        // Stage marked done with no tasks (skipped stage scenario)
+        globalProgress += stageWeight;
+      }
+      // If total === 0 and not done, stage contributes nothing yet
     }
 
-    // Global progress across all stages
     state.global = {
-      progress: globalTotal > 0 ? globalCompleted / globalTotal : 0,
+      progress: globalProgress,
       total: globalTotal,
       completed: globalCompleted,
       remaining: globalTotal - globalCompleted,

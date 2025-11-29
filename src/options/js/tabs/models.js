@@ -39,11 +39,11 @@ function getDefaultConfig() {
     },
 
     updateGlossary: true,
-    glossaryChunkSize: 2000,
+    glossaryChunkSize: 3000,
 
     textSegmentation: {
       method: 'chunk',
-      chunkSize: 1500,
+      chunkSize: 2000,
       overlapCount: 10,
     },
 
@@ -52,7 +52,7 @@ function getDefaultConfig() {
       contextLines: 5,
     },
 
-    postEdit: true,
+    postEdit: false,
 
     sourceLang: 'ja',
     targetLang: 'en',
