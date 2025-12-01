@@ -11,11 +11,14 @@ import { postEditText } from "./post-edit/post-edit.js";
 import { log } from "../../common/logger.js";
 
 export async function runPipeline(texts, glossary, config) {
+
+
   // Init object
-  getProgressTracker();
+  getProgressTracker(expectedTotalStages(config));
 
   try {
     let updatedGlossary = undefined;
+
     if (config.updateGlossary) {
       // Stage 1: Glossary Generation
       log(`Starting glossary generation.`);
@@ -49,4 +52,17 @@ export async function runPipeline(texts, glossary, config) {
     console.error('[Pipeline] Pipeline failed:', error);
     throw error;
   }
+}
+
+function expectedTotalStages(config) {
+  let total = 1; // TL
+  if (config.updateGlossary) {
+    total += 2
+  }
+
+  if (config.postEdit) {
+    total += 1
+  }
+
+  return total;
 }
