@@ -60,7 +60,7 @@ export async function translateText(config, texts, glossary, intervals) {
         sourceText,
         {
           precedingText,
-          relevantEntries,
+          glossaryEntries: relevantEntries,
           customInstruction: config.customInstruction,
         },
         config,

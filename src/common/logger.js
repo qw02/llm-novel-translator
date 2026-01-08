@@ -1,7 +1,7 @@
-let loggingEnabled = false;
+let loggingEnabled = true;
 
 chrome.storage.local.get('loggingEnabled').then((result) => {
-  loggingEnabled = result.loggingEnabled ?? false;
+  loggingEnabled = result.loggingEnabled ?? true;
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
