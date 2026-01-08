@@ -11,7 +11,7 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
 
 ### Chrome Web Store
 > [!NOTE]
-> **[Download from Chrome Web Store](https://chrome.google.com/webstore/detail/placeholder-link)** (Coming Soon)
+> **[Download from Chrome Web Store](https://chromewebstore.google.com/detail/llm-novel-translator-byok/gjmlfgonhkgmhdkdghgfldblbglkioen)**
 
 ### Manual Installation (Load Unpacked)
 1.  Download the latest release or clone this repository.
