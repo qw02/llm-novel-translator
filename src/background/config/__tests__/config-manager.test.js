@@ -21,7 +21,7 @@ describe('ConfigManager', () => {
 
     describe('resolveConfig', () => {
         it('should resolve hardcoded model config', async () => {
-            const llmId = '1-1'; // DeepSeek model from defaults
+            const llmId = '1-1';
             const customParams = { temperature: 0.9 };
 
             getAllApiKeys.mockResolvedValue({});
@@ -33,12 +33,12 @@ describe('ConfigManager', () => {
 
             expect(config.providerType).toBe('openrouter');
             expect(config.endpoint).toBe(PROVIDER_CONFIGS.openrouter.endpoint);
-            expect(config.params.model).toBe('moonshotai/kimi-k2-0905');
+            expect(config.params.model).toBe('deepseek/deepseek-v3.2');
             expect(config.params.temperature).toBe(0.9);
         });
 
         it('should merge parameters correctly (custom > user > model > default)', async () => {
-            const llmId = '3-1'; // GPT-5
+            const llmId = '3-1';
             const customParams = { temperature: 0.1 }; // Highest priority
 
             // Mock user params
@@ -50,7 +50,7 @@ describe('ConfigManager', () => {
 
             expect(config.params.temperature).toBe(0.1); // From custom
             expect(config.params.max_tokens).toBe(100); // From user
-            expect(config.params.model).toBe('gpt-5'); // From model config
+            expect(config.params.model).toBe('deepseek-chat'); // From model config
         });
     });
 

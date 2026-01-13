@@ -11,13 +11,13 @@ export const PROVIDER_CONFIGS = {
   openrouter: {
     endpoint: 'https://openrouter.ai/api/v1',
     models: [
-      { id: '1-1', model: 'deepseek/deepseek-v3.2-exp', label: 'DeepSeek V3.2', providers: ['DeepInfra', 'SiliconFlow', 'NovitaAI', 'GMICloud', 'DeepSeek'] },
+      { id: '1-1', model: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2', providers: ['DeepInfra', 'SiliconFlow', 'NovitaAI', 'GMICloud', 'DeepSeek'] },
       { id: '1-2', model: 'moonshotai/kimi-k2-0905', label: 'Kimi K2', providers: ['DeepInfra', 'Chutes'] },
-      { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 4 Pro', 'providers': ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low' },
-      { id: '1-4', model: 'google/gemini-2.5-flash-preview-09-2025', label: 'Gemini 2.5 Flash 2.5', 'providers': ['Google AI Studio', 'Google'] },
-      { id: '1-5', model: 'google/gemini-2.5-flash-lite-preview-06-17', label: 'Gemini 2.5 Flash-Lite', 'providers': ['Google AI Studio', 'Google'] },
+      { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro', 'providers': ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low' },
+      { id: '1-4', model: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', 'providers': ['Google AI Studio', 'Google'] },
+      { id: '1-5', model: 'google/gemini-2.5-flash-lite-preview-09-2025', label: 'Gemini 2.5 Flash-Lite', 'providers': ['Google AI Studio', 'Google'] },
       { id: '1-6', model: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast', 'providers': ['xAI'], reasoning: true, tokens: 8192 },
-      { id: '1-7', model: 'z-ai/glm-4.6', label: 'GLM 4.6', 'providers': ['z-ai'], tokens: 8192 },
+      { id: '1-7', model: 'z-ai/glm-4.7', label: 'GLM 4.7', 'providers': ['z-ai', 'novita/fp8', 'deepinfra/fp4'], tokens: 8192 },
       { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5' },
     ],
     limits: {
@@ -34,14 +34,14 @@ export const PROVIDER_CONFIGS = {
     models: [
       {
         id: '2-1',
-        model: 'gpt-5.1',
-        label: 'GPT-5.1 (Low)',
+        model: 'gpt-5.2',
+        label: 'GPT-5.2 (Low)',
         reasoning: 'low',
       },
       {
         id: '2-2',
-        model: 'gpt-5.1',
-        label: 'GPT-5.1 (High)',
+        model: 'gpt-5.2',
+        label: 'GPT-5.2 (High)',
         reasoning: 'high',
         tokens: 8192,
       },
@@ -73,12 +73,12 @@ export const PROVIDER_CONFIGS = {
       {
         id: '3-1',
         model: 'deepseek-chat',
-        label: 'DeepSeek V3.2 Exp (Non-reasoning)',
+        label: 'DeepSeek V3.2 (Non-reasoning)',
       },
       {
         id: '3-2',
         model: 'deepseek-reasoner',
-        label: 'DeepSeek V3.2 Exp (Reasoning)',
+        label: 'DeepSeek V3.2 (Reasoning)',
         tokens: 8192,
       },
     ],
@@ -138,15 +138,15 @@ export const PROVIDER_CONFIGS = {
     models: [
       {
         id: '6-1',
-        model: 'gemini-2.5-pro',
-        label: 'Gemini Pro 2.5 (Medium)',
-        reasoning: 'medium',
+        model: 'gemini-3-pro',
+        label: 'Gemini Pro 3',
+        reasoning: 'high',
         tokens: 8192,
       },
       {
         id: '6-2',
-        model: 'gemini-2.5-pro',
-        label: 'Gemini Pro 2.5 (Low)',
+        model: 'gemini-3-pro',
+        label: 'Gemini Pro 3 (Low)',
         reasoning: 'low',
       },
       {
@@ -164,15 +164,15 @@ export const PROVIDER_CONFIGS = {
       },
       {
         id: '6-5',
-        model: 'gemini-2.5-flash-preview-09-2025',
-        label: 'Gemini Flash 2.5 (Medium)',
+        model: 'gemini-3-flash-preview',
+        label: 'Gemini Flash 3 (Medium)',
         reasoning: 'medium',
         tokens: 8192,
       },
       {
         id: '6-6',
-        model: 'gemini-2.5-flash-preview-09-2025',
-        label: 'Gemini Flash 2.5 (Non-reasoning)',
+        model: 'gemini-3-flash-preview',
+        label: 'Gemini Flash 3 (Non-reasoning)',
         reasoning: 'minimal',
       },
     ],
