@@ -26,6 +26,9 @@
             <button class="sidebar-item" data-tab="custom-instructions">
                 Custom Instructions
             </button>
+            <button class="sidebar-item" data-tab="misc-settings">
+                Misc. Settings
+            </button>
         </nav>
     </aside>
 
@@ -404,6 +407,32 @@
                 <div class="actions-right">
                     <button id="custom-instructions-delete" type="button" class="btn-danger">Delete</button>
                 </div>
+            </div>
+        </section>
+
+        <section id="tab-misc-settings" class="tab" hidden>
+            <h2>Miscellaneous Settings</h2>
+            <p>Various settings for the extension.</p>
+
+            <div class="misc-settings-group">
+                <h3>Debug / Logging</h3>
+                <label class="setting-row">
+                    <input type="checkbox" id="misc-logging-enabled">
+                    Enable Logging
+                </label>
+                <p class="setting-desc">
+                    When enabled, the extension will write extra messages to the browser console to help diagnose problems.
+                    This can make the console noisy.
+                    Some messages appear in the extension’s service worker log and may disappear when it stops, so open the service worker inspector first (chrome://extensions → Inspect views →
+                    service worker).
+                </p>
+            </div>
+
+            <div id="misc-settings-status" class="status-message" aria-live="polite"></div>
+
+            <div class="tab-actions">
+                <button id="misc-settings-save" type="button">Save</button>
+                <button id="misc-settings-cancel" type="button">Cancel</button>
             </div>
         </section>
     </main>

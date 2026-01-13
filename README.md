@@ -1,7 +1,7 @@
 # LLM Novel Translator (BYOK)
 
 ![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.1-green.svg)
 
 **LLM Novel Translator** is an open-source Chrome Extension designed to translate web novels using the power of Large Language Models (LLMs). It features a unique **auto-generating glossary** system that maintains consistency of terms (names, places, ranks) across chapters.
 

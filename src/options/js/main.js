@@ -3,6 +3,7 @@ import { modelsTabController } from './tabs/models.js';
 import { glossaryTabController } from "./tabs/glossary-tab.js";
 import { customInstructionsTabController } from "./tabs/custom-instructions.js";
 import { welcomeTabController } from './tabs/welcome.js';
+import { miscSettingsController } from './tabs/misc-settings.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebarButtons = Array.from(
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'models': modelsTabController,
     'glossary': glossaryTabController,
     'custom-instructions': customInstructionsTabController,
+    'misc-settings': miscSettingsController,
   };
 
   let currentTabId = 'welcome';

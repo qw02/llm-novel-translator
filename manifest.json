@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LLM Novel Translator (BYOK)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LLM-powered web novel translation with context-aware glossary across chapters. BYOK—bring your own key, no middleman markup.",
   "permissions": [
     "storage",

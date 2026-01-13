@@ -27,7 +27,7 @@ export async function runPipeline(texts, glossary, config) {
 
       // Stage 2: Glossary Update
       updatedGlossary = await updateGlossary(config, glossary, newEntries);
-      log(`Completed update, glossary now has ${updatedGlossary?.length ?? glossary.length} entries.`);
+      log(`Completed update, glossary now has ${updatedGlossary.entries.length} entries.`);
     }
 
     // Stage 3: Text Splitting
@@ -58,6 +58,11 @@ function expectedTotalStages(config) {
   let total = 1; // TL
   if (config.updateGlossary) {
     total += 2
+  }
+
+  // Only this method uses LLM calls
+  if (config.textSegmentation.method === "chunk") {
+    total += 1
   }
 
   if (config.postEdit) {
