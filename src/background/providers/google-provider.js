@@ -39,15 +39,24 @@ export class GoogleProvider extends BaseProvider {
         maxOutputTokens: params.max_tokens ?? 4096,
       };
 
-        if (systemInstruction) {
+      if (systemInstruction) {
         config.systemInstruction = systemInstruction;
       }
 
-      const thinkingBudget = this._mapReasoningToThinkingBudget(params.reasoning);
-      if (thinkingBudget !== null) {
-        config.thinkingConfig = {
-          thinkingBudget: thinkingBudget,
-        };
+
+      if (params.model.includes("gemini-3")) {
+        if (params.reasoning !== null) {
+          config.thinkingConfig = {
+            thinkingLevel: params.reasoning,
+          };
+        }
+      } else {
+        const thinkingBudget = this._mapReasoningToThinkingBudget(params.reasoning);
+        if (thinkingBudget !== null) {
+          config.thinkingConfig = {
+            thinkingBudget: thinkingBudget,
+          };
+        }
       }
 
       const response = await this.ai.models.generateContent({
@@ -191,7 +200,7 @@ export class GoogleProvider extends BaseProvider {
       (error.message?.includes('thinking') ||
         error.message?.includes('thinkingBudget'))) {
       const enhancedError = new Error(
-        'Invalid thinking configuration for Google model (check thinking budget limits)'
+        'Invalid thinking configuration for Google model (check thinking budget limits)',
       );
       enhancedError.originalError = error;
       enhancedError.provider = 'google';
@@ -201,7 +210,7 @@ export class GoogleProvider extends BaseProvider {
     // Invalid model errors
     if (error.status === 404 || error.message?.includes('not found')) {
       const enhancedError = new Error(
-        `Google model not found or not available: ${error.message}`
+        `Google model not found or not available: ${error.message}`,
       );
       enhancedError.originalError = error;
       enhancedError.provider = 'google';
