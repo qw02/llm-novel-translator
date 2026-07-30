@@ -5,6 +5,7 @@
 import { getPromptBuilder } from '../../prompts/index.js';
 import { LLMClient } from "../../llm-client.js";
 import { parseJSONFromLLM } from "../../utils/data-extraction.js"
+import { requestBatchWithRetry, isUnparseableJSON } from "../../utils/llm-retry.js"
 import { getParagraphWeight } from "../../utils/text-helpers.js";
 
 // Default chunk size for glossary generation
@@ -34,7 +35,14 @@ export async function generateGlossary(config, textSegments) {
     const prompts = chunks.map(chunk => promptBuilder.build(chunk, config));
 
     // Run inference in parallel
-    const results = await client.requestBatch(prompts);
+    const results = await requestBatchWithRetry({
+      client,
+      fallbackLlmId: config.llm?.fallback ?? null,
+      stageId: "1",
+      stageLabel: "Glossary Generation",
+      prompts,
+      isMalformed: isUnparseableJSON,
+    });
 
     // Consolidate responses
     const allEntries = [];

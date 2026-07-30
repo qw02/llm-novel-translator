@@ -4,6 +4,7 @@
 import { getPromptBuilder } from "../../prompts/index.js";
 import { LLMClient } from "../../llm-client.js";
 import { extractTextFromTag } from "../../utils/data-extraction.js";
+import { requestBatchWithRetry, isMalformedTranslation } from "../../utils/llm-retry.js";
 
 /**
  * Translates text based on provided intervals.
@@ -78,7 +79,14 @@ export async function translateText(config, texts, glossary, intervals) {
     const prompts = promptData.map(m => m.prompt);
 
     // Send to LLM
-    const results = await client.requestBatch(prompts);
+    const results = await requestBatchWithRetry({
+      client,
+      fallbackLlmId: config.llm?.fallback ?? null,
+      stageId: "4",
+      stageLabel: "Translation",
+      prompts,
+      isMalformed: isMalformedTranslation,
+    });
 
     // Store data for post-editing
     const intervalMetadata = [];

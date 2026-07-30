@@ -4,6 +4,7 @@
 import { LLMClient } from "../../llm-client.js";
 import { getPromptBuilder } from "../../prompts/index.js";
 import { PostEditProcessor } from "./edit-processor.js";
+import { requestBatchWithRetry, isMalformedOperations } from "../../utils/llm-retry.js";
 
 /**
  * Post-edits translations based on metadata from translation stage.
@@ -65,7 +66,14 @@ export async function postEditText(config, translatedTexts, translationMetadata)
     const prompts = promptData.map(d => d.prompt);
 
     // Send to LLM
-    const results = await client.requestBatch(prompts);
+    const results = await requestBatchWithRetry({
+      client,
+      fallbackLlmId: config.llm?.fallback ?? null,
+      stageId: "5",
+      stageLabel: "Post Editing",
+      prompts,
+      isMalformed: isMalformedOperations,
+    });
 
     const processor = new PostEditProcessor();
 

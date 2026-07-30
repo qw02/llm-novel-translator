@@ -346,6 +346,31 @@
                 </div>
             </section>
 
+            <!-- Fallback model for malformed-output retries -->
+            <section class="stage" id="stage-fallback">
+                <h3>Fallback Model</h3>
+                <p>If a model repeatedly returns malformed output (e.g., broken JSON or missing tags), the request is retried up to 2 times, and the final attempt uses this fallback model instead. Applies to all stages.</p>
+                <p>Recommended setting: a cheap, reliable model (e.g., Gemini Flash).</p>
+
+                <div id="fallback-models" class="stage-models">
+                    <div class="stage-block">
+                        <h4>Fallback Model</h4>
+                        <label>
+                            Provider:
+                            <select id="provider-fallback"
+                                    class="provider-select"
+                                    data-stage="fallback"></select>
+                        </label>
+                        <label>
+                            Model:
+                            <select id="model-fallback"
+                                    class="model-select"
+                                    data-stage="fallback"></select>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
             <div id="models-status" class="status-message" aria-live="polite"></div>
 
             <div class="tab-actions">

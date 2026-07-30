@@ -22,8 +22,8 @@ export class OpenRouterProvider extends BaseProvider {
       apiKey: this.apiKey,
       baseURL: this.endpoint,
       defaultHeaders: {
-        'HTTP-Referer': 'https://github.com/qw02/llm-novel-translator',
-        'X-Title': 'LLM Novel Translator',
+        // 'HTTP-Referer': 'https://github.com/qw02/llm-novel-translator',
+        // 'X-Title': 'LLM Novel Translator',
       },
     });
   }

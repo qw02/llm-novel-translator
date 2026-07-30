@@ -141,5 +141,6 @@ export async function applyCSS(targetLang, cssClass) {
     el.style.wordBreak = wordBreak;
     el.style.overflowWrap = overflowWrap;
     el.style.fontFamily = fontFamily;
+    el.style.textIndent = '1.5em';
   });
 }

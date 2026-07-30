@@ -3,6 +3,7 @@ import { LLMClient } from "../../llm-client.js";
 import { getPromptBuilder } from "../../prompts/index.js";
 import { mergeChunkIntervals } from "../../utils/merge-intervals.js";
 import { getParagraphWeight } from "../../utils/text-helpers.js";
+import { requestBatchWithRetry, isUnparseableJSON } from "../../utils/llm-retry.js";
 
 /**
  * Segments text using LLM-based chunking strategy.
@@ -40,7 +41,14 @@ export async function segmentWithChunking(config, texts) {
       promptBuilder.build(batch.paragraphs, batch.offset, config),
     );
 
-    const results = await client.requestBatch(prompts);
+    const results = await requestBatchWithRetry({
+      client,
+      fallbackLlmId: config.llm?.fallback ?? null,
+      stageId: "3",
+      stageLabel: "Text Segmentation",
+      prompts,
+      isMalformed: isUnparseableJSON,
+    });
 
     // Parse each response and unmap offsets to get actual paragraph indices
     const intervalLists = results.map((result, i) => {

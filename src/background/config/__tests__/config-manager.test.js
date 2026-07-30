@@ -50,7 +50,7 @@ describe('ConfigManager', () => {
 
             expect(config.params.temperature).toBe(0.1); // From custom
             expect(config.params.max_tokens).toBe(100); // From user
-            expect(config.params.model).toBe('deepseek-chat'); // From model config
+            expect(config.params.model).toBe('deepseek-v4-flash'); // From model config
         });
     });
 

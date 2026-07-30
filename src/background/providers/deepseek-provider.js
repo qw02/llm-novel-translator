@@ -36,8 +36,26 @@ export class DeepSeekProvider extends BaseProvider {
         model: params.model,
         messages: messages,
         temperature: params.temperature ?? 1.0,
-        max_tokens: params.max_tokens ?? 4096,
+        max_tokens: params.max_tokens ?? 8192,
       };
+
+      if (params.reasoning) {
+        requestPayload.extra_body = {
+          thinking: {
+            type: 'enabled',
+          },
+        };
+
+        if (typeof params.reasoning === 'string') {
+          requestPayload.reasoning_effort = params.reasoning;
+        }
+      } else {
+        requestPayload.extra_body = {
+          thinking: {
+            type: 'disabled',
+          },
+        };
+      }
 
       const response = await this.client.chat.completions.create(requestPayload);
 

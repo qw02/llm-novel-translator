@@ -15,6 +15,7 @@ const STAGES = {
   textChunking: { index: 3, providerSelectId: 'provider-text-chunking', modelSelectId: 'model-text-chunking' },
   translation: { index: 4, providerSelectId: 'provider-translation', modelSelectId: 'model-translation' },
   postEdit: { index: 5, providerSelectId: 'provider-postedit', modelSelectId: 'model-postedit' },
+  fallback: { index: 6, providerSelectId: 'provider-fallback', modelSelectId: 'model-fallback' },
 };
 
 const SUPPORTED_LANGS = Object.entries(LANGS).map(([code, label]) => ({
@@ -36,6 +37,7 @@ function getDefaultConfig() {
       textChunking: null,
       translation: null,
       postEdit: null,
+      fallback: null,
     },
 
     updateGlossary: true,
@@ -430,6 +432,8 @@ export class ModelsTabController {
     const stageMeta = STAGES[stageKey];
     if (!stageMeta) return [];
 
+    // Fallback model is generic; stage limits don't apply to it
+    const isFallback = stageKey === 'fallback';
     const stageIndex = stageMeta.index;
     const isAdvanced = this.config.mode === 'advanced';
     const showAll = isAdvanced && this.config.showAllModels;
@@ -441,6 +445,7 @@ export class ModelsTabController {
       // Only recommended models and respect limits (stages where they are suggested)
       models = models.filter((m) => {
         if (m.source !== 'recommended') return false;
+        if (isFallback) return true;
         if (!Array.isArray(m.limits)) return true;
         return m.limits.includes(stageIndex);
       });
@@ -476,8 +481,17 @@ export class ModelsTabController {
       new Set(modelsForStage.map((m) => m.provider)),
     );
 
+    const allowNone = stageKey === 'fallback';
+
     providerSelect.innerHTML = '';
     modelSelect.innerHTML = '';
+
+    if (allowNone) {
+      const noneOpt = document.createElement('option');
+      noneOpt.value = '';
+      noneOpt.textContent = 'None';
+      providerSelect.appendChild(noneOpt);
+    }
 
     if (providers.length === 0) {
       const opt = document.createElement('option');
@@ -497,6 +511,12 @@ export class ModelsTabController {
     const currentModelId = this.config.llm[stageKey] || null;
     const currentModel = modelsForStage.find((m) => m.id === currentModelId);
     let selectedProvider = currentModel ? currentModel.provider : providers[0];
+
+    if (allowNone && !currentModel) {
+      providerSelect.value = '';
+      this.populateModelOptions(stageKey, '', null);
+      return;
+    }
 
     // Populate provider select
     providers.forEach((provider) => {
@@ -519,6 +539,18 @@ export class ModelsTabController {
     if (!modelSelect) return;
 
     modelSelect.innerHTML = '';
+
+    if (stageKey === 'fallback' && !provider) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'None (retries use the same model)';
+      modelSelect.appendChild(opt);
+      modelSelect.disabled = true;
+      this.config.llm[stageKey] = null;
+      return;
+    }
+
+    modelSelect.disabled = false;
 
     if (providerModels.length === 0) {
       const opt = document.createElement('option');
@@ -666,6 +698,9 @@ export class ModelsTabController {
       const pairConfig = this.currentPairModule.getConfig();
       Object.assign(config.translation, pairConfig);
     }
+
+    // Fallback model for malformed-output retries (generic across stages)
+    config.llm.fallback = this.stageModelSelects.fallback.value || null;
 
     // Post-edit
     const postEditEnabled = this.postEditEnabledCheckbox.checked;

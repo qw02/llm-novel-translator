@@ -1,5 +1,6 @@
 // Minimal async mutex to separate pending entries selection / scheduling from dictionary update / mutation
 import { parseJSONFromLLM } from "../../utils/data-extraction.js";
+import { requestWithRetry, isUnparseableJSON } from "../../utils/llm-retry.js";
 
 export class AsyncMutex {
   constructor() {
@@ -88,7 +89,14 @@ export class GlossaryUpdater {
           const prompt = this._createConflictPrompt(conflicts, candidate.entry);
 
           // Enqueue request using LLMClient
-          const basePromise = this.client.request(prompt);
+          const basePromise = requestWithRetry({
+            client: this.client,
+            fallbackLlmId: this.config?.llm?.fallback ?? null,
+            stageId: "2",
+            stageLabel: "Glossary Update",
+            prompt,
+            isMalformed: isUnparseableJSON,
+          }).then(({ raw }) => raw);
 
           // Attach metadata and a local sequence id so we can identify which promise completed.
           const meta = {
