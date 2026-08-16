@@ -259,6 +259,11 @@
 
                 <!-- Advanced-only chunk settings -->
                 <div id="segmentation-advanced-settings" class="advanced-row" hidden>
+                    <p>Target size of each chunk sent for translation. Use smaller chunks for weaker / locally-run models, larger chunks for frontier models. Default: Medium</p>
+                    <label for="chunk-target-size">Target chunk size:</label>
+                    <select id="chunk-target-size"></select>
+                    <p id="chunk-target-size-desc"></p>
+
                     <p>Number of CJk chars or words in one block. Default: 2000</p>
                     <label for="chunk-size">Chunk size:</label>
                     <select id="chunk-size">

@@ -1,4 +1,37 @@
-import { getChunkingUserParts } from "../utils.js";
+import { getChunkingUserParts, resolveChunkSizePreset } from "../utils.js";
+
+/**
+ * Target chunk size presets for the generic (all-language) fallback prompt.
+ * Keys appear as options in the advanced options UI; each entry's `description`
+ * is shown below the selector, and the remaining fields are interpolated into
+ * the system prompt below. `medium` matches the original hard-coded prompt.
+ */
+export const chunkSizeOptions = {
+  small: {
+    description: "Smaller chunks of roughly 80 tokens (~60 CJK characters or latin words). Better suited for locally-run or weaker models (e.g., ~30b class).",
+    targetTokens: 80,
+    approxChars: 60,
+    targetLines: "3-8",
+    minChars: 30,
+    maxDialogueLines: 5,
+  },
+  medium: {
+    description: "Balanced chunks of roughly 150 tokens (~100 CJK characters or latin words). Recommended default for most models.",
+    targetTokens: 150,
+    approxChars: 100,
+    targetLines: "5-15",
+    minChars: 50,
+    maxDialogueLines: 10,
+  },
+  large: {
+    description: "Larger chunks of roughly 300 tokens (~200 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+    targetTokens: 300,
+    approxChars: 200,
+    targetLines: "10-30",
+    minChars: 80,
+    maxDialogueLines: 20,
+  },
+};
 
 export default {
   /**
@@ -6,11 +39,16 @@ export default {
    * @param {Array<{text: string, index: number}>} indexedParagraphs - The paragraphs for this batch.
    * @param offset - The offset to subtract for mapping indices to lower range.
    * @param {Object} config - Configuration.
+   * @param {Object} [config.textSegmentation] - Segmentation settings (targetSize selects a chunkSizeOptions preset)
    * @returns {{system: string, user: string}}
    */
   build(indexedParagraphs, offset = 0, config) {
     const src = config.sourceLangName;
     const tgt = config.targetLangName;
+    const { preset } = resolveChunkSizePreset(
+      chunkSizeOptions,
+      config?.textSegmentation?.targetSize,
+    );
 
     const system = `
 You are an expert linguistic structural analyst. Your task is to segment a text written in **${src}** into semantically coherent chunks to prepare it for a downstream LLM-based translation into **${tgt}**.
@@ -34,13 +72,13 @@ You are an expert linguistic structural analyst. Your task is to segment a text 
 
 **1. Target Size (Token Economy)**
 The downstream translation process works best with semantically meaningful chunks of text.
-- **Target:** Aim for chunks roughly equivalent to **150 tokens** (approx. **100** CJK characters or latin words** or **5-15 lines** depending on density).
-- **Minimum:** Avoid creating chunks with less than ~50 characters or words unless it is the very end of the file.
+- **Target:** Aim for chunks roughly equivalent to **${preset.targetTokens} tokens** (approx. **${preset.approxChars}** CJK characters or latin words** or **${preset.targetLines} lines** depending on density).
+- **Minimum:** Avoid creating chunks with less than ~${preset.minChars} characters or words unless it is the very end of the file.
 
 **2. Semantic Coherence**
 Group text based on flow.
 - **Scene Consistency:** Keep a full scene or a long exchange of dialogue in one chunk if possible.
-- **Dialogue:** Do not split short back-and-forth dialogue. Only split dialogue if the conversation is massive (>10 lines).
+- **Dialogue:** Do not split short back-and-forth dialogue. Only split dialogue if the conversation is massive (>${preset.maxDialogueLines} lines).
 - **Separators:** **Never** isolate scene separators (e.g., \`***\`, \`---\`, \`===\`) into their own chunk. Always attach them to the **beginning** of the *next* chunk to provide context that a new scene is starting.
 
 **3. Split Priorities**

@@ -1,4 +1,40 @@
-import { getChunkingUserParts } from "../utils.js";
+import { getChunkingUserParts, resolveChunkSizePreset } from "../utils.js";
+
+/**
+ * Target chunk size presets for this language pair.
+ * Keys appear as options in the advanced options UI; each entry's `description`
+ * is shown below the selector, and the remaining fields are interpolated into
+ * the system prompt below. `medium` matches the original hard-coded prompt.
+ */
+export const chunkSizeOptions = {
+  small: {
+    description: "Smaller chunks of roughly 50–100 characters. Better suited for locally-run or weaker models (e.g., ~30b class).",
+    targetRange: "50–100",
+    allowedRange: "25–200",
+    hardCap: 150,
+    ultraShortBelow: 20,
+    mergeMax: 100,
+    blockSplitCap: 100,
+  },
+  medium: {
+    description: "Balanced chunks of roughly 100–200 characters. Recommended default for most models.",
+    targetRange: "100–200",
+    allowedRange: "50–400",
+    hardCap: 300,
+    ultraShortBelow: 40,
+    mergeMax: 200,
+    blockSplitCap: 200,
+  },
+  large: {
+    description: "Larger chunks of roughly 300–500 characters. For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+    targetRange: "300–500",
+    allowedRange: "150–900",
+    hardCap: 700,
+    ultraShortBelow: 80,
+    mergeMax: 400,
+    blockSplitCap: 300,
+  },
+};
 
 export default {
   /**
@@ -8,9 +44,15 @@ export default {
    * @param {Object} config - Configuration.
    * @param {string} [config.sourceLang] - Language of original raw text
    * @param {string} [config.targetLang] - Language of translation
+   * @param {Object} [config.textSegmentation] - Segmentation settings (targetSize selects a chunkSizeOptions preset)
    * @returns {{system: string, user: string}}
    */
   build(indexedParagraphs, offset = 0, config) {
+    const { preset } = resolveChunkSizePreset(
+      chunkSizeOptions,
+      config?.textSegmentation?.targetSize,
+    );
+
     const system = `
 You are an expert text analyst specializing in literary structure. Your primary task is to segment a long-form Japanese text into semantically coherent chunks, preparing it for a downstream translation process. The goal is to create chunks that are logical units of meaning, such as a complete scene, a distinct block of dialogue, or a self-contained descriptive passage.
 
@@ -33,11 +75,11 @@ You are an expert text analyst specializing in literary structure. Your primary 
 
 ### Chunking Goals
 - Primary constraint: chunk length (count content only; exclude the [n] prefixes).
-  - Target: 100–200 characters.
-  - Allowed: 50–400 characters.
-  - Hard cap: Avoid intervals whose content length exceeds 300 characters. Split as needed to respect this cap, even within a long scene or special block.
+  - Target: ${preset.targetRange} characters.
+  - Allowed: ${preset.allowedRange} characters.
+  - Hard cap: Avoid intervals whose content length exceeds ${preset.hardCap} characters. Split as needed to respect this cap, even within a long scene or special block.
 - Semantic coherence is important. Prefer clean breakpoints, but never exceed the hard cap to preserve a scene.
-- Smaller chunks are acceptable; try to avoid ultra‑short chunks (<40 characters) by merging with an adjacent chunk if it remains ≤200 characters.
+- Smaller chunks are acceptable; try to avoid ultra‑short chunks (<${preset.ultraShortBelow} characters) by merging with an adjacent chunk if it remains ≤${preset.mergeMax} characters.
 - Prefer to start chunks at natural breakpoints:
   - Scene or section separators (e.g., ＊＊＊, ─────, =====, ※※※).
   - Headings and metadata lines (e.g., 第N話, 【タイトル】, ◇～視点, side:, 視点：, POV).
@@ -48,7 +90,7 @@ You are an expert text analyst specializing in literary structure. Your primary 
 - It’s acceptable—and often required—to split long conversations, long narration, chat logs, lists, or tables across multiple chunks to satisfy the character budget. Choose the least disruptive boundary (after sentence-ending punctuation 「。！？」、after closing quotes 」/』、at paragraph breaks、or between list/log/table rows).
 
 ### Do not split inside the following unless unavoidable
-- Prefer to keep these contiguous, but if keeping them intact would cause a chunk to exceed 200 characters, you must split within the block. Use these safe sub-boundaries:
+- Prefer to keep these contiguous, but if keeping them intact would cause a chunk to exceed ${preset.blockSplitCap} characters, you must split within the block. Use these safe sub-boundaries:
   - Continuous dialogue: between utterances (between lines starting with 「 or 『) or after a narration beat; avoid cutting inside a single speech line if possible.
   - Lists/enumerations: between items.
   - Chat/comment logs: between messages; group a handful of lines per chunk to meet the budget.

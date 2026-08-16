@@ -1,5 +1,7 @@
 import { ja_en_settings } from '../lang-settings/ja_en.js';
 import { LANGS } from "../../../common/languages.js";
+import { getChunkSizeOptions } from '../../../content/prompts/index.js';
+import { resolveChunkSizePreset, DEFAULT_TARGET_SIZE } from '../../../content/prompts/utils.js';
 
 // Map of pair keys to their settings modules
 const PAIR_SETTINGS_MAP = {
@@ -47,6 +49,7 @@ function getDefaultConfig() {
       method: 'chunk',
       chunkSize: 2000,
       overlapCount: 10,
+      targetSize: DEFAULT_TARGET_SIZE,
     },
 
     translation: {
@@ -89,6 +92,9 @@ export class ModelsTabController {
     this.segmentationAdvancedContainer = null;
     this.chunkSizeSelect = null;
     this.overlapCountSelect = null;
+    this.chunkTargetSizeSelect = null;
+    this.chunkTargetSizeDesc = null;
+    this.currentChunkSizeOptions = null;
 
     this.postEditEnabledCheckbox = null;
     this.postEditModelsContainer = null;
@@ -144,6 +150,8 @@ export class ModelsTabController {
     this.segmentationAdvancedContainer = document.getElementById('segmentation-advanced-settings');
     this.chunkSizeSelect = document.getElementById('chunk-size');
     this.overlapCountSelect = document.getElementById('overlap-count');
+    this.chunkTargetSizeSelect = document.getElementById('chunk-target-size');
+    this.chunkTargetSizeDesc = document.getElementById('chunk-target-size-desc');
 
     this.postEditEnabledCheckbox = document.getElementById('postedit-enabled');
     this.postEditModelsContainer = document.getElementById('postedit-models');
@@ -227,6 +235,13 @@ export class ModelsTabController {
 
     this.overlapCountSelect.addEventListener('change', () => {
       this.config.textSegmentation.overlapCount = parseInt(this.overlapCountSelect.value, 10);
+      this.markDirty();
+    });
+
+    // Segment chunk target size
+    this.chunkTargetSizeSelect.addEventListener('change', () => {
+      this.config.textSegmentation.targetSize = this.chunkTargetSizeSelect.value;
+      this.updateChunkTargetSizeDescription();
       this.markDirty();
     });
 
@@ -351,6 +366,7 @@ export class ModelsTabController {
     this.chunkSizeSelect.value = String(this.config.textSegmentation.chunkSize || 1500);
     this.overlapCountSelect.value = String(this.config.textSegmentation.overlapCount || 10);
     this.updateSegmentationUI();
+    void this.renderChunkTargetSizeSelect();
 
     // Post-edit
     this.postEditEnabledCheckbox.checked = !!this.config.postEdit;
@@ -383,6 +399,58 @@ export class ModelsTabController {
 
     const isAdvanced = this.config.mode === 'advanced';
     this.segmentationAdvancedContainer.hidden = !(isAdvanced && usesModel);
+  }
+
+  /**
+   * Populate the target chunk size select from the current language pair's presets.
+   * Unknown or missing stored keys fall back to the default ('medium' or first key).
+   */
+  async renderChunkTargetSizeSelect() {
+    if (!this.chunkTargetSizeSelect) return;
+
+    const pairKey = `${this.config.sourceLang}_${this.config.targetLang}`;
+
+    let options;
+    try {
+      options = await getChunkSizeOptions(pairKey);
+    } catch (error) {
+      console.error('[Options] Failed to load chunk size options:', error);
+      options = null;
+    }
+
+    this.currentChunkSizeOptions = options || {};
+    const keys = Object.keys(this.currentChunkSizeOptions);
+
+    this.chunkTargetSizeSelect.innerHTML = '';
+    if (keys.length === 0) {
+      this.chunkTargetSizeDesc.textContent = '';
+      return;
+    }
+
+    keys.forEach((key) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+      this.chunkTargetSizeSelect.appendChild(opt);
+    });
+
+    const { key } = this.resolveChunkTargetSize(this.config.textSegmentation.targetSize);
+    this.chunkTargetSizeSelect.value = key;
+    this.updateChunkTargetSizeDescription();
+  }
+
+  updateChunkTargetSizeDescription() {
+    if (!this.chunkTargetSizeDesc) return;
+    const preset = this.currentChunkSizeOptions?.[this.chunkTargetSizeSelect.value];
+    this.chunkTargetSizeDesc.textContent = preset?.description || '';
+  }
+
+  resolveChunkTargetSize(value) {
+    const options = this.currentChunkSizeOptions;
+    if (options && Object.keys(options).length > 0) {
+      return resolveChunkSizePreset(options, value);
+    }
+    return { key: value || DEFAULT_TARGET_SIZE };
   }
 
   async loadModels() {
@@ -610,6 +678,7 @@ export class ModelsTabController {
   onLanguagePairChanged() {
     // In the future, this might request pair-specific defaults from the background worker.
     this.renderPairSpecificSettings();
+    void this.renderChunkTargetSizeSelect();
   }
 
   renderPairSpecificSettings() {
@@ -679,9 +748,11 @@ export class ModelsTabController {
       if (config.mode === 'advanced') {
         config.textSegmentation.chunkSize = parseInt(this.chunkSizeSelect.value, 10);
         config.textSegmentation.overlapCount = parseInt(this.overlapCountSelect.value, 10);
+        config.textSegmentation.targetSize = this.resolveChunkTargetSize(this.chunkTargetSizeSelect.value).key;
       } else {
         config.textSegmentation.chunkSize = this.config.textSegmentation.chunkSize || 1500;
         config.textSegmentation.overlapCount = this.config.textSegmentation.overlapCount || 10;
+        config.textSegmentation.targetSize = this.config.textSegmentation.targetSize || DEFAULT_TARGET_SIZE;
       }
     } else {
       config.llm.textChunking = null;
