@@ -19,6 +19,21 @@ const MAX_ATTEMPTS = 3;
 const FALLBACK_ATTEMPT = 3;
 
 /**
+ * Logs the malformed response body (and the model's reasoning trace, when
+ * present) so callers can inspect exactly what the model produced.
+ *
+ * @param {string} raw - The assistant response text
+ * @param {string|null} reasoning - The model's reasoning trace, if any
+ */
+function logMalformedResponse(raw, reasoning) {
+  const sections = [`[LLMRetry] Malformed response body:\n${raw}`];
+  if (reasoning) {
+    sections.push(`[LLMRetry] Model reasoning:\n${reasoning}`);
+  }
+  console.warn(sections.join('\n'));
+}
+
+/**
  * Sends a prompt with malformed-output retries.
  *
  * @param {Object} params
@@ -47,7 +62,7 @@ export async function requestWithRetry({
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const useFallback = attempt === FALLBACK_ATTEMPT && !!fallbackLlmId;
 
-      let raw;
+      let clientForAttempt;
       if (useFallback) {
         if (!fallbackClient) {
           fallbackClient = new LLMClient({
@@ -58,13 +73,19 @@ export async function requestWithRetry({
           });
         }
         console.warn(`[LLMRetry] Retrying with fallback model '${fallbackLlmId}' (attempt ${attempt}/${MAX_ATTEMPTS}).`);
-        raw = await fallbackClient.request(prompt);
+        clientForAttempt = fallbackClient;
       } else {
         if (attempt > 1) {
           console.warn(`[LLMRetry] Malformed output, retrying same request (attempt ${attempt}/${MAX_ATTEMPTS}).`);
         }
-        raw = await client.request(prompt);
+        clientForAttempt = client;
       }
+
+      // LLMClient.request resolves with { assistant, reasoning }; reasoning is
+      // null for models that don't expose a reasoning trace.
+      const response = await clientForAttempt.request(prompt);
+      const raw = response.assistant;
+      const reasoning = response.reasoning ?? null;
 
       lastRaw = raw;
 
@@ -72,6 +93,7 @@ export async function requestWithRetry({
         return { raw, attempts: attempt, usedFallback: useFallback, malformed: false };
       }
 
+      logMalformedResponse(raw, reasoning);
       console.warn(`[LLMRetry] Attempt ${attempt}/${MAX_ATTEMPTS} returned malformed output.`);
     }
 

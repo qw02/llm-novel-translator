@@ -82,7 +82,7 @@ export class ConfigManager {
           model: model.model,
           label: model.label,
           source: 'recommended',
-          stages: this._getModelStages(model.id, config.limits), // Add stages info
+          limits: this._getModelStages(model.id, config.limits), // Stage indexes this model is suggested for
         });
       });
     }
@@ -116,41 +116,37 @@ export class ConfigManager {
   /**
    * Determines which stages a model is recommended for based on limits config.
    *
+   * Limits keys map to UI stage indexes (see options/js/tabs/models.js STAGES):
+   * - stage1..stage6 for single-key stages (6 = fallback model)
+   * - stage3a / stage3b are sub-keys that both map to stage 3
+   *
    * @param {string} modelId - Model identifier (e.g., '1-1', '3-4')
    * @param {Object} limits - Limits object from provider config
-   * @returns {Array<number>} Array of stage numbers (1-5) where model is recommended
+   * @returns {Array<number>} Array of stage indexes (1-6) where model is recommended
    * @private
    *
    * @example
-   * // limits = { stage1: 'all', stage2: ['1-4'], stage3: 'all', stage4: 'all', stage5: 'all' }
-   * _getModelStages('1-4', limits) // Returns [1, 2, 3, 4, 5]
-   * _getModelStages('1-1', limits) // Returns [1, 3, 4, 5]
+   * // limits = { stage1: 'all', stage2: ['1-4'], stage3a: ['1-4'], stage3b: 'all', stage6: 'all' }
+   * _getModelStages('1-4', limits) // Returns [1, 2, 3, 6]
+   * _getModelStages('1-1', limits) // Returns [1, 3, 6]
    */
   _getModelStages(modelId, limits) {
-    const stages = [];
+    const stages = new Set();
 
-    // Check each stage (1-5)
-    for (let stageNum = 1; stageNum <= 5; stageNum++) {
-      const stageKey = `stage${stageNum}`;
-      const stageLimit = limits?.[stageKey];
+    for (const [key, stageLimit] of Object.entries(limits ?? {})) {
+      const match = key.match(/^stage(\d+)[a-z]?$/);
+      if (!match) continue;
 
-      if (!stageLimit) {
-        // Stage not defined in limits, skip
-        continue;
-      }
+      const stageNum = parseInt(match[1], 10);
 
       if (stageLimit === 'all') {
-        // All models allowed for this stage
-        stages.push(stageNum);
-      } else if (Array.isArray(stageLimit)) {
-        // Check if model ID is in the allowed list
-        if (stageLimit.includes(modelId)) {
-          stages.push(stageNum);
-        }
+        stages.add(stageNum);
+      } else if (Array.isArray(stageLimit) && stageLimit.includes(modelId)) {
+        stages.add(stageNum);
       }
     }
 
-    return stages;
+    return [...stages].sort((a, b) => a - b);
   }
 
   /**

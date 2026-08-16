@@ -92,9 +92,9 @@ describe('update scheduling without real LLM', () => {
     // Both scheduled before any resolve
     expect(client.request).toHaveBeenCalledTimes(2);
 
-    // Complete both with any payload; parseJSONFromLLM will map to [{action:'none'}]
-    d1.resolve('ok1');
-    d2.resolve('ok2');
+    // Complete both with valid JSON (non-malformed => no retries); parseJSONFromLLM maps to [{action:'none'}]
+    d1.resolve({ assistant: '{"ok":true}' });
+    d2.resolve({ assistant: '{"ok":true}' });
 
     const result = await promise;
     expect(result.entries.map(e => e.value).sort()).toEqual(['A', 'B']); // none => no change
@@ -120,7 +120,7 @@ describe('update scheduling without real LLM', () => {
     await Promise.resolve();
 
     expect(client.request).toHaveBeenCalledTimes(1);
-    d1.resolve('ok');
+    d1.resolve({ assistant: '{"ok":true}' });
 
     // Wait for the second request to be called.
     await vi.waitFor(() => {
@@ -128,7 +128,7 @@ describe('update scheduling without real LLM', () => {
     });
 
     // Clean up by resolving the second request
-    d2.resolve('ok');
+    d2.resolve({ assistant: '{"ok":true}' });
     await p;
   });
 });
@@ -136,7 +136,7 @@ describe('update scheduling without real LLM', () => {
 describe('LLM result application without real LLM', () => {
   it('applies update action', async () => {
     parseJSONFromLLM.mockReturnValue([{ action: 'update', id: 1, data: 'NEW' }]);
-    const client = immediateClient('whatever');
+    const client = immediateClient({ assistant: 'whatever' });
     const updater = new GlossaryUpdater(client, { build: vi.fn() });
 
     const existing = { entries: [{ id: 1, keys: ['a'], value: 'old' }] };
@@ -151,7 +151,7 @@ describe('LLM result application without real LLM', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     parseJSONFromLLM.mockReturnValue([{ action: 'delete', id: 999 }]); // not in conflicts
-    const client = immediateClient('x');
+    const client = immediateClient({ assistant: 'x' });
     const updater = new GlossaryUpdater(client, { build: vi.fn() });
 
     const existing = { entries: [{ id: 1, keys: ['a'], value: 'v' }] };

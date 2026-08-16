@@ -512,13 +512,7 @@ export class ModelsTabController {
     const currentModel = modelsForStage.find((m) => m.id === currentModelId);
     let selectedProvider = currentModel ? currentModel.provider : providers[0];
 
-    if (allowNone && !currentModel) {
-      providerSelect.value = '';
-      this.populateModelOptions(stageKey, '', null);
-      return;
-    }
-
-    // Populate provider select
+    // Populate provider select (after the "None" option, if present)
     providers.forEach((provider) => {
       const opt = document.createElement('option');
       opt.value = provider;
@@ -528,6 +522,13 @@ export class ModelsTabController {
       }
       providerSelect.appendChild(opt);
     });
+
+    // No fallback model configured: select "None" and show disabled model select
+    if (allowNone && !currentModel) {
+      providerSelect.value = '';
+      this.populateModelOptions(stageKey, '', null);
+      return;
+    }
 
     this.populateModelOptions(stageKey, selectedProvider, currentModelId);
   }

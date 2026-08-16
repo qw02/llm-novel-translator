@@ -11,7 +11,7 @@ export const PROVIDER_CONFIGS = {
   openrouter: {
     endpoint: 'https://openrouter.ai/api/v1',
     models: [
-      { id: '1-1', model: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2', providers: ['DeepInfra', 'SiliconFlow', 'NovitaAI', 'GMICloud', 'DeepSeek'] },
+      { id: '1-1', model: '~deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash (Non-reasoning)', providers: ['fireworks', 'novita/fp8', 'parasail/fp8'], reasoning: 'none' },
       { id: '1-2', model: 'moonshotai/kimi-k2.6', label: 'Kimi K2.6', reasoning: 'minimal' },
       { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro', 'providers': ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low' },
       { id: '1-4', model: 'google/gemini-3.6-flash', label: 'Gemini 3.6 Flash (Reasoning: Minimal)', 'providers': ['google-ai-studio', 'google-vertex/global'], reasoning: 'minimal' },
@@ -20,15 +20,16 @@ export const PROVIDER_CONFIGS = {
       { id: '1-7', model: 'z-ai/glm-4.7', label: 'GLM 4.7', 'providers': ['z-ai', 'novita/fp8', 'deepinfra/fp4'], tokens: 8192 },
       { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5' },
       { id: '1-9', model: 'google/gemini-3.6-flash', label: 'Gemini 3.6 Flash (Reasoning: Medium)', 'providers': ['google-ai-studio', 'google-vertex/global'], reasoning: 'medium' },
-      { id: '1-6', model: 'x-ai/grok-4.3', label: 'Grok 4.3', 'providers': ['xAI'], reasoning: "low" },
 
     ],
     limits: {
       stage1: 'all',
       stage2: ['1-1', '1-4', '1-5'],
-      stage3: ['1-1', '1-4', '1-5', '1-6'],
+      stage3a: ['1-1', '1-4', '1-5', '1-6'],
+      stage3b: 'all',
       stage4: 'all',
       stage5: 'all',
+      stage6: 'all',
     },
   },
 
@@ -67,6 +68,8 @@ export const PROVIDER_CONFIGS = {
       stage3a: ['2-3', '2-4'],
       stage3b: 'all',
       stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
     },
   },
 
@@ -81,15 +84,15 @@ export const PROVIDER_CONFIGS = {
       {
         id: '3-2',
         model: 'deepseek-v4-flash',
-        label: 'DeepSeek V4 Flash (High)',
-        reasoning: 'high',
+        label: 'DeepSeek V4 Flash (Low)',
+        reasoning: 'low',
         tokens: 16384,
       },
       {
         id: '3-3',
         model: 'deepseek-v4-flash',
-        label: 'DeepSeek V4 Flash (Max)',
-        reasoning: 'max',
+        label: 'DeepSeek V4 Flash (High)',
+        reasoning: 'high',
         tokens: 16384,
       },
       {
@@ -118,6 +121,8 @@ export const PROVIDER_CONFIGS = {
       stage3a: ['3-1', '3-4'],
       stage3b: 'all',
       stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
     },
   },
 
@@ -160,6 +165,8 @@ export const PROVIDER_CONFIGS = {
       stage3a: ['5-2'],
       stage3b: 'all',
       stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
     },
   },
 
@@ -212,6 +219,8 @@ export const PROVIDER_CONFIGS = {
       stage3a: ['6-3', '6-4', '6-5', '6-6'],
       stage3b: 'all',
       stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
     },
   },
 

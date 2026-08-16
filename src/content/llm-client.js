@@ -44,7 +44,9 @@ class LLMClient {
    * @param {Object} prompt
    * @param {string} prompt.system - The system message/prompt
    * @param {string} prompt.user - The user message/prompt
-   * @returns {Promise<string>} The assistant's completion text
+   * @returns {Promise<{assistant: string, reasoning: string | null}>} The
+   *   normalized response: assistant text plus the model's reasoning trace (or
+   *   null when the model doesn't provide one).
    */
   async request(prompt) {
     if (this._disposed) {
@@ -81,7 +83,7 @@ class LLMClient {
     const promises = prompts.map(async (userMessage) => {
       try {
         const result = await this.request(userMessage);
-        return { ok: true, data: result };
+        return { ok: true, data: result.assistant };
       } catch (error) {
         return { ok: false, error: error.message };
       }
@@ -119,7 +121,7 @@ class LLMClient {
         pending.reject(new Error(response.error || 'LLM request failed'));
       } else {
         this.progressTracker.markComplete(this.stageId);
-        pending.resolve(response.data.assistant);
+        pending.resolve(response.data);
       }
 
     } catch (error) {

@@ -21,13 +21,16 @@ import {
 
 const fakeClient = { request: (...args) => mockRequest(...args) };
 
+/** Helper to build a normalized LLMClient.response value. */
+const resp = (assistant, reasoning = null) => ({ assistant, reasoning });
+
 describe('requestWithRetry', () => {
   beforeEach(() => {
     mockRequest.mockReset();
   });
 
   it('returns immediately when the first response is well-formed', async () => {
-    mockRequest.mockResolvedValueOnce('good');
+    mockRequest.mockResolvedValueOnce(resp('good'));
 
     const res = await requestWithRetry({
       client: fakeClient,
@@ -41,8 +44,8 @@ describe('requestWithRetry', () => {
 
   it('retries the same request once on malformed output', async () => {
     mockRequest
-      .mockResolvedValueOnce('junk')
-      .mockResolvedValueOnce('good');
+      .mockResolvedValueOnce(resp('junk'))
+      .mockResolvedValueOnce(resp('good'));
 
     const res = await requestWithRetry({
       client: fakeClient,
@@ -58,9 +61,9 @@ describe('requestWithRetry', () => {
 
   it('uses the fallback model on the third attempt', async () => {
     mockRequest
-      .mockResolvedValueOnce('junk')
-      .mockResolvedValueOnce('junk')
-      .mockResolvedValueOnce('good');
+      .mockResolvedValueOnce(resp('junk'))
+      .mockResolvedValueOnce(resp('junk'))
+      .mockResolvedValueOnce(resp('good'));
 
     const res = await requestWithRetry({
       client: fakeClient,
@@ -79,9 +82,9 @@ describe('requestWithRetry', () => {
 
   it('reuses the primary model on attempt 3 when no fallback is configured', async () => {
     mockRequest
-      .mockResolvedValueOnce('junk')
-      .mockResolvedValueOnce('junk')
-      .mockResolvedValueOnce('good');
+      .mockResolvedValueOnce(resp('junk'))
+      .mockResolvedValueOnce(resp('junk'))
+      .mockResolvedValueOnce(resp('good'));
 
     const res = await requestWithRetry({
       client: fakeClient,
@@ -96,7 +99,7 @@ describe('requestWithRetry', () => {
   });
 
   it('returns malformed: true with the last raw output after 3 malformed attempts', async () => {
-    mockRequest.mockResolvedValue('junk');
+    mockRequest.mockResolvedValue(resp('junk'));
 
     const res = await requestWithRetry({
       client: fakeClient,
@@ -108,6 +111,38 @@ describe('requestWithRetry', () => {
     expect(res.attempts).toBe(3);
     expect(res.raw).toBe('junk');
     expect(mockRequest).toHaveBeenCalledTimes(3);
+  });
+
+  it('logs the malformed response body and reasoning', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockRequest.mockResolvedValue(resp('junk', 'thinking...'));
+
+    await requestWithRetry({
+      client: fakeClient,
+      prompt: { system: 's', user: 'u' },
+      isMalformed: () => true,
+    });
+
+    const output = warnSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+    expect(output).toContain('junk');
+    expect(output).toContain('thinking...');
+    warnSpy.mockRestore();
+  });
+
+  it('omits the reasoning section when the model returns none', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockRequest.mockResolvedValue(resp('junk', null));
+
+    await requestWithRetry({
+      client: fakeClient,
+      prompt: { system: 's', user: 'u' },
+      isMalformed: () => true,
+    });
+
+    const output = warnSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+    expect(output).toContain('junk');
+    expect(output).not.toContain('Model reasoning');
+    warnSpy.mockRestore();
   });
 
   it('propagates transport errors without retrying', async () => {
@@ -132,7 +167,7 @@ describe('requestBatchWithRetry', () => {
 
   it('maps results to requestBatch shape and isolates failures', async () => {
     mockRequest
-      .mockResolvedValueOnce('good')
+      .mockResolvedValueOnce(resp('good'))
       .mockRejectedValueOnce(new Error('boom'));
 
     const results = await requestBatchWithRetry({
