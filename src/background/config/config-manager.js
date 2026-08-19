@@ -83,6 +83,7 @@ export class ConfigManager {
           label: model.label,
           source: 'recommended',
           limits: this._getModelStages(model.id, config.limits), // Stage indexes this model is suggested for
+          deprecated: model.deprecated === true, // Phased-out model: still dispatchable, hidden from UI list
         });
       });
     }
@@ -308,7 +309,7 @@ export class ConfigManager {
       max_tokens: DEFAULT_PARAMS.max_tokens,
     };
 
-    const excludedKeys = new Set(['id', 'label', 'provider', 'endpoint', 'model', 'source']);
+    const excludedKeys = new Set(['id', 'label', 'provider', 'endpoint', 'model', 'source', 'deprecated']);
 
     // Apply ALL keys from model config (except metadata)
     for (const [key, value] of Object.entries(modelConfig)) {

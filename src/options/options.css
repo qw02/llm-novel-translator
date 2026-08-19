@@ -339,6 +339,23 @@ button#custom-instructions-save:hover {
     border: 1px solid #f5c6cb;
 }
 
+/* Phased-out model update banner + per-selector warnings */
+.update-banner {
+    margin-top: 15px;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: var(--radius);
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
+.phaseout-warning {
+    font-size: 13px;
+    color: #856404;
+    margin: 4px 0 0;
+}
+
 /* Dialogs */
 .unsaved-dialog {
     position: fixed;

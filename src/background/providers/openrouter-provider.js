@@ -47,7 +47,7 @@ export class OpenRouterProvider extends BaseProvider {
         model: params.model,
         messages: messages,
         temperature: params.temperature ?? 0.6,
-        max_tokens: params.max_tokens ?? 4096,
+        max_tokens: params.max_tokens ?? 8192,
       };
 
       // Add provider routing preference if specified

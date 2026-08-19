@@ -1,7 +1,7 @@
 vi.mock('../../utils/api-key-manager.js');
 
 import { getAllApiKeys } from "../../utils/api-key-manager.js";
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ConfigManager } from '../config-manager.js';
 import { PROVIDER_CONFIGS } from '../defaults.js';
 
@@ -95,6 +95,55 @@ describe('ConfigManager', () => {
             const cached = models.find(m => m.id === 'cached-gpt');
             expect(cached).toBeDefined();
             expect(cached.source).toBe('provider');
+        });
+    });
+
+    describe('deprecated models', () => {
+        const deprecatedEntry = {
+            id: '1-test-dep',
+            model: 'deprecated/test-model',
+            label: 'Deprecated Test Model',
+            deprecated: true,
+        };
+
+        beforeEach(() => {
+            PROVIDER_CONFIGS.openrouter.models.push(deprecatedEntry);
+        });
+
+        afterEach(() => {
+            const idx = PROVIDER_CONFIGS.openrouter.models.indexOf(deprecatedEntry);
+            if (idx !== -1) PROVIDER_CONFIGS.openrouter.models.splice(idx, 1);
+        });
+
+        it('getModelList should carry the deprecated flag', async () => {
+            const models = await manager.getModelList({ showAll: false });
+
+            const dep = models.find(m => m.id === '1-test-dep');
+            expect(dep).toBeDefined();
+            expect(dep.deprecated).toBe(true);
+
+            const normal = models.find(m => m.id === '1-1');
+            expect(normal.deprecated).toBe(false);
+        });
+
+        it('should still resolve a deprecated model for backend dispatch', async () => {
+            getAllApiKeys.mockResolvedValue({});
+            chrome.storage.local.get.mockResolvedValue({ userParams: {} });
+
+            const config = await manager.resolveConfig('1-test-dep', {});
+
+            expect(config.providerType).toBe('openrouter');
+            expect(config.endpoint).toBe(PROVIDER_CONFIGS.openrouter.endpoint);
+            expect(config.params.model).toBe('deprecated/test-model');
+        });
+
+        it('should not leak the deprecated flag into request params', async () => {
+            getAllApiKeys.mockResolvedValue({});
+            chrome.storage.local.get.mockResolvedValue({ userParams: {} });
+
+            const config = await manager.resolveConfig('1-test-dep', {});
+
+            expect(config.params).not.toHaveProperty('deprecated');
         });
     });
 

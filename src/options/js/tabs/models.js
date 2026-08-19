@@ -133,6 +133,7 @@ export class ModelsTabController {
     this.statusElement = document.getElementById('models-status');
     this.saveButton = document.getElementById('models-save');
     this.cancelButton = document.getElementById('models-cancel');
+    this.phaseOutBanner = document.getElementById('models-update-banner');
 
     this.modeSimpleRadio = document.getElementById('mode-simple');
     this.modeAdvancedRadio = document.getElementById('mode-advanced');
@@ -470,6 +471,7 @@ export class ModelsTabController {
 
       this.models = Array.isArray(response.data) ? response.data : [];
       this.rebuildAllModelSelectors();
+      this.updatePhaseOutUI();
     } catch (error) {
       console.error('Failed to load models:', error);
       this.setStatus('Failed to load models.', 'error');
@@ -528,7 +530,80 @@ export class ModelsTabController {
       }
     }
 
-    return models;
+    // Phased-out models are never offered as selectable options
+    return models.filter((m) => !m.deprecated);
+  }
+
+  /**
+   * Finds a model in the full (unfiltered) model list, including deprecated ones.
+   *
+   * @param {string|null} id - Model identifier
+   * @returns {Object|undefined} Model info or undefined
+   */
+  findModelById(id) {
+    if (!id) return undefined;
+    return this.models.find((m) => m.id === id);
+  }
+
+  /**
+   * Whether the stored selection for a stage points to a phased-out model.
+   *
+   * @param {string} stageKey
+   * @returns {boolean}
+   */
+  isDeprecatedSelected(stageKey) {
+    const model = this.findModelById(this.config.llm[stageKey]);
+    return !!model && model.deprecated === true;
+  }
+
+  /**
+   * Shows/hides the global update banner and the per-stage inline warnings
+   * based on which stored selections reference phased-out models.
+   */
+  updatePhaseOutUI() {
+    let deprecatedCount = 0;
+
+    for (const stageKey of Object.keys(STAGES)) {
+      if (this.isDeprecatedSelected(stageKey)) deprecatedCount++;
+      this.updateStagePhaseOutWarning(stageKey);
+    }
+
+    if (!this.phaseOutBanner) return;
+
+    if (deprecatedCount > 0) {
+      this.phaseOutBanner.textContent =
+        `The recommended model list has been updated. ${deprecatedCount} of your model ` +
+        `selection(s) refer to phased-out models. They will keep working until you change them, ` +
+        `but updating is recommended.`;
+      this.phaseOutBanner.hidden = false;
+    } else {
+      this.phaseOutBanner.textContent = '';
+      this.phaseOutBanner.hidden = true;
+    }
+  }
+
+  /**
+   * Adds or removes the inline "phased out" warning under a stage's model selector.
+   *
+   * @param {string} stageKey
+   */
+  updateStagePhaseOutWarning(stageKey) {
+    const modelSelect = this.stageModelSelects[stageKey];
+    const block = modelSelect?.closest('.stage-block');
+    if (!block) return;
+
+    const existing = block.querySelector('.phaseout-warning');
+    const affected = this.isDeprecatedSelected(stageKey);
+
+    if (affected && !existing) {
+      const warning = document.createElement('p');
+      warning.className = 'phaseout-warning';
+      warning.textContent =
+        'This model has been phased out. It keeps working until you choose a replacement.';
+      modelSelect.closest('label').after(warning);
+    } else if (!affected && existing) {
+      existing.remove();
+    }
   }
 
   rebuildAllModelSelectors() {
@@ -580,6 +655,16 @@ export class ModelsTabController {
     const currentModel = modelsForStage.find((m) => m.id === currentModelId);
     let selectedProvider = currentModel ? currentModel.provider : providers[0];
 
+    // Stored selection is a phased-out model: keep it selected (with a warning)
+    // until the user actively picks a replacement.
+    if (!currentModel && this.isDeprecatedSelected(stageKey)) {
+      const deprecatedModel = this.findModelById(currentModelId);
+      if (deprecatedModel && !providers.includes(deprecatedModel.provider)) {
+        providers.push(deprecatedModel.provider);
+      }
+      selectedProvider = deprecatedModel ? deprecatedModel.provider : selectedProvider;
+    }
+
     // Populate provider select (after the "None" option, if present)
     providers.forEach((provider) => {
       const opt = document.createElement('option');
@@ -592,7 +677,7 @@ export class ModelsTabController {
     });
 
     // No fallback model configured: select "None" and show disabled model select
-    if (allowNone && !currentModel) {
+    if (allowNone && !currentModelId) {
       providerSelect.value = '';
       this.populateModelOptions(stageKey, '', null);
       return;
@@ -621,7 +706,13 @@ export class ModelsTabController {
 
     modelSelect.disabled = false;
 
-    if (providerModels.length === 0) {
+    // A phased-out stored selection is still offered (marked) so the selector
+    // retains the old id until the user chooses a replacement.
+    const deprecatedSelected = selectedModelId ? this.findModelById(selectedModelId) : null;
+    const showDeprecatedSelected =
+      !!deprecatedSelected && deprecatedSelected.deprecated && deprecatedSelected.provider === provider;
+
+    if (providerModels.length === 0 && !showDeprecatedSelected) {
       const opt = document.createElement('option');
       opt.value = '';
       opt.textContent = 'No models';
@@ -635,6 +726,16 @@ export class ModelsTabController {
     const others = providerModels.filter((m) => m.source !== 'recommended');
     const ordered = [...recommended, ...others];
 
+    let deprecatedOptionAdded = false;
+    if (showDeprecatedSelected) {
+      const opt = document.createElement('option');
+      opt.value = deprecatedSelected.id;
+      opt.textContent = `${deprecatedSelected.label} (phased out)`;
+      opt.selected = true;
+      modelSelect.appendChild(opt);
+      deprecatedOptionAdded = true;
+    }
+
     ordered.forEach((model) => {
       const opt = document.createElement('option');
       opt.value = model.id;
@@ -647,7 +748,7 @@ export class ModelsTabController {
     });
 
     // If selected id is not in the list, default to the first
-    const foundSelected = ordered.some((m) => m.id === selectedModelId);
+    const foundSelected = deprecatedOptionAdded || ordered.some((m) => m.id === selectedModelId);
     if (!foundSelected) {
       modelSelect.selectedIndex = 0;
       this.config.llm[stageKey] = ordered[0].id;
@@ -664,6 +765,7 @@ export class ModelsTabController {
     const currentModelId = this.config.llm[stageKey] || null;
     this.populateModelOptions(stageKey, provider, currentModelId);
     this.markDirty();
+    this.updatePhaseOutUI();
   }
 
   handleModelChange(stageKey) {
@@ -673,6 +775,7 @@ export class ModelsTabController {
     const modelId = modelSelect.value || null;
     this.config.llm[stageKey] = modelId;
     this.markDirty();
+    this.updatePhaseOutUI();
   }
 
   onLanguagePairChanged() {
@@ -846,6 +949,7 @@ export class ModelsTabController {
     this.isDirty = false;
     await this.applyConfigToUI();
     this.rebuildAllModelSelectors();
+    this.updatePhaseOutUI();
     this.setStatus('Changes discarded.', 'info');
   }
 

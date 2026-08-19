@@ -5,27 +5,45 @@
  * - Default endpoints
  * - Suggested stage limits (used by UI, not enforced by backend)
  * - Default parameters per model
+ *
+ * Deprecation convention (when updating the recommended list):
+ * - Never delete or reassign a model `id` — stored user settings reference it.
+ * - To phase a model out, keep the entry and add `deprecated: true`.
+ *   It stays resolvable for backend request dispatch, but is hidden from the
+ *   options-page model list, which instead shows a per-selector update prompt.
  */
 
 export const PROVIDER_CONFIGS = {
   openrouter: {
     endpoint: 'https://openrouter.ai/api/v1',
     models: [
-      { id: '1-1', model: '~deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash (Non-reasoning)', providers: ['fireworks', 'novita/fp8', 'parasail/fp8'], reasoning: 'none' },
-      { id: '1-2', model: 'moonshotai/kimi-k2.6', label: 'Kimi K2.6', reasoning: 'minimal' },
-      { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro', 'providers': ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low' },
-      { id: '1-4', model: 'google/gemini-3.6-flash', label: 'Gemini 3.6 Flash (Reasoning: Minimal)', 'providers': ['google-ai-studio', 'google-vertex/global'], reasoning: 'minimal' },
-      { id: '1-5', model: 'google/gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', 'providers': ['google-ai-studio', 'google-vertex/global'] },
-      { id: '1-6', model: 'x-ai/grok-4.3', label: 'Grok 4.3', 'providers': ['xAI'], reasoning: "none" },
-      { id: '1-7', model: 'z-ai/glm-4.7', label: 'GLM 4.7', 'providers': ['z-ai', 'novita/fp8', 'deepinfra/fp4'], tokens: 8192 },
-      { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5' },
-      { id: '1-9', model: 'google/gemini-3.6-flash', label: 'Gemini 3.6 Flash (Reasoning: Medium)', 'providers': ['google-ai-studio', 'google-vertex/global'], reasoning: 'medium' },
+      { id: '1-1', model: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2', providers: ['DeepInfra', 'SiliconFlow', 'NovitaAI', 'GMICloud', 'DeepSeek'], deprecated: true },
+      { id: '1-2', model: 'moonshotai/kimi-k2-0905', label: 'Kimi K2', providers: ['DeepInfra', 'Chutes'], deprecated: true },
+      { id: '1-3', model: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro', providers: ['Google', 'Google AI Studio'], tokens: 8192, reasoning: 'low', deprecated: true },
+      { id: '1-4', model: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', providers: ['Google AI Studio', 'Google'], deprecated: true },
+      { id: '1-5', model: 'google/gemini-2.5-flash-lite-preview-09-2025', label: 'Gemini 2.5 Flash-Lite', providers: ['Google AI Studio', 'Google'], deprecated: true },
+      { id: '1-6', model: 'x-ai/grok-4.1-fast', label: 'Grok 4.1 Fast', 'providers': ['xAI'], reasoning: true, tokens: 8192 },
+      { id: '1-7', model: 'z-ai/glm-4.7', label: 'GLM 4.7', 'providers': ['z-ai', 'novita/fp8', 'deepinfra/fp4'], tokens: 8192, deprecated: true },
+      { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5', deprecated: true },
 
+      { id: '1-9', model: 'z-ai/glm-5.3', label: 'GLM 5.3' },
+      { id: '1-10', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash', providers: ['google-vertex/global'], reasoning: 'low' },
+      { id: '1-11', model: 'qwen/qwen3.8-2.4t-a95b', label: 'Qwen3.8 2.4T A95B' },
+      { id: '1-12', model: 'deepseek/deepseek-v4-pro-0813', label: 'DeepSeek V4 Pro 0813' },
+      { id: '1-13', model: 'x-ai/grok-4.6', label: 'Grok 4.6' },
+      { id: '1-14', model: '~deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest' },
+      { id: '1-20', model: '~deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest (Non-reasoning)', reasoning: 'none' },
+      { id: '1-15', model: 'google/gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite' },
+      { id: '1-16', model: 'moonshotai/kimi-k3', label: 'Kimi K3', providers: ['moonshotai/mxfp4', 'digitalocean', 'together', 'modal/mxfp4', 'baseten/fp8', 'fireworks', 'deepinfra/bf16']  },
+      { id: '1-17', model: 'openai/gpt-5.6-luna', label: 'GPT-5.6 Luna' },
+      { id: '1-18', model: 'anthropic/claude-sonnet-5', label: 'Claude Sonnet 5' },
+
+      // { id: '1-', model: '', label: '' },
     ],
     limits: {
       stage1: 'all',
-      stage2: ['1-1', '1-4', '1-5'],
-      stage3a: ['1-1', '1-4', '1-5', '1-6'],
+      stage2: ['1-1', '1-4', '1-5', '1-10', '1-20'],
+      stage3a: ['1-1', '1-4', '1-5', '1-6', '1-10', '1-20'],
       stage3b: 'all',
       stage4: 'all',
       stage5: 'all',
@@ -60,6 +78,42 @@ export const PROVIDER_CONFIGS = {
         model: 'gpt-5-nano',
         label: 'GPT-5 Nano (Minimal)',
         reasoning: 'minimal',
+      },
+      {
+        id: '2-5',
+        model: 'gpt-5.6-sol',
+        label: 'GPT-5.6 Sol (Minimal)',
+        reasoning: 'minimal',
+      },
+      {
+        id: '2-6',
+        model: 'gpt-5.6-terra',
+        label: 'GPT-5.6 Terra (Minimal)',
+        reasoning: 'minimal',
+      },
+      {
+        id: '2-7',
+        model: 'gpt-5.6-luna',
+        label: 'GPT-5.6 Luna (Minimal)',
+        reasoning: 'minimal',
+      },
+      {
+        id: '2-8',
+        model: 'gpt-5.6-sol',
+        label: 'GPT-5.6 Sol (Medium)',
+        reasoning: 'medium',
+      },
+      {
+        id: '2-9',
+        model: 'gpt-5.6-terra',
+        label: 'GPT-5.6 Terra (Medium)',
+        reasoning: 'medium',
+      },
+      {
+        id: '2-10',
+        model: 'gpt-5.6-luna',
+        label: 'GPT-5.6 Luna (Medium)',
+        reasoning: 'medium',
       },
     ],
     limits: {
