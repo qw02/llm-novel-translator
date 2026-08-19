@@ -28,13 +28,13 @@ export const chunkSizeOptions = {
     minEnforcedChars: 50,
   },
   large: {
-    description: "Larger chunks of roughly 600 tokens (~400 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
-    targetTokens: 600,
-    approxChars: 400,
-    targetLines: "20-40",
-    minChars: 200,
+    description: "Larger chunks of roughly 300 tokens (~200 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+    targetTokens: 300,
+    approxChars: 200,
+    targetLines: "10-30",
+    minChars: 80,
     maxDialogueLines: 20,
-    minEnforcedChars: 150,
+    minEnforcedChars: 80,
   },
 };
 

@@ -9,7 +9,7 @@ import { getChunkingUserParts, resolveChunkSizePreset } from "../utils.js";
  * pipeline to merge chunks that came back smaller than this many characters.
  */
 export const chunkSizeOptions = {
-  small: {
+  tiny: {
     description: "Smaller chunks of roughly 50–100 characters. Better suited for locally-run or weaker models (e.g., ~30b class).",
     targetRange: "50–100",
     allowedRange: "25–200",
@@ -19,7 +19,7 @@ export const chunkSizeOptions = {
     blockSplitCap: 100,
     minEnforcedChars: 20,
   },
-  medium: {
+  small: {
     description: "Balanced chunks of roughly 100–200 characters. Recommended default for most models.",
     targetRange: "100–200",
     allowedRange: "50–400",
@@ -29,7 +29,7 @@ export const chunkSizeOptions = {
     blockSplitCap: 200,
     minEnforcedChars: 40,
   },
-  large: {
+  medium: {
     description: "Larger chunks of roughly 300–500 characters. For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
     targetRange: "300–500",
     allowedRange: "150–900",
@@ -38,6 +38,16 @@ export const chunkSizeOptions = {
     mergeMax: 400,
     blockSplitCap: 300,
     minEnforcedChars: 80,
+  },
+  large: {
+    description: "Very large chunks of roughly 500-1000. For frontier models, can also be used to save cost by reducing the number of API calls used.",
+    targetRange: "500-1000",
+    allowedRange: "400-1500",
+    hardCap: 1500,
+    ultraShortBelow: 250,
+    mergeMax: 750,
+    blockSplitCap: 800,
+    minEnforcedChars: 250,
   },
 };
 
