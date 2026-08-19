@@ -5,6 +5,8 @@ import { getChunkingUserParts, resolveChunkSizePreset } from "../utils.js";
  * Keys appear as options in the advanced options UI; each entry's `description`
  * is shown below the selector, and the remaining fields are interpolated into
  * the system prompt below. `medium` matches the original hard-coded prompt.
+ * `minEnforcedChars` is NOT part of the prompt string; it is used by the
+ * pipeline to merge chunks that came back smaller than this many characters.
  */
 export const chunkSizeOptions = {
   small: {
@@ -14,6 +16,7 @@ export const chunkSizeOptions = {
     targetLines: "3-8",
     minChars: 30,
     maxDialogueLines: 5,
+    minEnforcedChars: 30,
   },
   medium: {
     description: "Balanced chunks of roughly 150 tokens (~100 CJK characters or latin words). Recommended default for most models.",
@@ -22,14 +25,16 @@ export const chunkSizeOptions = {
     targetLines: "5-15",
     minChars: 50,
     maxDialogueLines: 10,
+    minEnforcedChars: 50,
   },
   large: {
-    description: "Larger chunks of roughly 300 tokens (~200 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
-    targetTokens: 300,
-    approxChars: 200,
-    targetLines: "10-30",
-    minChars: 80,
+    description: "Larger chunks of roughly 600 tokens (~400 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+    targetTokens: 600,
+    approxChars: 400,
+    targetLines: "20-40",
+    minChars: 200,
     maxDialogueLines: 20,
+    minEnforcedChars: 150,
   },
 };
 

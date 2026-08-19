@@ -1,6 +1,7 @@
 import { parseJSONFromLLM } from "../../utils/data-extraction.js";
 import { LLMClient } from "../../llm-client.js";
-import { getPromptBuilder } from "../../prompts/index.js";
+import { getPromptBuilder, getChunkSizeOptions } from "../../prompts/index.js";
+import { resolveChunkSizePreset } from "../../prompts/utils.js";
 import { mergeChunkIntervals } from "../../utils/merge-intervals.js";
 import { getParagraphWeight } from "../../utils/text-helpers.js";
 import { requestBatchWithRetry, isUnparseableJSON } from "../../utils/llm-retry.js";
@@ -75,9 +76,21 @@ export async function segmentWithChunking(config, texts) {
       tolerance: 1,
     });
 
+    // Enforce the preset's minimum chunk size (pure JS; the LLM may still
+    // produce chunks smaller than instructed). May exceed the max range rule.
+    const sizeOptions = await getChunkSizeOptions(config.languagePair);
+    const { preset: sizePreset } = resolveChunkSizePreset(
+      sizeOptions,
+      config.textSegmentation?.targetSize,
+    );
+    const enforcedIntervals = enforceMinChunkSize(
+      mergedIntervals,
+      texts,
+      sizePreset.minEnforcedChars ?? 0,
+    );
 
     // Convert from 1-indexed to 0-indexed for array access
-    return mergedIntervals.map(interval => [interval[0] - 1, interval[1] - 1]);
+    return enforcedIntervals.map(interval => [interval[0] - 1, interval[1] - 1]);
 
   } finally {
     client.dispose();
@@ -169,6 +182,58 @@ export function makeFallbackIntervals(start, end, step = 5) {
     out.push([s, e]);
     s = e + 1;
   }
+  return out;
+}
+
+/**
+ * Enforce a minimum chunk size on merged 1-indexed intervals.
+ *
+ * Any chunk whose total character count is below `minChars` is merged with the
+ * following interval (interval n+1 is concatenated into n). This deliberately
+ * ignores the max range rule — a merged chunk may exceed the target max. If the
+ * final chunk is too small and has no successor, it is merged into the previous
+ * chunk instead.
+ *
+ * Input intervals must be sorted, contiguous, and 1-indexed (as returned by
+ * mergeChunkIntervals). The input is not mutated.
+ *
+ * @param {Array<[number, number]>} intervals - Sorted contiguous 1-indexed intervals.
+ * @param {Array<{id: string, index: number, text: string}>} texts - Input paragraphs.
+ * @param {number} minChars - Minimum character count per chunk; 0 disables enforcement.
+ * @returns {Array<[number, number]>} Intervals with small chunks merged forward.
+ */
+export function enforceMinChunkSize(intervals, texts, minChars) {
+  if (!minChars || minChars <= 0 || intervals.length <= 1) {
+    return intervals;
+  }
+
+  // Interval [s, e] is 1-indexed over the paragraph index, which matches
+  // position in `texts` (index === array position).
+  const charCounts = texts.map(p => (p.text || '').length);
+  const lengthOf = ([s, e]) => {
+    let sum = 0;
+    for (let i = s - 1; i < e; i++) {
+      sum += charCounts[i] || 0;
+    }
+    return sum;
+  };
+
+  const out = [];
+  for (const interval of intervals) {
+    if (out.length > 0 && lengthOf(out[out.length - 1]) < minChars) {
+      // Previous chunk is too small: append this interval to it
+      out[out.length - 1][1] = interval[1];
+    } else {
+      out.push([...interval]);
+    }
+  }
+
+  // Last chunk may still be below the minimum with nothing left to absorb
+  if (out.length > 1 && lengthOf(out[out.length - 1]) < minChars) {
+    out[out.length - 2][1] = out[out.length - 1][1];
+    out.pop();
+  }
+
   return out;
 }
 

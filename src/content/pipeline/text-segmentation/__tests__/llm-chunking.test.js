@@ -14,6 +14,7 @@ import { parseJSONFromLLM } from "../../../utils/data-extraction.js";
 import {
   getIntervalsFromLLMOrFallback,
   makeFallbackIntervals,
+  enforceMinChunkSize,
 } from "../llm-chunking.js";
 
 
@@ -216,5 +217,77 @@ describe("getIntervalsFromLLMOrFallback", () => {
 
     const got = getIntervalsFromLLMOrFallback("ok", start, end);
     expect(got).toEqual(valid);
+  });
+});
+describe("enforceMinChunkSize", () => {
+  // Build paragraphs where each paragraph is `len` chars long
+  function makeTexts(lengths) {
+    return lengths.map((len, i) => ({
+      id: `p${i}`,
+      index: i,
+      text: "x".repeat(len),
+    }));
+  }
+
+  it("returns input unchanged when minChars is 0 or negative", () => {
+    const texts = makeTexts([1, 1, 1]);
+    const intervals = [[1, 1], [2, 2], [3, 3]];
+    expect(enforceMinChunkSize(intervals, texts, 0)).toEqual(intervals);
+    expect(enforceMinChunkSize(intervals, texts, -5)).toEqual(intervals);
+  });
+
+  it("returns a single interval unchanged even if below the minimum", () => {
+    const texts = makeTexts([5, 5]);
+    const intervals = [[1, 2]];
+    expect(enforceMinChunkSize(intervals, texts, 100)).toEqual(intervals);
+  });
+
+  it("leaves chunks untouched when all meet the minimum", () => {
+    const texts = makeTexts([50, 50, 50]);
+    const intervals = [[1, 1], [2, 2], [3, 3]];
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual(intervals);
+  });
+
+  it("merges a too-small chunk forward with the next interval", () => {
+    // chunk [1,1] has 10 chars < 40, so it absorbs [2,2]
+    const texts = makeTexts([10, 50, 50]);
+    const intervals = [[1, 1], [2, 2], [3, 3]];
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual([[1, 2], [3, 3]]);
+  });
+
+  it("keeps merging forward while the accumulated chunk stays below the minimum", () => {
+    // [1,1]=10 absorbs [2,2] (=20) still < 40, absorbs [3,3] (=30+10+... ) now 70 >= 40
+    const texts = makeTexts([10, 10, 50, 50]);
+    const intervals = [[1, 1], [2, 2], [3, 3], [4, 4]];
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual([[1, 3], [4, 4]]);
+  });
+
+  it("allows the merged chunk to exceed any max range", () => {
+    const texts = makeTexts([5, 500]);
+    const intervals = [[1, 1], [2, 2]];
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual([[1, 2]]);
+  });
+
+  it("merges a too-small final chunk into the previous one", () => {
+    // [3,3] has 10 chars < 40 and has no successor -> merge into previous
+    const texts = makeTexts([50, 50, 10]);
+    const intervals = [[1, 1], [2, 2], [3, 3]];
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual([[1, 1], [2, 3]]);
+  });
+
+  it("handles several small chunks in a row including the tail", () => {
+    const texts = makeTexts([50, 10, 10, 10]);
+    const intervals = [[1, 1], [2, 2], [3, 3], [4, 4]];
+    // [2,2] small -> absorbs [3,3] (20 < 40) -> absorbs [4,4] (30 < 40),
+    // still below min at the tail -> merged into [1,1]
+    expect(enforceMinChunkSize(intervals, texts, 40)).toEqual([[1, 4]]);
+  });
+
+  it("does not mutate the input intervals", () => {
+    const texts = makeTexts([10, 50]);
+    const intervals = [[1, 1], [2, 2]];
+    const copy = intervals.map(iv => [...iv]);
+    enforceMinChunkSize(intervals, texts, 40);
+    expect(intervals).toEqual(copy);
   });
 });
