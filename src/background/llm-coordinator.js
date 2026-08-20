@@ -7,6 +7,8 @@ import { DeepSeekProvider } from './providers/deepseek-provider.js';
 import { GoogleProvider } from './providers/google-provider.js';
 import { ConfigManager } from "./config/config-manager.js";
 import { XaiProvider } from "./providers/xai-provider.js";
+import { LocalProvider } from "./providers/local-provider.js";
+import { assertProviderHostPermissions } from "../common/provider-permissions.js";
 import { log } from "../common/logger.js";
 
 /**
@@ -19,6 +21,7 @@ const PROVIDER_REGISTRY = {
   deepseek: DeepSeekProvider,
   google: GoogleProvider,
   xai: XaiProvider,
+  local: LocalProvider,
 };
 
 /**
@@ -73,6 +76,11 @@ export class LLMCoordinator {
     try {
       // Step 1: Resolve configuration via ConfigManager
       const config = await this.configManager.resolveConfig(llmId, customParams);
+
+      // Guard: providers with optional host permissions (e.g., local) must
+      // have them granted. The options page enforces this at save time; this
+      // only catches manually manipulated storage.
+      await assertProviderHostPermissions(config.providerType);
 
       // Step 2: Get or create provider instance
       const provider = await this._getProvider(config.providerType, config.endpoint);
@@ -231,8 +239,8 @@ export class LLMCoordinator {
       throw new Error(`No provider implementation found for: ${providerType}`);
     }
 
-    // Fetch API key
-    const apiKey = await getApiKey(providerType);
+    // Fetch API key (local endpoints don't use one)
+    const apiKey = providerType === 'local' ? 'local' : await getApiKey(providerType);
 
     // Instantiate provider
     const provider = new ProviderClass({ endpoint, apiKey });

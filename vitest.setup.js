@@ -49,4 +49,9 @@ chromeMock.storage = {
   },
 }
 
+chromeMock.permissions = {
+  contains: vi.fn(() => Promise.resolve(false)),
+  request: vi.fn(() => Promise.resolve(false)),
+}
+
 globalThis.chrome = chromeMock

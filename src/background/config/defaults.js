@@ -284,6 +284,26 @@ export const PROVIDER_CONFIGS = {
     },
   },
 
+  local: {
+    // Endpoint is resolved per request from `local_llm_config` in storage;
+    // see providers/local-provider.js. The pseudo-model below only appears
+    // in the model list (and only resolves) when the feature is enabled —
+    // gating lives in config-manager.js.
+    endpoint: null,
+    models: [
+      { id: 'local-1', model: 'local', label: 'Local' },
+    ],
+    limits: {
+      stage1: 'all',
+      stage2: 'all',
+      stage3a: 'all',
+      stage3b: 'all',
+      stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
+    },
+  },
+
 };
 
 /**

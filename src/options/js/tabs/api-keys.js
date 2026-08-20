@@ -1,3 +1,15 @@
+import {
+  LOCAL_LLM_PRESETS,
+  DEFAULT_LOCAL_LLM_CONFIG,
+  getLocalLlmConfig,
+  saveLocalLlmConfig,
+  parseExtraParams,
+} from '../../../common/local-llm-config.js';
+import {
+  hasProviderHostPermissions,
+  requestProviderHostPermissions,
+} from '../../../common/provider-permissions.js';
+
 const API_KEY_PROVIDERS = [
   'openrouter',
   'openai',
@@ -46,9 +58,17 @@ class ApiKeysTabController {
     this.saveButton = null;
     this.cancelButton = null;
 
+    // Local LLM (OpenAI-compatible) settings
+    this.localEnabledCheckbox = null;
+    this.localSettingsContainer = null;
+    this.localPresetSelect = null;
+    this.localEndpointInput = null;
+    this.localExtraParamsInput = null;
+
     this.isInitialized = false;
     this.isDirty = false;
     this.originalKeys = {};
+    this.originalLocalConfig = { ...DEFAULT_LOCAL_LLM_CONFIG };
   }
 
   async onShow() {
@@ -72,6 +92,20 @@ class ApiKeysTabController {
       );
       this.inputs[provider] = input;
     });
+
+    // Local LLM section
+    this.localEnabledCheckbox = document.getElementById('local-llm-enabled');
+    this.localSettingsContainer = document.getElementById('local-llm-settings');
+    this.localPresetSelect = document.getElementById('local-llm-preset');
+    this.localEndpointInput = document.getElementById('local-llm-endpoint');
+    this.localExtraParamsInput = document.getElementById('local-llm-extra-params');
+
+    LOCAL_LLM_PRESETS.forEach((preset) => {
+      const opt = document.createElement('option');
+      opt.value = preset.key;
+      opt.textContent = preset.label;
+      this.localPresetSelect.appendChild(opt);
+    });
   }
 
   attachListeners() {
@@ -82,6 +116,37 @@ class ApiKeysTabController {
       });
     });
 
+    // Local LLM inputs
+    this.localEnabledCheckbox.addEventListener('change', async () => {
+      // Enabling requires the optional localhost host permissions; the
+      // request must originate from this user gesture.
+      if (this.localEnabledCheckbox.checked) {
+        const granted = await requestProviderHostPermissions('local');
+        if (!granted) {
+          this.localEnabledCheckbox.checked = false;
+          this.setStatus('Local LLM requires permission to access localhost. Permission was not granted.', 'error');
+        }
+      }
+      this.updateLocalSettingsVisibility();
+      this.markDirty();
+    });
+
+    this.localPresetSelect.addEventListener('change', () => {
+      const preset = LOCAL_LLM_PRESETS.find(p => p.key === this.localPresetSelect.value);
+      if (preset && preset.endpoint) {
+        this.localEndpointInput.value = preset.endpoint;
+      }
+      this.markDirty();
+    });
+
+    this.localEndpointInput.addEventListener('input', () => {
+      this.markDirty();
+    });
+
+    this.localExtraParamsInput.addEventListener('input', () => {
+      this.markDirty();
+    });
+
     this.saveButton.addEventListener('click', async () => {
       await this.save();
     });
@@ -89,6 +154,29 @@ class ApiKeysTabController {
     this.cancelButton.addEventListener('click', () => {
       this.reset();
     });
+  }
+
+  updateLocalSettingsVisibility() {
+    this.localSettingsContainer.hidden = !this.localEnabledCheckbox.checked;
+  }
+
+  /**
+   * Picks the preset matching the given endpoint, falling back to 'custom'.
+   *
+   * @param {string} endpoint
+   * @returns {string} Preset key
+   */
+  matchPreset(endpoint) {
+    const preset = LOCAL_LLM_PRESETS.find(p => p.key !== 'custom' && p.endpoint === endpoint);
+    return preset ? preset.key : 'custom';
+  }
+
+  applyLocalConfigToUI(config) {
+    this.localEnabledCheckbox.checked = !!config.enabled;
+    this.localEndpointInput.value = config.endpoint || '';
+    this.localExtraParamsInput.value = config.extraParams || '';
+    this.localPresetSelect.value = this.matchPreset(config.endpoint || '');
+    this.updateLocalSettingsVisibility();
   }
 
   async loadKeys() {
@@ -101,6 +189,10 @@ class ApiKeysTabController {
         if (!input) return;
         input.value = keys[provider] || '';
       });
+
+      const localConfig = await getLocalLlmConfig();
+      this.originalLocalConfig = { ...localConfig };
+      this.applyLocalConfigToUI(localConfig);
 
       this.isDirty = false;
       this.setStatus('', '');
@@ -126,9 +218,39 @@ class ApiKeysTabController {
       }
     });
 
+    // Validate local LLM settings before saving anything
+    const localConfig = {
+      enabled: this.localEnabledCheckbox.checked,
+      endpoint: this.localEndpointInput.value.trim(),
+      extraParams: this.localExtraParamsInput.value,
+    };
+
+    if (localConfig.enabled) {
+      if (!localConfig.endpoint) {
+        this.setStatus('Local LLM endpoint must be set when local LLM is enabled.', 'error');
+        return;
+      }
+
+      // Permission gate: enabled implies the localhost host permissions were
+      // granted (they may have been revoked since via Chrome settings)
+      if (!(await hasProviderHostPermissions('local'))) {
+        this.setStatus('Local LLM requires permission to access localhost. Untick and re-tick the checkbox to grant it.', 'error');
+        return;
+      }
+
+      try {
+        parseExtraParams(localConfig.extraParams);
+      } catch (error) {
+        this.setStatus(`Local LLM extra params: ${error.message}`, 'error');
+        return;
+      }
+    }
+
     try {
       await setApiKeys(updated);
+      await saveLocalLlmConfig(localConfig);
       this.originalKeys = { ...updated };
+      this.originalLocalConfig = { ...localConfig };
       this.isDirty = false;
       this.setStatus('API keys saved.', 'success');
     } catch (error) {
@@ -144,6 +266,8 @@ class ApiKeysTabController {
       if (!input) return;
       input.value = this.originalKeys[provider] || '';
     });
+
+    this.applyLocalConfigToUI(this.originalLocalConfig);
 
     this.isDirty = false;
     this.setStatus('Changes discarded.', 'info');

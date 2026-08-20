@@ -160,4 +160,55 @@ describe('ConfigManager', () => {
             expect(mockProviderClass).not.toHaveBeenCalled();
         });
     });
+
+    describe('local LLM gating', () => {
+        function mockLocalEnabled(enabled) {
+            chrome.storage.local.get.mockImplementation((key) => {
+                if (key === 'local_llm_config') {
+                    return Promise.resolve({
+                        local_llm_config: enabled
+                            ? { enabled: true, endpoint: 'http://localhost:8080/v1', extraParams: '' }
+                            : { enabled: false, endpoint: '', extraParams: '' },
+                    });
+                }
+                return Promise.resolve({});
+            });
+        }
+
+        it('should exclude the local model from getModelList when disabled', async () => {
+            mockLocalEnabled(false);
+
+            const models = await manager.getModelList({ showAll: false });
+
+            expect(models.find(m => m.provider === 'local')).toBeUndefined();
+        });
+
+        it('should include the local model in getModelList when enabled', async () => {
+            mockLocalEnabled(true);
+
+            const models = await manager.getModelList({ showAll: false });
+
+            const local = models.find(m => m.id === 'local-1');
+            expect(local).toBeDefined();
+            expect(local.provider).toBe('local');
+            expect(local.source).toBe('recommended');
+            expect(local.limits).toEqual([1, 2, 3, 4, 5, 6]);
+        });
+
+        it('should resolve local-1 when enabled', async () => {
+            mockLocalEnabled(true);
+            getAllApiKeys.mockResolvedValue({});
+
+            const config = await manager.resolveConfig('local-1', {});
+
+            expect(config.providerType).toBe('local');
+        });
+
+        it('should fail to resolve local-1 when disabled', async () => {
+            mockLocalEnabled(false);
+            getAllApiKeys.mockResolvedValue({});
+
+            await expect(manager.resolveConfig('local-1', {})).rejects.toThrow('Model not found');
+        });
+    });
 });

@@ -32,6 +32,7 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
     *   [Google Gemini](https://aistudio.google.com/api-keys)
     *   [DeepSeek](https://platform.deepseek.com/)
     *   [xAI (Grok)](https://console.x.ai/)
+    *   Local inference servers (llama.cpp, KoboldCpp, Ollama, …) via an OpenAI-compatible endpoint — see below
 *   **⚙️ Granular Control**: Configure different models for different tasks (e.g., use a cheaper model for glossary extraction and a smarter model for final translation).
 
 ## 🚀 Usage
@@ -48,6 +49,16 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
     *   Navigate to a novel chapter.
     *   Click the extension icon -> **Translate**.
     *   Sit back while the extension analyzes the text, updates the glossary, and translates the content.
+
+### Local LLMs (llama.cpp / KoboldCpp / Ollama)
+
+You can run translation entirely on your own machine with any server exposing an OpenAI-compatible chat completions endpoint:
+
+1.  In the **API Keys** tab, tick **Enable local LLM** — the browser will ask for permission to access `localhost` / `127.0.0.1` (granted at runtime; the extension does not request it on install). Then pick a server preset (llama.cpp `:8080`, Ollama `:11434`, KoboldCpp `:5001`) or enter a custom endpoint.
+2.  Optionally fill in **Extra request params** — a single JSON object merged verbatim into every request, e.g. `{"model":"qwen3.8","temperature":0.6,"top_p":0.95,"max_tokens":8192}`. Ollama requires the `model` key here; llama.cpp and KoboldCpp ignore it.
+3.  In **Model / Translation Config**, select **Local** as the provider for the stages you want. The same endpoint and params are used for all stages; concurrency/parallelism is controlled by your server's own start-up flags.
+
+Notes: only `http://localhost` / `http://127.0.0.1` endpoints are covered by the extension's optional host permissions. For anything fancier (remote hosts, API-key headers), fork and adjust `manifest.json` / `src/background/providers/local-provider.js`.
 
 ## 🛠️ Development
 

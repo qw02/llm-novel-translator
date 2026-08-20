@@ -104,6 +104,43 @@
                 </div>
             </div>
 
+            <h2>Local LLM (OpenAI-compatible)</h2>
+            <p>Point the extension at a local inference server (llama.cpp, KoboldCpp, Ollama, …) exposing an OpenAI-compatible endpoint.</p>
+            <p>When enabled, a "Local" provider appears in the Model / Translation Config tab. The same endpoint and extra params are used for all stages.</p>
+
+            <label>
+                <input type="checkbox" id="local-llm-enabled">
+                Enable local LLM
+            </label>
+
+            <div id="local-llm-settings" hidden>
+                <div class="api-key-row">
+                    <label for="local-llm-preset">Server preset:</label>
+                    <select id="local-llm-preset"></select>
+                </div>
+
+                <div class="api-key-row">
+                    <label for="local-llm-endpoint">Endpoint (base URL):</label>
+                    <input
+                            id="local-llm-endpoint"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="http://localhost:8080/v1"
+                    >
+                </div>
+
+                <div class="api-key-row">
+                    <label for="local-llm-extra-params">Extra request params (JSON object, merged into every request):</label>
+                    <textarea
+                            id="local-llm-extra-params"
+                            rows="4"
+                            autocomplete="off"
+                            placeholder='{"model":"qwen3.8","temperature":0.6,"top_p":0.95,"max_tokens":8192}'
+                    ></textarea>
+                    <p>The placeholder above is an example only — it is not applied as a default.</p>
+                </div>
+            </div>
+
             <div id="api-keys-status" class="status-message" aria-live="polite"></div>
 
             <div class="tab-actions">

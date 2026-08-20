@@ -15,6 +15,9 @@
     "https://api.x.ai/*",
     "https://generativelanguage.googleapis.com/*"
   ],
+  "optional_host_permissions": [
+    "http://127.0.0.1/*"
+  ],
   "background": {
     "service_worker": "src/background/main.js",
     "type": "module"

@@ -1,5 +1,6 @@
 import { PROVIDER_CONFIGS, DEFAULT_PARAMS } from './defaults.js';
 import { getAllApiKeys } from '../utils/api-key-manager.js';
+import { getLocalLlmConfig } from '../../common/local-llm-config.js';
 import { log } from "../../common/logger.js";
 
 /**
@@ -73,8 +74,13 @@ export class ConfigManager {
   async getModelList({ showAll = false }) {
     const models = [];
 
+    // The local pseudo-model is only offered when the feature is enabled
+    const localEnabled = (await getLocalLlmConfig()).enabled;
+
     // Always include hardcoded recommended models
     for (const [provider, config] of Object.entries(this.hardcodedConfigs)) {
+      if (provider === 'local' && !localEnabled) continue;
+
       config.models.forEach(model => {
         models.push({
           provider,
@@ -251,8 +257,14 @@ export class ConfigManager {
    * @private
    */
   async _findModelConfig(llmId) {
+    // The local pseudo-model only resolves while the feature is enabled,
+    // so stale stage configs fail cleanly after the user turns local off.
+    const localEnabled = (await getLocalLlmConfig()).enabled;
+
     // Search hardcoded configs first
     for (const [provider, config] of Object.entries(this.hardcodedConfigs)) {
+      if (provider === 'local' && !localEnabled) continue;
+
       const model = config.models.find(m => m.id === llmId);
       if (model) {
         return {

@@ -1,5 +1,6 @@
 import { ja_en_settings } from '../lang-settings/ja_en.js';
 import { LANGS } from "../../../common/languages.js";
+import { getRequiredHostPermissions, hasProviderHostPermissions } from '../../../common/provider-permissions.js';
 import { getChunkSizeOptions } from '../../../content/prompts/index.js';
 import { resolveChunkSizePreset, DEFAULT_TARGET_SIZE } from '../../../content/prompts/utils.js';
 
@@ -669,7 +670,7 @@ export class ModelsTabController {
     providers.forEach((provider) => {
       const opt = document.createElement('option');
       opt.value = provider;
-      opt.textContent = provider;
+      opt.textContent = provider === 'local' ? 'Local' : provider;
       if (provider === selectedProvider) {
         opt.selected = true;
       }
@@ -701,6 +702,18 @@ export class ModelsTabController {
       modelSelect.appendChild(opt);
       modelSelect.disabled = true;
       this.config.llm[stageKey] = null;
+      return;
+    }
+
+    // Local LLM: no model choice — endpoint and params are set in the API Keys tab
+    if (provider === 'local') {
+      const opt = document.createElement('option');
+      opt.value = 'local-1';
+      opt.textContent = 'Local (configured in API Keys tab)';
+      opt.selected = true;
+      modelSelect.appendChild(opt);
+      modelSelect.disabled = true;
+      this.config.llm[stageKey] = 'local-1';
       return;
     }
 
@@ -924,10 +937,49 @@ export class ModelsTabController {
     return true;
   }
 
+  /**
+   * Checks that every provider selected for a stage has its required host
+   * permissions granted (core host_permissions or granted optional ones).
+   *
+   * @param {Object} config - Config built from the UI
+   * @returns {Promise<boolean>} True if all selected providers are permitted
+   */
+  async validateProviderPermissions(config) {
+    const providers = new Set();
+
+    for (const modelId of Object.values(config.llm)) {
+      if (!modelId) continue;
+      const model = this.findModelById(modelId);
+      // The local pseudo-model is absent from the list when the feature is
+      // disabled; map its id directly so stale selections are still checked.
+      const provider = model?.provider || (modelId === 'local-1' ? 'local' : null);
+      if (provider) providers.add(provider);
+    }
+
+    for (const provider of providers) {
+      if (getRequiredHostPermissions(provider).length === 0) continue;
+
+      if (!(await hasProviderHostPermissions(provider))) {
+        const label = provider === 'local' ? 'Local' : provider;
+        this.setStatus(
+          `Missing host permission for provider "${label}". Grant it in the API Keys tab before saving.`,
+          'error'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   async save() {
     const newConfig = this.buildConfigFromUI();
 
     if (!this.validateConfig(newConfig)) {
+      return;
+    }
+
+    if (!(await this.validateProviderPermissions(newConfig))) {
       return;
     }
 
