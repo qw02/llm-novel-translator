@@ -7,34 +7,67 @@
  *
  * {
  *   enabled: false,
- *   endpoint: 'http://localhost:8080/v1',
- *   extraParams: ''   // raw text; must JSON.parse to a plain object
+ *   port: 8080,             // local port; host is fixed to 127.0.0.1
+ *   extraParams: ''         // raw text; must JSON.parse to a plain object
  * }
+ *
+ * The endpoint is always `http://127.0.0.1:<port>/v1` (OpenAI-style chat
+ * completions). The host and path are fixed to keep the required optional
+ * host permission scoped to `http://127.0.0.1/*`; only the port is free-form.
  */
 
 export const LOCAL_LLM_STORAGE_KEY = 'local_llm_config';
 
+export const LOCAL_LLM_HOST = 'http://127.0.0.1';
+export const LOCAL_LLM_PATH = '/v1';
+export const LOCAL_LLM_DEFAULT_PORT = 8080;
+export const LOCAL_LLM_PORT_MIN = 1;
+export const LOCAL_LLM_PORT_MAX = 65535;
+
 /**
- * Preset endpoints for popular local inference engines.
- * `custom` leaves the endpoint field untouched for free-form entry.
+ * Presets for popular local inference engines. Selecting one fills in the
+ * port; the port remains editable.
  */
 export const LOCAL_LLM_PRESETS = [
-  { key: 'llamacpp', label: 'llama.cpp (localhost:8080)', endpoint: 'http://localhost:8080/v1' },
-  { key: 'ollama', label: 'Ollama (localhost:11434)', endpoint: 'http://localhost:11434/v1' },
-  { key: 'koboldcpp', label: 'KoboldCpp (localhost:5001)', endpoint: 'http://localhost:5001/v1' },
-  { key: 'custom', label: 'Custom…', endpoint: '' },
+  { key: 'llamacpp', label: 'llama.cpp', port: 8080 },
+  { key: 'ollama', label: 'Ollama', port: 11434 },
+  { key: 'koboldcpp', label: 'KoboldCpp', port: 5001 },
 ];
 
 export const DEFAULT_LOCAL_LLM_CONFIG = {
   enabled: false,
-  endpoint: LOCAL_LLM_PRESETS[0].endpoint,
+  port: LOCAL_LLM_DEFAULT_PORT,
   extraParams: '',
 };
 
 /**
+ * Normalizes an arbitrary value to a valid port number.
+ * Falls back to `fallback` for non-numeric / out-of-range input.
+ *
+ * @param {*} value - Raw value (string or number)
+ * @param {number} [fallback=LOCAL_LLM_DEFAULT_PORT]
+ * @returns {number} Valid port
+ */
+export function normalizePort(value, fallback = LOCAL_LLM_DEFAULT_PORT) {
+  const port = parseInt(value, 10);
+  if (Number.isNaN(port)) return fallback;
+  return Math.min(LOCAL_LLM_PORT_MAX, Math.max(LOCAL_LLM_PORT_MIN, port));
+}
+
+/**
+ * Builds the base OpenAI endpoint URL for a port.
+ *
+ * @param {number|string} port
+ * @returns {string} e.g. 'http://127.0.0.1:8080/v1'
+ */
+export function buildLocalEndpoint(port) {
+  return `${LOCAL_LLM_HOST}:${normalizePort(port)}${LOCAL_LLM_PATH}`;
+}
+
+/**
  * Reads the local LLM config from storage, falling back to defaults.
  *
- * @returns {Promise<{enabled: boolean, endpoint: string, extraParams: string}>}
+ * @returns {Promise<{enabled: boolean, port: number, extraParams: string}>}
  */
 export async function getLocalLlmConfig() {
   const result = await chrome.storage.local.get(LOCAL_LLM_STORAGE_KEY);
@@ -46,7 +79,7 @@ export async function getLocalLlmConfig() {
 
   return {
     enabled: stored.enabled === true,
-    endpoint: typeof stored.endpoint === 'string' ? stored.endpoint : DEFAULT_LOCAL_LLM_CONFIG.endpoint,
+    port: normalizePort((stored.port ?? stored.endpoint) || LOCAL_LLM_DEFAULT_PORT),
     extraParams: typeof stored.extraParams === 'string' ? stored.extraParams : '',
   };
 }
@@ -54,14 +87,14 @@ export async function getLocalLlmConfig() {
 /**
  * Saves the local LLM config to storage.
  *
- * @param {{enabled: boolean, endpoint: string, extraParams: string}} config
+ * @param {{enabled: boolean, port: number|string, extraParams: string}} config
  * @returns {Promise<void>}
  */
 export async function saveLocalLlmConfig(config) {
   await chrome.storage.local.set({
     [LOCAL_LLM_STORAGE_KEY]: {
       enabled: config.enabled === true,
-      endpoint: config.endpoint || '',
+      port: normalizePort(config.port, LOCAL_LLM_DEFAULT_PORT),
       extraParams: config.extraParams || '',
     },
   });

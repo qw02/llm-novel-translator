@@ -167,8 +167,8 @@ describe('ConfigManager', () => {
                 if (key === 'local_llm_config') {
                     return Promise.resolve({
                         local_llm_config: enabled
-                            ? { enabled: true, endpoint: 'http://localhost:8080/v1', extraParams: '' }
-                            : { enabled: false, endpoint: '', extraParams: '' },
+                            ? { enabled: true, port: 8080, extraParams: '' }
+                            : { enabled: false, port: 8080, extraParams: '' },
                     });
                 }
                 return Promise.resolve({});

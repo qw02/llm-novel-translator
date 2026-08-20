@@ -12,7 +12,7 @@
  */
 
 export const PROVIDER_HOST_PERMISSIONS = {
-  local: ['http://localhost/*', 'http://127.0.0.1/*'],
+  local: ['http://127.0.0.1/*'],
 };
 
 /**

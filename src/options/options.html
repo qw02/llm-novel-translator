@@ -114,18 +114,22 @@
             </label>
 
             <div id="local-llm-settings" hidden>
+                <p>Host is fixed to <code>http://127.0.0.1</code> (only the port is configurable). The extension will use the OpenAI-style endpoint <code>http://127.0.0.1:&lt;port&gt;/v1</code>.</p>
+
                 <div class="api-key-row">
                     <label for="local-llm-preset">Server preset:</label>
                     <select id="local-llm-preset"></select>
                 </div>
 
                 <div class="api-key-row">
-                    <label for="local-llm-endpoint">Endpoint (base URL):</label>
+                    <label for="local-llm-port">Port:</label>
                     <input
-                            id="local-llm-endpoint"
-                            type="text"
+                            id="local-llm-port"
+                            type="number"
+                            min="1"
+                            max="65535"
+                            inputmode="numeric"
                             autocomplete="off"
-                            placeholder="http://localhost:8080/v1"
                     >
                 </div>
 

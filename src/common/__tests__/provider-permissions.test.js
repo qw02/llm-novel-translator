@@ -14,7 +14,7 @@ describe('provider-permissions', () => {
 
   describe('getRequiredHostPermissions', () => {
     it('should return origins for providers that need them', () => {
-      expect(getRequiredHostPermissions('local')).toEqual(['http://localhost/*', 'http://127.0.0.1/*']);
+      expect(getRequiredHostPermissions('local')).toEqual(['http://127.0.0.1/*']);
     });
 
     it('should return empty array for providers without optional hosts', () => {

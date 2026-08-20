@@ -709,7 +709,7 @@ export class ModelsTabController {
     if (provider === 'local') {
       const opt = document.createElement('option');
       opt.value = 'local-1';
-      opt.textContent = 'Local (configured in API Keys tab)';
+      opt.textContent = 'Local (port configured in API Keys tab)';
       opt.selected = true;
       modelSelect.appendChild(opt);
       modelSelect.disabled = true;

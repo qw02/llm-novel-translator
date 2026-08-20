@@ -54,11 +54,11 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
 
 You can run translation entirely on your own machine with any server exposing an OpenAI-compatible chat completions endpoint:
 
-1.  In the **API Keys** tab, tick **Enable local LLM** — the browser will ask for permission to access `localhost` / `127.0.0.1` (granted at runtime; the extension does not request it on install). Then pick a server preset (llama.cpp `:8080`, Ollama `:11434`, KoboldCpp `:5001`) or enter a custom endpoint.
+1.  In the **API Keys** tab, tick **Enable local LLM** — the browser will ask for permission to access `127.0.0.1` (granted at runtime; the extension does not request it on install). Pick a server preset (llama.cpp `:8080`, Ollama `:11434`, KoboldCpp `:5001`) or enter a custom port. The host is fixed to `http://127.0.0.1`, so requests go to `http://127.0.0.1:<port>/v1` (OpenAI-style chat completions).
 2.  Optionally fill in **Extra request params** — a single JSON object merged verbatim into every request, e.g. `{"model":"qwen3.8","temperature":0.6,"top_p":0.95,"max_tokens":8192}`. Ollama requires the `model` key here; llama.cpp and KoboldCpp ignore it.
 3.  In **Model / Translation Config**, select **Local** as the provider for the stages you want. The same endpoint and params are used for all stages; concurrency/parallelism is controlled by your server's own start-up flags.
 
-Notes: only `http://localhost` / `http://127.0.0.1` endpoints are covered by the extension's optional host permissions. For anything fancier (remote hosts, API-key headers), fork and adjust `manifest.json` / `src/background/providers/local-provider.js`.
+Notes: only `http://127.0.0.1` endpoints are covered by the extension's optional host permissions. For anything fancier (custom host, API-key headers, remote servers), fork and adjust `manifest.json` / `src/background/providers/local-provider.js`.
 
 ## 🛠️ Development
 

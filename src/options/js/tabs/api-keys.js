@@ -4,6 +4,8 @@ import {
   getLocalLlmConfig,
   saveLocalLlmConfig,
   parseExtraParams,
+  normalizePort,
+  LOCAL_LLM_DEFAULT_PORT,
 } from '../../../common/local-llm-config.js';
 import {
   hasProviderHostPermissions,
@@ -62,7 +64,7 @@ class ApiKeysTabController {
     this.localEnabledCheckbox = null;
     this.localSettingsContainer = null;
     this.localPresetSelect = null;
-    this.localEndpointInput = null;
+    this.localPortInput = null;
     this.localExtraParamsInput = null;
 
     this.isInitialized = false;
@@ -97,7 +99,7 @@ class ApiKeysTabController {
     this.localEnabledCheckbox = document.getElementById('local-llm-enabled');
     this.localSettingsContainer = document.getElementById('local-llm-settings');
     this.localPresetSelect = document.getElementById('local-llm-preset');
-    this.localEndpointInput = document.getElementById('local-llm-endpoint');
+    this.localPortInput = document.getElementById('local-llm-port');
     this.localExtraParamsInput = document.getElementById('local-llm-extra-params');
 
     LOCAL_LLM_PRESETS.forEach((preset) => {
@@ -118,13 +120,13 @@ class ApiKeysTabController {
 
     // Local LLM inputs
     this.localEnabledCheckbox.addEventListener('change', async () => {
-      // Enabling requires the optional localhost host permissions; the
+      // Enabling requires the optional loopback host permission; the
       // request must originate from this user gesture.
       if (this.localEnabledCheckbox.checked) {
         const granted = await requestProviderHostPermissions('local');
         if (!granted) {
           this.localEnabledCheckbox.checked = false;
-          this.setStatus('Local LLM requires permission to access localhost. Permission was not granted.', 'error');
+          this.setStatus('Local LLM requires permission to access 127.0.0.1. Permission was not granted.', 'error');
         }
       }
       this.updateLocalSettingsVisibility();
@@ -133,13 +135,13 @@ class ApiKeysTabController {
 
     this.localPresetSelect.addEventListener('change', () => {
       const preset = LOCAL_LLM_PRESETS.find(p => p.key === this.localPresetSelect.value);
-      if (preset && preset.endpoint) {
-        this.localEndpointInput.value = preset.endpoint;
+      if (preset) {
+        this.localPortInput.value = preset.port;
       }
       this.markDirty();
     });
 
-    this.localEndpointInput.addEventListener('input', () => {
+    this.localPortInput.addEventListener('input', () => {
       this.markDirty();
     });
 
@@ -161,21 +163,22 @@ class ApiKeysTabController {
   }
 
   /**
-   * Picks the preset matching the given endpoint, falling back to 'custom'.
+   * Picks the preset matching the given port, or the first preset if none match.
    *
-   * @param {string} endpoint
+   * @param {number} port - Currently configured port
    * @returns {string} Preset key
    */
-  matchPreset(endpoint) {
-    const preset = LOCAL_LLM_PRESETS.find(p => p.key !== 'custom' && p.endpoint === endpoint);
-    return preset ? preset.key : 'custom';
+  matchPreset(port) {
+    const normalized = normalizePort(port, LOCAL_LLM_DEFAULT_PORT);
+    const matching = LOCAL_LLM_PRESETS.find(p => p.port === normalized);
+    return matching ? matching.key : LOCAL_LLM_PRESETS[0].key;
   }
 
   applyLocalConfigToUI(config) {
     this.localEnabledCheckbox.checked = !!config.enabled;
-    this.localEndpointInput.value = config.endpoint || '';
+    this.localPortInput.value = normalizePort(config.port, LOCAL_LLM_DEFAULT_PORT);
     this.localExtraParamsInput.value = config.extraParams || '';
-    this.localPresetSelect.value = this.matchPreset(config.endpoint || '');
+    this.localPresetSelect.value = this.matchPreset(config.port);
     this.updateLocalSettingsVisibility();
   }
 
@@ -218,23 +221,19 @@ class ApiKeysTabController {
       }
     });
 
-    // Validate local LLM settings before saving anything
+    // Validate local LLM settings before saving anything.
+    // normalizePort coerces input into the valid 1-65535 range.
     const localConfig = {
       enabled: this.localEnabledCheckbox.checked,
-      endpoint: this.localEndpointInput.value.trim(),
+      port: normalizePort(this.localPortInput.value),
       extraParams: this.localExtraParamsInput.value,
     };
 
     if (localConfig.enabled) {
-      if (!localConfig.endpoint) {
-        this.setStatus('Local LLM endpoint must be set when local LLM is enabled.', 'error');
-        return;
-      }
-
-      // Permission gate: enabled implies the localhost host permissions were
-      // granted (they may have been revoked since via Chrome settings)
+      // Permission gate: enabled implies the 127.0.0.1 host permission was
+      // granted (it may have been revoked since via Chrome settings)
       if (!(await hasProviderHostPermissions('local'))) {
-        this.setStatus('Local LLM requires permission to access localhost. Untick and re-tick the checkbox to grant it.', 'error');
+        this.setStatus('Local LLM requires permission to access 127.0.0.1. Untick and re-tick the checkbox to grant it.', 'error');
         return;
       }
 

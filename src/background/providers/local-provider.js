@@ -1,14 +1,14 @@
 import OpenAI from 'openai';
 import { BaseProvider } from './base-provider.js';
-import { getLocalLlmConfig, parseExtraParams } from '../../common/local-llm-config.js';
+import { getLocalLlmConfig, parseExtraParams, buildLocalEndpoint } from '../../common/local-llm-config.js';
 
 /**
  * Local LLM provider implementation.
  *
- * Talks to any OpenAI-compatible chat completions endpoint (llama.cpp,
- * KoboldCpp, Ollama, …). Endpoint and extra request params are read from
- * chrome.storage on every request, so config changes take effect immediately
- * even though the coordinator caches provider instances.
+ * Talks to an OpenAI-compatible chat completions endpoint (llama.cpp,
+ * KoboldCpp, Ollama, …) at http://127.0.0.1:<port>/v1. Config is read from
+ * chrome.storage on every request, so changes take effect immediately even
+ * though the coordinator caches provider instances.
  *
  * The request payload is intentionally minimal: `messages` plus whatever the
  * user put in the extra-params field (merged as-is, including the `model`
@@ -38,13 +38,11 @@ export class LocalProvider extends BaseProvider {
       if (!config.enabled) {
         throw new Error('Local LLM is disabled. Enable it in the API Keys tab.');
       }
-      if (!config.endpoint) {
-        throw new Error('Local LLM endpoint is not configured.');
-      }
 
+      const endpoint = buildLocalEndpoint(config.port);
       const client = new OpenAI({
         apiKey: 'local',
-        baseURL: config.endpoint,
+        baseURL: endpoint,
         dangerouslyAllowBrowser: true,
       });
 

@@ -42,7 +42,7 @@ describe('LocalProvider', () => {
     it('should send messages plus extra params only', async () => {
         mockLocalConfig({
             enabled: true,
-            endpoint: 'http://localhost:8080/v1',
+            port: 8080,
             extraParams: '{"model":"qwen3.8","foo":"bar"}',
         });
 
@@ -60,7 +60,7 @@ describe('LocalProvider', () => {
     it('should send only messages when extra params are blank', async () => {
         mockLocalConfig({
             enabled: true,
-            endpoint: 'http://localhost:11434/v1',
+            port: 11434,
             extraParams: '',
         });
 
@@ -70,28 +70,29 @@ describe('LocalProvider', () => {
     });
 
     it('should throw when local LLM is disabled', async () => {
-        mockLocalConfig({ enabled: false, endpoint: 'http://localhost:8080/v1', extraParams: '' });
+        mockLocalConfig({ enabled: false, port: 8080, extraParams: '' });
 
         await expect(provider.completion(messages, {})).rejects.toThrow('Local LLM is disabled');
         expect(createMock).not.toHaveBeenCalled();
     });
 
-    it('should throw when endpoint is missing', async () => {
-        mockLocalConfig({ enabled: true, endpoint: '', extraParams: '' });
+    it('should default to the default port when absent', async () => {
+        mockLocalConfig({ enabled: true, extraParams: '' });
 
-        await expect(provider.completion(messages, {})).rejects.toThrow('endpoint is not configured');
-        expect(createMock).not.toHaveBeenCalled();
+        await provider.completion(messages, {});
+
+        expect(createMock).toHaveBeenCalledWith({ messages });
     });
 
     it('should throw on invalid extra params JSON', async () => {
-        mockLocalConfig({ enabled: true, endpoint: 'http://localhost:8080/v1', extraParams: '{oops' });
+        mockLocalConfig({ enabled: true, port: 8080, extraParams: '{oops' });
 
         await expect(provider.completion(messages, {})).rejects.toThrow('not valid JSON');
         expect(createMock).not.toHaveBeenCalled();
     });
 
     it('should throw when extra params is not a plain object', async () => {
-        mockLocalConfig({ enabled: true, endpoint: 'http://localhost:8080/v1', extraParams: '[1,2]' });
+        mockLocalConfig({ enabled: true, port: 8080, extraParams: '[1,2]' });
 
         await expect(provider.completion(messages, {})).rejects.toThrow('single JSON object');
         expect(createMock).not.toHaveBeenCalled();
