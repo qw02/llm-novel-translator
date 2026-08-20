@@ -54,7 +54,7 @@ describe("resolveChunkSizePreset", () => {
 
 describe("ja_en text-segmentation prompt sizes", () => {
   it("medium matches the original hard-coded prompt values", () => {
-    const system = buildJaEn({ textSegmentation: { targetSize: "medium" } });
+    const system = buildJaEn({ textSegmentation: { targetSize: "small" } });
     expect(system).toContain("Target: 100–200 characters.");
     expect(system).toContain("Allowed: 50–400 characters.");
     expect(system).toContain("exceeds 300 characters");

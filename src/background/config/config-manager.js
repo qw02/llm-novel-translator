@@ -1,6 +1,7 @@
 import { PROVIDER_CONFIGS, DEFAULT_PARAMS } from './defaults.js';
 import { getAllApiKeys } from '../utils/api-key-manager.js';
 import { getLocalLlmConfig } from '../../common/local-llm-config.js';
+import { hasProviderHostPermissions } from '../../common/provider-permissions.js';
 import { log } from "../../common/logger.js";
 
 /**
@@ -77,9 +78,13 @@ export class ConfigManager {
     // The local pseudo-model is only offered when the feature is enabled
     const localEnabled = (await getLocalLlmConfig()).enabled;
 
+    // NanoGPT is only offered once its optional host permission is granted.
+    const nanogptPermitted = await hasProviderHostPermissions('nanogpt');
+
     // Always include hardcoded recommended models
     for (const [provider, config] of Object.entries(this.hardcodedConfigs)) {
       if (provider === 'local' && !localEnabled) continue;
+      if (provider === 'nanogpt' && !nanogptPermitted) continue;
 
       config.models.forEach(model => {
         models.push({
@@ -99,6 +104,9 @@ export class ConfigManager {
       const apiKeys = await getAllApiKeys();
 
       for (const provider of Object.keys(apiKeys)) {
+        // Keep optional-host providers hidden until their permission is granted.
+        if (provider === 'nanogpt' && !nanogptPermitted) continue;
+
         // Load cached models for this provider
         const cached = await this._loadModelCache(provider);
 
@@ -191,6 +199,14 @@ export class ConfigManager {
           continue;
         }
 
+        // Providers that use optional host permissions (e.g., NanoGPT) must be
+        // granted before we attempt to reach them from the service worker.
+        if (!(await hasProviderHostPermissions(provider))) {
+          console.warn(`[ConfigManager] Missing host permission for provider: ${provider}`);
+          results.skipped.push(provider);
+          continue;
+        }
+
         // Create temporary provider instance to fetch models
         const providerInstance = new ProviderClass({ endpoint, apiKey });
 
@@ -260,10 +276,12 @@ export class ConfigManager {
     // The local pseudo-model only resolves while the feature is enabled,
     // so stale stage configs fail cleanly after the user turns local off.
     const localEnabled = (await getLocalLlmConfig()).enabled;
+    const nanogptPermitted = await hasProviderHostPermissions('nanogpt');
 
     // Search hardcoded configs first
     for (const [provider, config] of Object.entries(this.hardcodedConfigs)) {
       if (provider === 'local' && !localEnabled) continue;
+      if (provider === 'nanogpt' && !nanogptPermitted) continue;
 
       const model = config.models.find(m => m.id === llmId);
       if (model) {
@@ -279,6 +297,8 @@ export class ConfigManager {
     const apiKeys = await getAllApiKeys();
 
     for (const provider of Object.keys(apiKeys)) {
+      if (provider === 'nanogpt' && !nanogptPermitted) continue;
+
       const cached = await this._loadModelCache(provider);
 
       if (cached) {

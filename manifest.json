@@ -16,7 +16,8 @@
     "https://generativelanguage.googleapis.com/*"
   ],
   "optional_host_permissions": [
-    "http://127.0.0.1/*"
+    "http://127.0.0.1/*",
+    "https://nano-gpt.com/*"
   ],
   "background": {
     "service_worker": "src/background/main.js",

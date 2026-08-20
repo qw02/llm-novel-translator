@@ -17,7 +17,8 @@ const API_KEY_PROVIDERS = [
   'openai',
   'deepseek',
   'google',
-  'xai'
+  'xai',
+  'nanogpt'
 ];
 
 async function getApiKeys() {
@@ -245,18 +246,54 @@ class ApiKeysTabController {
       }
     }
 
+    // NanoGPT uses an optional host permission (https://nano-gpt.com). When a
+    // key is present but the permission hasn't been granted yet, request it
+    // from this save click. If the user declines, still persist the key but
+    // show a warning; Save remains usable so another click can retry the grant.
+    if (updated.nanogpt && !(await hasProviderHostPermissions('nanogpt'))) {
+      const granted = await requestProviderHostPermissions('nanogpt');
+
+      try {
+        await this.persistApiKeysAndLocalConfig(updated, localConfig);
+      } catch (error) {
+        console.error('[Options] Failed to save API keys:', error);
+        this.setStatus('Failed to save API keys.', 'error');
+        throw error;
+      }
+
+      if (granted) {
+        this.setStatus('API keys saved.', 'success');
+      } else {
+        this.setStatus(
+          'NanoGPT API key saved, but permission to access nano-gpt.com was not granted. Click Save again to retry granting it.',
+          'warning'
+        );
+      }
+      return;
+    }
+
     try {
-      await setApiKeys(updated);
-      await saveLocalLlmConfig(localConfig);
-      this.originalKeys = { ...updated };
-      this.originalLocalConfig = { ...localConfig };
-      this.isDirty = false;
+      await this.persistApiKeysAndLocalConfig(updated, localConfig);
       this.setStatus('API keys saved.', 'success');
     } catch (error) {
       console.error('[Options] Failed to save API keys:', error);
       this.setStatus('Failed to save API keys.', 'error');
       throw error;
     }
+  }
+
+  /**
+   * Persists API keys and the local LLM config together and marks the tab clean.
+   *
+   * @param {Object} updated - Non-empty API keys by provider
+   * @param {Object} localConfig - Normalized local LLM config
+   */
+  async persistApiKeysAndLocalConfig(updated, localConfig) {
+    await setApiKeys(updated);
+    await saveLocalLlmConfig(localConfig);
+    this.originalKeys = { ...updated };
+    this.originalLocalConfig = { ...localConfig };
+    this.isDirty = false;
   }
 
   reset() {

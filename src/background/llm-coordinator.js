@@ -8,6 +8,7 @@ import { GoogleProvider } from './providers/google-provider.js';
 import { ConfigManager } from "./config/config-manager.js";
 import { XaiProvider } from "./providers/xai-provider.js";
 import { LocalProvider } from "./providers/local-provider.js";
+import { NanoGptProvider } from "./providers/nanogpt-provider.js";
 import { assertProviderHostPermissions } from "../common/provider-permissions.js";
 import { log } from "../common/logger.js";
 
@@ -22,6 +23,7 @@ const PROVIDER_REGISTRY = {
   google: GoogleProvider,
   xai: XaiProvider,
   local: LocalProvider,
+  nanogpt: NanoGptProvider,
 };
 
 /**

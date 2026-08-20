@@ -122,7 +122,7 @@ describe('ConfigManager', () => {
             expect(dep).toBeDefined();
             expect(dep.deprecated).toBe(true);
 
-            const normal = models.find(m => m.id === '1-1');
+            const normal = models.find(m => m.id === '1-20');
             expect(normal.deprecated).toBe(false);
         });
 
@@ -209,6 +209,45 @@ describe('ConfigManager', () => {
             getAllApiKeys.mockResolvedValue({});
 
             await expect(manager.resolveConfig('local-1', {})).rejects.toThrow('Model not found');
+        });
+    });
+
+    describe('nanogpt gating', () => {
+        it('should exclude nanogpt models from getModelList without permission', async () => {
+            chrome.permissions.contains.mockResolvedValueOnce(false);
+
+            const models = await manager.getModelList({ showAll: false });
+
+            expect(models.find(m => m.provider === 'nanogpt')).toBeUndefined();
+        });
+
+        it('should include nanogpt models when permission is granted', async () => {
+            chrome.permissions.contains.mockResolvedValueOnce(true);
+
+            const models = await manager.getModelList({ showAll: false });
+
+            const nanogpt = models.find(m => m.id === '4-1');
+            expect(nanogpt).toBeDefined();
+            expect(nanogpt.provider).toBe('nanogpt');
+            expect(nanogpt.source).toBe('recommended');
+        });
+
+        it('should fail to resolve nanogpt model without permission', async () => {
+            chrome.permissions.contains.mockResolvedValueOnce(false);
+            getAllApiKeys.mockResolvedValue({});
+
+            await expect(manager.resolveConfig('4-1', {})).rejects.toThrow('Model not found');
+        });
+
+        it('should resolve nanogpt model when permission is granted', async () => {
+            chrome.permissions.contains.mockResolvedValueOnce(true);
+            getAllApiKeys.mockResolvedValue({});
+
+            const config = await manager.resolveConfig('4-1', {});
+
+            expect(config.providerType).toBe('nanogpt');
+            expect(config.endpoint).toBe(PROVIDER_CONFIGS.nanogpt.endpoint);
+            expect(config.params.model).toBe('deepseek/deepseek-v4-flash-latest');
         });
     });
 });

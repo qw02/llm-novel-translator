@@ -339,6 +339,12 @@ button#custom-instructions-save:hover {
     border: 1px solid #f5c6cb;
 }
 
+.status-message[data-status-type="warning"] {
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
 /* Phased-out model update banner + per-selector warnings */
 .update-banner {
     margin-top: 15px;

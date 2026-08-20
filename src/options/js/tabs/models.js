@@ -670,7 +670,7 @@ export class ModelsTabController {
     providers.forEach((provider) => {
       const opt = document.createElement('option');
       opt.value = provider;
-      opt.textContent = provider === 'local' ? 'Local' : provider;
+      opt.textContent = provider === 'local' ? 'Local' : provider === 'nanogpt' ? 'NanoGPT' : provider;
       if (provider === selectedProvider) {
         opt.selected = true;
       }
@@ -960,7 +960,7 @@ export class ModelsTabController {
       if (getRequiredHostPermissions(provider).length === 0) continue;
 
       if (!(await hasProviderHostPermissions(provider))) {
-        const label = provider === 'local' ? 'Local' : provider;
+        const label = provider === 'local' ? 'Local' : provider === 'nanogpt' ? 'NanoGPT' : provider;
         this.setStatus(
           `Missing host permission for provider "${label}". Grant it in the API Keys tab before saving.`,
           'error'

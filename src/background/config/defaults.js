@@ -181,19 +181,24 @@ export const PROVIDER_CONFIGS = {
     },
   },
 
-  // ENHANCEMENT: Add support for NanoGPT as provider
-  // nanogpt: {
-  //   models: [
-  //     { id: '4-1', model: 'deepseek-ai/deepseek-v3.2-exp', label: '[NG] DeepSeek V3.2 (R: Off)' },
-  //   ],
-  //   limits: {
-  //     stage1: 'all',
-  //     stage2: 'all',
-  //     stage3a: 'all',
-  //     stage3b: 'all',
-  //     stage4: 'all',
-  //   },
-  // },
+  nanogpt: {
+    endpoint: 'https://nano-gpt.com/api/v1',
+    models: [
+      { id: '4-1', model: 'deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest (Non-reasoning)', reasoning: 'none' },
+      { id: '4-2', model: 'deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest (Reasoning)', reasoning: 'medium' },
+      { id: '4-3', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Low)', reasoning: 'low' },
+      { id: '4-4', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Medium)', reasoning: 'medium' },
+    ],
+    limits: {
+      stage1: 'all',
+      stage2: 'all',
+      stage3a: 'all',
+      stage3b: 'all',
+      stage4: 'all',
+      stage5: 'all',
+      stage6: 'all',
+    },
+  },
 
   xai: {
     endpoint: 'https://api.x.ai/v1',
