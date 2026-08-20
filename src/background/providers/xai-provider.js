@@ -15,6 +15,7 @@ export class XaiProvider extends BaseProvider {
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: this.endpoint,
+      dangerouslyAllowBrowser: true,
     });
   }
 
@@ -34,6 +35,13 @@ export class XaiProvider extends BaseProvider {
         messages: messages,
         max_completion_tokens: params.max_tokens ?? 4096,
       };
+
+      // reasoning={"effort": "high"}
+      if (params.reasoning && typeof params.reasoning === 'string') {
+        requestPayload.reasoning = {
+          effort: params.reasoning,
+        };
+      }
 
       const response = await this.client.chat.completions.create(requestPayload);
 

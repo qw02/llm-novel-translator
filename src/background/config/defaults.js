@@ -52,7 +52,7 @@ export const PROVIDER_CONFIGS = {
   },
 
   openai: {
-    endpoint: 'https://api.openai.com/v1/chat/completions',
+    endpoint: 'https://api.openai.com/v1',
     models: [
       {
         id: '2-1',
@@ -118,8 +118,8 @@ export const PROVIDER_CONFIGS = {
     ],
     limits: {
       stage1: 'all',
-      stage2: ['2-3', '2-4'],
-      stage3a: ['2-3', '2-4'],
+      stage2: ['2-3', '2-4', '2-7'],
+      stage3a: ['2-3', '2-4', '2-7'],
       stage3b: 'all',
       stage4: 'all',
       stage5: 'all',
@@ -128,6 +128,7 @@ export const PROVIDER_CONFIGS = {
   },
 
   deepseek: {
+    // reasoning -> leave key out to inject thinking == false
     endpoint: 'https://api.deepseek.com/v1',
     models: [
       {
@@ -140,7 +141,7 @@ export const PROVIDER_CONFIGS = {
         model: 'deepseek-v4-flash',
         label: 'DeepSeek V4 Flash (Low)',
         reasoning: 'low',
-        tokens: 16384,
+        tokens: 8192,
       },
       {
         id: '3-3',
@@ -159,7 +160,7 @@ export const PROVIDER_CONFIGS = {
         model: 'deepseek-v4-pro',
         label: 'DeepSeek V4 Pro (High)',
         reasoning: 'high',
-        tokens: 16384,
+        tokens: 8192,
       },
       {
         id: '3-6',
@@ -199,18 +200,20 @@ export const PROVIDER_CONFIGS = {
     models: [
       {
         id: '5-1',
-        model: 'grok-4-1-fast-reasoning',
-        label: 'Grok 4.1 Fast (Reasoning)',
+        model: 'grok-4.20-0309-reasoning',
+        label: 'Grok 4.20 (Medium)',
+        reasoning: 'medium',
       },
       {
         id: '5-2',
-        model: 'grok-4-1-fast-non-reasoning',
-        label: 'Grok 4.1 Fast (Non-reasoning)',
+        model: 'grok-4.20-0309-reasoning',
+        label: 'Grok 4.20 (Low)',
+        reasoning: 'low',
       },
       {
         id: '5-3',
-        model: 'grok-4-0709',
-        label: 'Grok 4',
+        model: 'grok-4.6',
+        label: 'Grok 4.6',
       },
     ],
     limits: {
@@ -227,44 +230,47 @@ export const PROVIDER_CONFIGS = {
   google: {
     endpoint: 'handled-by-sdk',
     models: [
+      // PRO
       {
         id: '6-1',
-        model: 'gemini-3-pro',
-        label: 'Gemini Pro 3',
+        model: 'gemini-3.1-pro-preview',
+        label: 'Gemini 3.1 Pro',
         reasoning: 'high',
         tokens: 8192,
       },
       {
         id: '6-2',
-        model: 'gemini-3-pro',
-        label: 'Gemini Pro 3 (Low)',
+        model: 'gemini-3.1-pro-preview',
+        label: 'Gemini 3.1 Pro (Low)',
         reasoning: 'low',
       },
+      // Flash Lite
       {
         id: '6-3',
-        model: 'gemini-2.5-flash-lite-preview-09-2025',
-        label: 'Gemini Flash-Lite 2.5 (Medium)',
+        model: 'gemini-3.5-flash-lite',
+        label: 'Gemini 3.5 Flash Lite (Medium)',
         reasoning: 'medium',
         tokens: 8192,
       },
       {
         id: '6-4',
-        model: 'gemini-2.5-flash-lite-preview-09-2025',
-        label: 'Gemini Flash-Lite 2.5 (Non-reasoning)',
+        model: 'gemini-3.5-flash-lite',
+        label: 'Gemini 3.5 Flash Lite (Non-reasoning)',
         reasoning: 'minimal',
       },
+      // Flash
       {
         id: '6-5',
-        model: 'google/gemini-3.5-flash',
-        label: 'Gemini Flash 3.5 (Medium)',
+        model: 'google/gemini-3.7-flash',
+        label: 'Gemini Flash 3.7 (Medium)',
         reasoning: 'medium',
         tokens: 8192,
       },
       {
         id: '6-6',
-        model: 'google/gemini-3.5-flash',
-        label: 'Gemini Flash 3.5 (Non-reasoning)',
-        reasoning: 'minimal',
+        model: 'google/gemini-3.7-flash',
+        label: 'Gemini Flash 3.7 (Low)',
+        reasoning: 'low',
       },
     ],
     limits: {

@@ -15,6 +15,7 @@ export class DeepSeekProvider extends BaseProvider {
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: this.endpoint,
+      dangerouslyAllowBrowser: true,
     });
   }
 
@@ -40,20 +41,16 @@ export class DeepSeekProvider extends BaseProvider {
       };
 
       if (params.reasoning) {
-        requestPayload.extra_body = {
-          thinking: {
+        requestPayload.thinking = {
             type: 'enabled',
-          },
         };
 
         if (typeof params.reasoning === 'string') {
           requestPayload.reasoning_effort = params.reasoning;
         }
       } else {
-        requestPayload.extra_body = {
-          thinking: {
+        requestPayload.thinking = {
             type: 'disabled',
-          },
         };
       }
 

@@ -25,6 +25,7 @@ export class OpenRouterProvider extends BaseProvider {
         // 'HTTP-Referer': 'https://github.com/qw02/llm-novel-translator',
         // 'X-Title': 'LLM Novel Translator',
       },
+      dangerouslyAllowBrowser: true,
     });
   }
 
@@ -46,7 +47,7 @@ export class OpenRouterProvider extends BaseProvider {
       const requestPayload = {
         model: params.model,
         messages: messages,
-        temperature: params.temperature ?? 0.6,
+        temperature: params.temperature ?? 1.0,
         max_tokens: params.max_tokens ?? 8192,
       };
 

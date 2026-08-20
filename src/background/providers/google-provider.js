@@ -4,6 +4,8 @@ import { BaseProvider } from './base-provider.js';
 /**
  * Google Gemini provider implementation.
  *
+ * Uses the Gemini Interactions API for text generation:
+ * system instruction + user input -> assistant text.
  */
 export class GoogleProvider extends BaseProvider {
   constructor({ endpoint, apiKey }) {
@@ -21,51 +23,37 @@ export class GoogleProvider extends BaseProvider {
    *
    * @param {Array<Object>} messages - Messages array with role and content
    * @param {Object} params - Request parameters
-   * @param {string} params.model - Model identifier (e.g., 'gemini-2.5-pro')
+   * @param {string} params.model - Model identifier (e.g., 'gemini-3.1-pro-preview')
    * @param {number} [params.temperature] - Sampling temperature
-   * @param {number} [params.top_p] - Nucleus sampling parameter
    * @param {number} [params.max_tokens] - Maximum tokens to generate
-   * @param {string} [params.reasoning] - Reasoning mode ('minimal', 'low', 'medium', 'high')
+   * @param {string} [params.reasoning] - Thinking level ('minimal', 'low', 'medium', 'high')
    * @returns {Promise<Object>} Normalized response
    */
   async completion(messages, params) {
     try {
       const systemInstruction = messages.find(m => m.role === 'system')?.content;
-      const userMessages = messages.filter(m => m.role !== 'system');
+      const input = messages
+        .filter(m => m.role !== 'system')
+        .map(m => m.content)
+        .join('\n');
 
-      const contents = this._convertMessagesToGoogleFormat(userMessages);
-
-      const config = {
-        maxOutputTokens: params.max_tokens ?? 4096,
+      const generationConfig = {
+        temperature: params.temperature ?? 1,
+        max_output_tokens: params.max_tokens ?? 4096,
       };
 
-      if (systemInstruction) {
-        config.systemInstruction = systemInstruction;
+      if (params.reasoning !== undefined && params.reasoning !== null) {
+        generationConfig.thinking_level = params.reasoning;
       }
 
-
-      if (params.model.includes("gemini-3")) {
-        if (params.reasoning !== null) {
-          config.thinkingConfig = {
-            thinkingLevel: params.reasoning,
-          };
-        }
-      } else {
-        const thinkingBudget = this._mapReasoningToThinkingBudget(params.reasoning);
-        if (thinkingBudget !== null) {
-          config.thinkingConfig = {
-            thinkingBudget: thinkingBudget,
-          };
-        }
-      }
-
-      const response = await this.ai.models.generateContent({
-        model: params.model,
-        contents: contents,
-        config: config,
+      const interaction = await this.ai.interactions.create({
+        model: this._formatModel(params.model),
+        input,
+        generation_config: generationConfig,
+        ...(systemInstruction ? { system_instruction: systemInstruction } : {}),
       });
 
-      const normalized = this.normalizeResponse(response);
+      const normalized = this.normalizeResponse(interaction);
       this.logInteraction(messages, normalized.assistant, normalized.reasoning);
 
       return normalized;
@@ -76,92 +64,85 @@ export class GoogleProvider extends BaseProvider {
   }
 
   /**
-   * Converts standard messages format to Google's contents format.
-   * Google uses: [{ role: 'user'|'model', parts: [{ text: '...' }] }]
+   * Normalizes a Google model identifier for the Interactions API.
    *
-   * @param {Array<Object>} messages - Standard messages array
-   * @returns {Array<Object>} Google-formatted contents array
+   * The Interactions API expects `models/<model-id>`. Older model configs may
+   * include a `google/` vendor prefix (e.g. `google/gemini-3.7-flash`), which
+   * is removed before the `models/` prefix is applied.
+   *
+   * @param {string} model - Raw model identifier from config
+   * @returns {string} Google Interactions API model identifier
    * @private
    */
-  _convertMessagesToGoogleFormat(messages) {
-    return messages.map(message => ({
-      role: message.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: message.content }],
-    }));
+  _formatModel(model) {
+    if (typeof model !== 'string' || !model) {
+      throw new Error('Google model identifier is required');
+    }
+
+    const normalized = model.replace(/^google\//, '');
+
+    if (normalized.startsWith('models/') || normalized.startsWith('tunedModels/')) {
+      return normalized;
+    }
+
+    return `models/${normalized}`;
   }
 
   /**
-   * Maps reasoning mode to Google's thinking budget (token count).
+   * Normalizes a Google Interactions API response to standard format.
+   * Extracts both main content and available thinking summaries.
    *
-   * Budget allocation:
-   * - minimal: 0 (disable thinking for faster responses)
-   * - low: 128 (minimum thinking, required for gemini-2.5-pro)
-   * - medium: 1024 (balanced reasoning)
-   * - high: 8192 (deep reasoning)
-   *
-   * @param {string|undefined} reasoning - Reasoning config
-   * @returns {number|null} Thinking budget in tokens, or null if not specified
-   * @private
-   */
-  _mapReasoningToThinkingBudget(reasoning) {
-    if (reasoning === undefined) {
-      return null; // Use default at Google's inference engine side
-    }
-
-    const budgetMap = {
-      minimal: 0,      // Disable thinking (not allowed for gemini-2.5-pro)
-      low: 128,        // Minimum thinking
-      medium: 1024,    // Balanced
-      high: 8192,      // Maximum
-    };
-
-    const budget = budgetMap[reasoning];
-
-    if (budget === undefined) {
-      console.warn(`[Google] Unknown reasoning mode: ${reasoning}, using default`);
-      return null;
-    }
-
-    return budget;
-  }
-
-  /**
-   * Normalizes Google response to standard format.
-   * Extracts both main content and thinking/reasoning parts.
-   *
-   * @param {Object} rawResponse - Raw response from @google/genai
+   * @param {Object} rawResponse - Raw interaction response from @google/genai
    * @returns {Object} Normalized response: { assistant: string, reasoning: string | null }
    */
   normalizeResponse(rawResponse) {
-    const candidate = rawResponse.candidates?.[0];
-
-    if (!candidate) {
-      throw new Error('Invalid response: no candidates returned from Google');
+    if (!rawResponse || typeof rawResponse !== 'object') {
+      throw new Error('Invalid response: no interaction returned from Google');
     }
 
-    const content = candidate.content;
-    if (!content || !content.parts || content.parts.length === 0) {
-      throw new Error('Invalid response: no content parts returned');
-    }
+    const assistant = typeof rawResponse.output_text === 'string'
+      ? rawResponse.output_text
+      : '';
 
-    // Extract main text content (parts with 'text' field)
-    const textParts = content.parts.filter(part => part.text);
-    const assistant = textParts.map(part => part.text).join('');
-
-    // Extract thinking/reasoning content (parts with 'thought' field)
-    const thinkingParts = content.parts.filter(part => part.thought);
-    const reasoning = thinkingParts.length > 0
-                      ? thinkingParts.map(part => part.thought).join('\n')
-                      : null;
+    const reasoning = this._extractReasoning(rawResponse.steps);
 
     if (!assistant && !reasoning) {
-      throw new Error('Invalid response: no text or thought content in parts');
+      throw new Error('Invalid response: no text or thought content in interaction');
     }
 
     return {
-      assistant: assistant || '',
+      assistant,
       reasoning,
     };
+  }
+
+  /**
+   * Extracts thinking summaries from interaction steps.
+   *
+   * @param {Array<Object>|undefined} steps - Interaction steps
+   * @returns {string|null} Joined thinking summaries, or null if none found
+   * @private
+   */
+  _extractReasoning(steps) {
+    if (!Array.isArray(steps)) {
+      return null;
+    }
+
+    const thoughtTexts = [];
+
+    for (const step of steps) {
+      if (!step || step.type !== 'thought' || !Array.isArray(step.summary)) {
+        continue;
+      }
+
+      for (const item of step.summary) {
+        if (item?.type === 'text' && typeof item.text === 'string' && item.text) {
+          thoughtTexts.push(item.text);
+        }
+      }
+    }
+
+    return thoughtTexts.length > 0 ? thoughtTexts.join('\n') : null;
   }
 
   /**
@@ -198,9 +179,10 @@ export class GoogleProvider extends BaseProvider {
     // Invalid thinking configuration
     if (error.status === 400 &&
       (error.message?.includes('thinking') ||
-        error.message?.includes('thinkingBudget'))) {
+        error.message?.includes('thinkingLevel') ||
+        error.message?.includes('thinking_level'))) {
       const enhancedError = new Error(
-        'Invalid thinking configuration for Google model (check thinking budget limits)',
+        'Invalid thinking configuration for Google model (check thinking level)',
       );
       enhancedError.originalError = error;
       enhancedError.provider = 'google';
