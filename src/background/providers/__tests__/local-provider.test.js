@@ -46,7 +46,7 @@ describe('LocalProvider', () => {
             extraParams: '{"model":"qwen3.8","foo":"bar"}',
         });
 
-        const result = await provider.completion(messages, { model: 'ignored', max_tokens: 4096 });
+        const result = await provider.completion(messages, { model: 'ignored', max_tokens: 8192 });
 
         expect(createMock).toHaveBeenCalledWith({
             messages,

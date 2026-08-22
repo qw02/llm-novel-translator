@@ -201,8 +201,8 @@ export class LLMCoordinator {
     // Merge parameters with precedence: customParams > model config > defaults
     const params = {
       model: foundModel.model,
-      temperature: customParams.temperature ?? foundModel.temperature ?? 0.6,
-      max_tokens: customParams.max_tokens ?? foundModel.tokens ?? 4096,
+      temperature: customParams.temperature ?? foundModel.temperature ?? 1.0,
+      max_tokens: customParams.max_tokens ?? foundModel.tokens ?? 8192,
     };
 
     // Add provider-specific parameters

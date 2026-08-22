@@ -30,7 +30,7 @@ export const chunkSizeOptions = {
     minEnforcedChars: 40,
   },
   medium: {
-    description: "Larger chunks of roughly 300–500 characters. For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+    description: "Chunks of roughly 300–500 characters. For frontier models with large context windows.",
     targetRange: "300–500",
     allowedRange: "150–900",
     hardCap: 700,
@@ -40,7 +40,7 @@ export const chunkSizeOptions = {
     minEnforcedChars: 80,
   },
   large: {
-    description: "Very large chunks of roughly 500-1000. For frontier models, can also be used to save cost by reducing the number of API calls used.",
+    description: "Larger chunks of roughly 500-1000 characters. For frontier models, can also be used to save cost by reducing the number of API calls used.",
     targetRange: "500-1000",
     allowedRange: "400-1500",
     hardCap: 1500,

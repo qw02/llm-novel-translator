@@ -39,7 +39,7 @@ export class GoogleProvider extends BaseProvider {
 
       const generationConfig = {
         temperature: params.temperature ?? 1,
-        max_output_tokens: params.max_tokens ?? 4096,
+        max_output_tokens: params.max_tokens ?? 8192,
       };
 
       if (params.reasoning !== undefined && params.reasoning !== null) {

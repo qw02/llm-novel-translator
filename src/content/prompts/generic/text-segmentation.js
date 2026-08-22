@@ -9,7 +9,7 @@ import { getChunkingUserParts, resolveChunkSizePreset } from "../utils.js";
  * pipeline to merge chunks that came back smaller than this many characters.
  */
 export const chunkSizeOptions = {
-  small: {
+  tiny: {
     description: "Smaller chunks of roughly 80 tokens (~60 CJK characters or latin words). Better suited for locally-run or weaker models (e.g., ~30b class).",
     targetTokens: 80,
     approxChars: 60,
@@ -18,7 +18,7 @@ export const chunkSizeOptions = {
     maxDialogueLines: 5,
     minEnforcedChars: 30,
   },
-  medium: {
+  small: {
     description: "Balanced chunks of roughly 150 tokens (~100 CJK characters or latin words). Recommended default for most models.",
     targetTokens: 150,
     approxChars: 100,
@@ -27,14 +27,23 @@ export const chunkSizeOptions = {
     maxDialogueLines: 10,
     minEnforcedChars: 50,
   },
-  large: {
-    description: "Larger chunks of roughly 300 tokens (~200 CJK characters or latin words). For frontier models with large context windows (e.g., GPT-5-class, Claude Opus).",
+  medium: {
+    description: "Chunks of roughly 300 tokens (~200 CJK characters or latin words). For frontier models with large context windows.",
     targetTokens: 300,
     approxChars: 200,
     targetLines: "10-30",
     minChars: 80,
     maxDialogueLines: 20,
     minEnforcedChars: 80,
+  },
+  large: {
+    description: "Larger chunks of roughly 1000 tokens (~750 CJK characters or latin words). For frontier models, can also be used to save cost by reducing the number of API calls used.",
+    targetTokens: 1000,
+    approxChars: 750,
+    targetLines: "50-70",
+    minChars: 400,
+    maxDialogueLines: 40,
+    minEnforcedChars: 250,
   },
 };
 

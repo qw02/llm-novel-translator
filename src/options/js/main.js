@@ -153,4 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
       event.returnValue = '';
     }
   });
+
+  // Sets the placeholder text, with formatted JSON
+  const EXTRA_PARAMS_PLACEHOLDER_EXAMPLE = {
+    model: "qwen_3.8",
+    temperature: 0.6,
+    top_p: 0.95,
+  };
+
+  document.getElementById("local-llm-extra-params").placeholder =
+    JSON.stringify(EXTRA_PARAMS_PLACEHOLDER_EXAMPLE, null, 2);
 });

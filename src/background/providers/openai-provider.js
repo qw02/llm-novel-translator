@@ -43,7 +43,7 @@ export class OpenAIProvider extends BaseProvider {
       const requestPayload = {
         model: params.model,
         input: userMessage,
-        max_output_tokens: params.max_tokens ?? 4096,
+        max_output_tokens: params.max_tokens ?? 8192,
       };
 
       if (systemPrompt) {

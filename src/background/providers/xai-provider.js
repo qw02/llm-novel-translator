@@ -33,7 +33,7 @@ export class XaiProvider extends BaseProvider {
       const requestPayload = {
         model: params.model,
         messages: messages,
-        max_completion_tokens: params.max_tokens ?? 4096,
+        max_completion_tokens: params.max_tokens ?? 8192,
       };
 
       // reasoning={"effort": "high"}
