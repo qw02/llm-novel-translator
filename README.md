@@ -1,7 +1,7 @@
 # LLM Novel Translator (BYOK)
 
 ![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.1-green.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
 
 **LLM Novel Translator** is an open-source Chrome Extension designed to translate web novels using the power of Large Language Models (LLMs). It features a unique **auto-generating glossary** system that maintains consistency of terms (names, places, ranks) across chapters.
 
@@ -32,6 +32,7 @@ This extension operates on a **Bring Your Own Key (BYOK)** model, ensuring your 
     *   [Google Gemini](https://aistudio.google.com/api-keys)
     *   [DeepSeek](https://platform.deepseek.com/)
     *   [xAI (Grok)](https://console.x.ai/)
+    *   [NanoGPT](https://nano-gpt.com/api)
     *   Local inference servers (llama.cpp, KoboldCpp, Ollama, …) via an OpenAI-compatible endpoint — see below
 *   **⚙️ Granular Control**: Configure different models for different tasks (e.g., use a cheaper model for glossary extraction and a smarter model for final translation).
 
