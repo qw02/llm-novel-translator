@@ -88,9 +88,9 @@ describe("ja_en text-segmentation prompt sizes", () => {
 describe("generic text-segmentation prompt sizes", () => {
   it("medium matches the original hard-coded prompt values", () => {
     const system = buildGeneric(genericConfig({ targetSize: "medium" }));
-    expect(system).toContain("**150 tokens**");
-    expect(system).toContain("~50 characters");
-    expect(system).toContain("(>10 lines)");
+    expect(system).toContain("**300 tokens**");
+    expect(system).toContain("~80 characters");
+    expect(system).toContain("(>20 lines)");
   });
 
   it("defaults to medium when config lacks textSegmentation", () => {

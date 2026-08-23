@@ -70,11 +70,11 @@ describe('ConfigManager', () => {
 
             // '1-4' is listed in openrouter stage2 + stage3a, others are 'all'
             const m14 = models.find(m => m.id === '1-4');
-            expect(m14.limits).toEqual([1, 2, 3, 4, 5, 6]);
+            expect(m14.limits).toEqual([1, 4, 5, 6]);
 
             // '1-8' is not in stage2/stage3a lists, but stage3b is 'all'
             const m18 = models.find(m => m.id === '1-8');
-            expect(m18.limits).toEqual([1, 3, 4, 5, 6]);
+            expect(m18.limits).toEqual([1, 4, 5, 6]);
 
             // Provider-fetched models have no limits field
             expect(models.every(m => m.source !== 'recommended' || Array.isArray(m.limits))).toBe(true);

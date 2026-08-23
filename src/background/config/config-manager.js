@@ -141,7 +141,7 @@ export class ConfigManager {
    * @private
    *
    * @example
-   * // limits = { stage1: 'all', stage2: ['1-4'], stage3a: ['1-4'], stage3b: 'all', stage6: 'all' }
+   * // limits = { stage1: 'all', stage2: ['1-4'], Zstage3a: ['1-4'], stage3b: 'all', stage6: 'all' }
    * _getModelStages('1-4', limits) // Returns [1, 2, 3, 6]
    * _getModelStages('1-1', limits) // Returns [1, 3, 6]
    */
