@@ -158,6 +158,28 @@ describe('requestWithRetry', () => {
 
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
+
+  it('retries when translation tag is missing or unbalanced and recovers on attempt 3 with fallback', async () => {
+    mockRequest
+      .mockResolvedValueOnce(resp('<translation>missing closing'))
+      .mockResolvedValueOnce(resp('missing opening</translation>'))
+      .mockResolvedValueOnce(resp('<translation>balanced and valid</translation>\nLLM commentary'));
+
+    const res = await requestWithRetry({
+      client: fakeClient,
+      fallbackLlmId: 'fallback-model',
+      stageId: '4',
+      stageLabel: 'Translation',
+      prompt: { system: 's', user: 'u' },
+      isMalformed: isMalformedTranslation,
+    });
+
+    expect(res.raw).toBe('<translation>balanced and valid</translation>\nLLM commentary');
+    expect(res.attempts).toBe(3);
+    expect(res.usedFallback).toBe(true);
+    expect(res.malformed).toBe(false);
+    expect(mockRequest).toHaveBeenCalledTimes(3);
+  });
 });
 
 describe('requestBatchWithRetry', () => {
@@ -220,8 +242,16 @@ describe('isMalformedTranslation', () => {
     expect(isMalformedTranslation('<translation>Hello</translation>')).toBe(false);
   });
 
-  it('accepts recovered output with a missing closing tag', () => {
-    expect(isMalformedTranslation('<translation>Hello world')).toBe(false);
+  it('accepts balanced translation tags with extra text after the closing tag', () => {
+    expect(isMalformedTranslation('<translation>Hello</translation>\nHere is some explanation.')).toBe(false);
+  });
+
+  it('flags output with a missing closing tag as malformed to trigger retry', () => {
+    expect(isMalformedTranslation('<translation>Hello world')).toBe(true);
+  });
+
+  it('flags output with a missing opening tag as malformed to trigger retry', () => {
+    expect(isMalformedTranslation('Hello world</translation>')).toBe(true);
   });
 });
 

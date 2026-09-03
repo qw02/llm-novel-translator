@@ -138,19 +138,17 @@ function extractBalancedJSONSegments(text) {
 
 /**
  * Extracts the content enclosed within a specified XML/HTML tag from a given string.
- * If the closing tag is missing, it attempts to return the content after the opening tag.
- * If neither the opening nor closing tag is found, it provides a fallback value.
+ * Considers success only when there are balanced tag pairs (either 1 or many).
+ * Extra text outside or after the tags is ignored.
+ * If tags are missing or unbalanced, it provides a fallback value ('###').
  *
  * @param {string} str - The input string containing the XML/HTML content.
  * @param {string} tag - The name of the tag to extract content from.
- * @returns {string} - The extracted content, or a fallback value ('###') if the tag is not found.
+ * @returns {string} - The extracted content, or a fallback value ('###') if tags are missing or unbalanced.
  */
 export function extractTextFromTag(str, tag) {
   // Escape special regex characters in tag
   const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  const openingTag = `<${tag}>`;
-  const closingTag = `</${tag}>`;
 
   // Count opening and closing tags first
   const openingMatches = str.match(new RegExp(`<${escapedTag}>`, 'g'));
@@ -158,7 +156,7 @@ export function extractTextFromTag(str, tag) {
   const openingCount = openingMatches ? openingMatches.length : 0;
   const closingCount = closingMatches ? closingMatches.length : 0;
 
-  // Fast path: counts match → return all balanced pairs
+  // Balanced pairs: counts match and at least 1 pair exists
   if (openingCount > 0 && openingCount === closingCount) {
     const balancedRegex = new RegExp(`<${escapedTag}>(.*?)</${escapedTag}>`, 'gs');
     const matches = [...str.matchAll(balancedRegex)];
@@ -167,67 +165,11 @@ export function extractTextFromTag(str, tag) {
     }
   }
 
-  // Helper to find all indices of a substring
-  const findAllIndices = (text, substring) => {
-    const indices = [];
-    let index = 0;
-    while ((index = text.indexOf(substring, index)) !== -1) {
-      indices.push(index);
-      index += substring.length;
-    }
-    return indices;
-  };
-
-  // Case 1: Missing first opening tag (one more closing than opening)
-  if (closingCount === openingCount + 1 && closingCount > 0) {
-    console.warn(`Warning: Missing first opening tag <${tag}>. Attempting recovery.\n${str}`);
-
-    const openingIndices = findAllIndices(str, openingTag);
-    const closingIndices = findAllIndices(str, closingTag);
-    const extractedTexts = [];
-
-    // First segment: from start to first closing tag
-    extractedTexts.push(str.slice(0, closingIndices[0]).trim());
-
-    // Remaining segments: balanced pairs
-    for (let i = 0; i < openingIndices.length; i++) {
-      const start = openingIndices[i] + openingTag.length;
-      const end = closingIndices[i + 1];
-      if (end !== undefined) {
-        extractedTexts.push(str.slice(start, end).trim());
-      }
-    }
-
-    return extractedTexts.join('\n');
-  }
-
-  // Case 2: Missing last closing tag (one more opening than closing)
-  if (openingCount === closingCount + 1 && openingCount > 0) {
-    console.warn(`Warning: Missing last closing tag </${tag}>. Attempting recovery.\n${str}`);
-
-    const openingIndices = findAllIndices(str, openingTag);
-    const closingIndices = findAllIndices(str, closingTag);
-    const extractedTexts = [];
-
-    // All but last: balanced pairs
-    for (let i = 0; i < closingIndices.length; i++) {
-      const start = openingIndices[i] + openingTag.length;
-      const end = closingIndices[i];
-      extractedTexts.push(str.slice(start, end).trim());
-    }
-
-    // Last segment: from last opening to end
-    const lastStart = openingIndices[openingIndices.length - 1] + openingTag.length;
-    extractedTexts.push(str.slice(lastStart).trim());
-
-    return extractedTexts.join('\n');
-  }
-
-  // Case 3: No tags found or too broken
+  // Tags missing or unbalanced
   if (openingCount === 0 && closingCount === 0) {
     console.warn(`Warning: No tags <${tag}> found.\n${str}`);
   } else {
-    console.warn(`Warning: Tags too malformed to recover. Opening: ${openingCount}, Closing: ${closingCount}.\n${str}`);
+    console.warn(`Warning: Unbalanced or malformed tags <${tag}>. Opening: ${openingCount}, Closing: ${closingCount}.\n${str}`);
   }
 
   return '###';

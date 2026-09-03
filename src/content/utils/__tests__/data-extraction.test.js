@@ -240,13 +240,29 @@ describe('extractTextFromTag', () => {
     expect(result).toBe('hello\nworld');
   });
 
-  it('returns content after opening tag when last closing tag is missing (recovery: missing last closing)', () => {
+  it('returns ### and warns when last closing tag is missing', () => {
     const input = 'xxx<data>aaa';
     const result = extractTextFromTag(input, 'data');
-    expect(result).toBe('aaa');
+    expect(result).toBe('###');
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     const [[message]] = consoleWarnSpy.mock.calls;
-    expect(message).toContain('Missing last closing tag </data>');
+    expect(message).toContain('Unbalanced or malformed tags <data>');
+  });
+
+  it('returns ### and warns when first opening tag is missing', () => {
+    const input = 'aaa</data>';
+    const result = extractTextFromTag(input, 'data');
+    expect(result).toBe('###');
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    const [[message]] = consoleWarnSpy.mock.calls;
+    expect(message).toContain('Unbalanced or malformed tags <data>');
+  });
+
+  it('allows extra text after the last tag when balanced tag pair is present', () => {
+    const input = '<data>translated text</data>\nNote: I added some extra LLM comments here.';
+    const result = extractTextFromTag(input, 'data');
+    expect(result).toBe('translated text');
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 
   it('returns ### and warns when no tags are found', () => {
@@ -296,12 +312,12 @@ describe('extractTextFromTag', () => {
     expect(result).toBe('lower');
   });
 
-  it('when counts indicate missing last closing with lots of text after, returns tail correctly', () => {
+  it('returns ### when tag counts indicate missing last closing even with lots of text after', () => {
     const input = 'preamble <data>alpha</data> middle <data>beta</data> trailer <data>gamma and more text';
     const result = extractTextFromTag(input, 'data');
-    expect(result).toBe('alpha\nbeta\ngamma and more text');
+    expect(result).toBe('###');
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy.mock.calls[0][0]).toContain('Missing last closing tag </data>');
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('Unbalanced or malformed tags <data>');
   });
 
 });
