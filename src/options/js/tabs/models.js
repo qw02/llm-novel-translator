@@ -3,6 +3,7 @@ import { LANGS } from "../../../common/languages.js";
 import { getRequiredHostPermissions, hasProviderHostPermissions } from '../../../common/provider-permissions.js';
 import { getChunkSizeOptions } from '../../../content/prompts/index.js';
 import { resolveChunkSizePreset, DEFAULT_TARGET_SIZE } from '../../../content/prompts/utils.js';
+import { getDefaultTranslationConfig } from '../../../background/config/defaults.js';
 
 // Map of pair keys to their settings modules
 const PAIR_SETTINGS_MAP = {
@@ -33,39 +34,7 @@ function deepClone(obj) {
 
 // Default config if nothing is stored yet
 function getDefaultConfig() {
-  return {
-    llm: {
-      glossaryGenerate: null,
-      glossaryUpdate: null,
-      textChunking: null,
-      translation: null,
-      postEdit: null,
-      fallback: null,
-    },
-
-    updateGlossary: true,
-    glossaryChunkSize: 3000,
-
-    textSegmentation: {
-      method: 'chunk',
-      chunkSize: 2000,
-      overlapCount: 10,
-      targetSize: DEFAULT_TARGET_SIZE,
-    },
-
-    translation: {
-      // Pair-specific options will go here
-      contextLines: 5,
-    },
-
-    postEdit: false,
-
-    sourceLang: 'ja',
-    targetLang: 'en',
-
-    mode: 'simple',          // 'simple' | 'advanced'
-    showAllModels: false,     // advanced-only
-  };
+  return getDefaultTranslationConfig();
 }
 
 export class ModelsTabController {

@@ -3,6 +3,7 @@
  */
 import { LANGS } from "../../common/languages.js";
 import { getLanguage } from "../languages/detect-language.js";
+import { getDefaultTranslationConfig } from "../../background/config/defaults.js";
 
 class TranslationConfig {
   constructor(raw) {
@@ -42,12 +43,25 @@ export async function getCustomInstructions(sourceLang, targetLang) {
   }
 }
 
-export async function getTranslationConfig(popupOverrides) {
+export async function getTranslationConfig(popupOverrides = {}) {
   // Load from disk
   const { translation_config } = await chrome.storage.local.get('translation_config');
 
+  const baseConfig = (translation_config && typeof translation_config === 'object')
+    ? translation_config
+    : getDefaultTranslationConfig();
+
+  // If there wasn't one saved yet, persist default configuration to storage
+  if (!translation_config) {
+    try {
+      await chrome.storage.local.set({ translation_config: baseConfig });
+    } catch (error) {
+      console.warn('[Content] Failed to save default translation config:', error);
+    }
+  }
+
   // Fully materialize and copy before mutation
-  const rawConfig = structuredClone(translation_config)
+  const rawConfig = structuredClone(baseConfig);
 
   // Only used by UI
   delete rawConfig.mode;

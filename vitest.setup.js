@@ -13,6 +13,10 @@ chromeMock.runtime = {
     addListener: vi.fn(),
     removeListener: vi.fn(),
   },
+  onInstalled: {
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  },
   sendMessage: vi.fn(() => {
     console.warn('[Vitest mock] chrome.runtime.sendMessage should not be called in unit tests.');
   }),

@@ -334,3 +334,57 @@ export const RATE_LIMIT_CONFIG = {
   intervalCap: 10,       // Max 10 requests per interval
   interval: 1000,        // Interval in milliseconds (1 second)
 };
+
+/**
+ * Top recommended model used as default when the user has not configured specific models.
+ * Single selected model from the recommended models list in PROVIDER_CONFIGS.
+ * Update this object across versions as recommended models evolve.
+ */
+export const TOP_RECOMMENDED_MODEL = {
+  id: '1-10',
+  provider: 'openrouter',
+  model: 'google/gemini-3.8-flash',
+  label: 'Gemini 3.8 Flash (Low)',
+};
+
+/**
+ * Creates the default translation configuration for a fresh installation.
+ * Uses TOP_RECOMMENDED_MODEL for all active pipeline stages.
+ *
+ * @returns {Object} Default translation configuration
+ */
+export function getDefaultTranslationConfig() {
+  return {
+    llm: {
+      glossaryGenerate: TOP_RECOMMENDED_MODEL.id,
+      glossaryUpdate: TOP_RECOMMENDED_MODEL.id,
+      textChunking: TOP_RECOMMENDED_MODEL.id,
+      translation: TOP_RECOMMENDED_MODEL.id,
+      postEdit: null,
+      fallback: TOP_RECOMMENDED_MODEL.id,
+    },
+
+    updateGlossary: true,
+    glossaryChunkSize: 2000,
+
+    textSegmentation: {
+      method: 'chunk',
+      chunkSize: 2000,
+      overlapCount: 10,
+      targetSize: 'medium',
+    },
+
+    translation: {
+      contextLines: 5,
+    },
+
+    postEdit: false,
+
+    sourceLang: 'ja',
+    targetLang: 'en',
+
+    mode: 'simple',          // 'simple' | 'advanced'
+    showAllModels: false,     // advanced-only
+  };
+}
+

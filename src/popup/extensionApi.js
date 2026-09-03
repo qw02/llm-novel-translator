@@ -1,4 +1,5 @@
 import { POPUP_MSG_TYPE } from "../common/messaging.js";
+import { getDefaultTranslationConfig } from "../background/config/defaults.js";
 
 function storageGet(keyOrKeys) {
   return new Promise((resolve, reject) => {
@@ -41,7 +42,7 @@ export async function getApiKeys() {
 
 export async function getConfigFromDisk() {
   const { translation_config } = await storageGet("translation_config");
-  return translation_config || null;
+  return translation_config || getDefaultTranslationConfig();
 }
 
 export async function getActiveTab() {

@@ -10,6 +10,7 @@ import {
   scanAllKeysFromDB,
 } from './indexeddb-storage.js';
 import { log } from "../common/logger.js";
+import { getDefaultTranslationConfig } from "./config/defaults.js";
 
 const BG_MSG_TYPES = {
   llm_request: 'llm_request',
@@ -115,5 +116,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.warn('[Background] Unknown message type:', message.type);
   return false;
 });
+
+/**
+ * Initializes default translation_config in chrome.storage.local if not already set.
+ */
+export async function initializeDefaultConfig() {
+  try {
+    const result = await chrome.storage.local.get('translation_config');
+    if (!result.translation_config) {
+      await chrome.storage.local.set({ translation_config: getDefaultTranslationConfig() });
+      log('[Background] Initialized default translation_config on first install');
+    }
+  } catch (error) {
+    console.error('[Background] Failed to initialize default config:', error);
+  }
+}
+
+// First install / update event listener
+if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled?.addListener) {
+  chrome.runtime.onInstalled.addListener((details) => {
+    log('[Background] onInstalled event:', details?.reason);
+    void initializeDefaultConfig();
+  });
+}
+
+// Ensure default config exists on service worker startup as well
+void initializeDefaultConfig();
 
 log('[Background] Service worker started');

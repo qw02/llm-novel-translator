@@ -11,6 +11,7 @@ import {
   hasProviderHostPermissions,
   requestProviderHostPermissions,
 } from '../../../common/provider-permissions.js';
+import { getDefaultTranslationConfig } from '../../../background/config/defaults.js';
 
 const API_KEY_PROVIDERS = [
   'openrouter',
@@ -291,6 +292,13 @@ class ApiKeysTabController {
   async persistApiKeysAndLocalConfig(updated, localConfig) {
     await setApiKeys(updated);
     await saveLocalLlmConfig(localConfig);
+
+    // Ensure default translation_config is initialized if missing
+    const { translation_config } = await chrome.storage.local.get('translation_config');
+    if (!translation_config) {
+      await chrome.storage.local.set({ translation_config: getDefaultTranslationConfig() });
+    }
+
     this.originalKeys = { ...updated };
     this.originalLocalConfig = { ...localConfig };
     this.isDirty = false;
