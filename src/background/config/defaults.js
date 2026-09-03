@@ -27,8 +27,8 @@ export const PROVIDER_CONFIGS = {
       { id: '1-8', model: 'anthropic/claude-sonnet-4.5', label: 'Sonnet 4.5', deprecated: true },
 
       { id: '1-9',  model: 'z-ai/glm-5.3', label: 'GLM 5.3' },
-      { id: '1-10', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Low)', providers: ['google-vertex/global'], reasoning: 'low' },
-      { id: '1-11', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Medium)', providers: ['google-vertex/global'], reasoning: 'medium' },
+      { id: '1-10', model: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash (Low)', providers: ['google-vertex/global'], reasoning: 'low' },
+      { id: '1-11', model: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash (Medium)', providers: ['google-vertex/global'], reasoning: 'medium' },
       { id: '1-12', model: 'qwen/qwen3.8-2.4t-a95b', label: 'Qwen3.8 2.4T A95B' },
       { id: '1-13', model: 'deepseek/deepseek-v4-pro-0813', label: 'DeepSeek V4 Pro 0813' },
       { id: '1-14', model: 'deepseek/deepseek-v4-pro-0813', label: 'DeepSeek V4 Pro 0813 (Non-reasoning)', reasoning: 'none' },
@@ -192,8 +192,8 @@ export const PROVIDER_CONFIGS = {
     models: [
       { id: '4-1', model: 'deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest (Non-reasoning)', reasoning: 'none' },
       { id: '4-2', model: 'deepseek/deepseek-v4-flash-latest', label: 'DeepSeek V4 Flash Latest (Reasoning)', reasoning: 'medium' },
-      { id: '4-3', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Low)', reasoning: 'low' },
-      { id: '4-4', model: 'google/gemini-3.7-flash', label: 'Gemini 3.7 Flash (Medium)', reasoning: 'medium' },
+      { id: '4-3', model: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash (Low)', reasoning: 'low' },
+      { id: '4-4', model: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash (Medium)', reasoning: 'medium' },
     ],
     limits: {
       stage1: 'all',
@@ -272,15 +272,15 @@ export const PROVIDER_CONFIGS = {
       // Flash
       {
         id: '6-5',
-        model: 'google/gemini-3.7-flash',
-        label: 'Gemini Flash 3.7 (Medium)',
+        model: 'google/gemini-3.8-flash',
+        label: 'Gemini Flash 3.8 (Medium)',
         reasoning: 'medium',
         tokens: 8192,
       },
       {
         id: '6-6',
-        model: 'google/gemini-3.7-flash',
-        label: 'Gemini Flash 3.7 (Low)',
+        model: 'google/gemini-3.8-flash',
+        label: 'Gemini Flash 3.8 (Low)',
         reasoning: 'low',
       },
     ],
