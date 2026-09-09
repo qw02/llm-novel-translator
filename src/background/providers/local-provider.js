@@ -48,6 +48,7 @@ export class LocalProvider extends BaseProvider {
 
       const requestPayload = {
         messages,
+        max_tokens: 4096,
         ...parseExtraParams(config.extraParams),
       };
 
