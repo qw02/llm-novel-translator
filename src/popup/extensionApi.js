@@ -45,6 +45,16 @@ export async function getConfigFromDisk() {
   return translation_config || getDefaultTranslationConfig();
 }
 
+/**
+ * Returns whether the Local LLM provider is enabled in the options page.
+ * Unlike cloud providers it has no API key, so the popup must treat it as a
+ * configured provider independently of `api_keys`.
+ */
+export async function getLocalLlmEnabled() {
+  const { local_llm_config } = await storageGet("local_llm_config");
+  return local_llm_config?.enabled === true;
+}
+
 export async function getActiveTab() {
   return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

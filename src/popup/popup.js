@@ -1,6 +1,7 @@
 import {
   getApiKeys,
   getConfigFromDisk,
+  getLocalLlmEnabled,
   getActiveTab,
   querySiteSupported,
   getPipelineLifecycleState,
@@ -125,14 +126,16 @@ async function refresh() {
   clearProgressTimer();
   appRoot.innerHTML = `<h1 class="loading-title">Loading…</h1>`;
 
-  const [apiKeys, config] = await Promise.all([
+  const [apiKeys, config, localEnabled] = await Promise.all([
     getApiKeys(),
     getConfigFromDisk(),
+    getLocalLlmEnabled(),
   ]);
 
   currentConfig = config || null;
 
   const hasApiKeys = apiKeys && Object.keys(apiKeys).length > 0;
+  const hasLocalLlm = localEnabled === true;
   let siteSupported = false;
   let pipelineState = null;
 
@@ -163,7 +166,7 @@ async function refresh() {
   currentSourceLang = langOverrides.popupSourceLang || baseSourceLang;
   currentTargetLang = langOverrides.popupTargetLang || baseTargetLang;
 
-  const uiState = computeUiState({ hasApiKeys, siteSupported, pipelineState });
+  const uiState = computeUiState({ hasApiKeys, hasLocalLlm, siteSupported, pipelineState });
   currentUiState = uiState;
 
   const renderContext = {

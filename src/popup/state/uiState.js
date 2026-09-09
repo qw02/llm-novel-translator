@@ -7,8 +7,8 @@ export const UiState = {
   COMPLETE_ERROR: "COMPLETE_ERROR",
 };
 
-export function computeUiState({ hasApiKeys, siteSupported, pipelineState }) {
-  if (!hasApiKeys) {
+export function computeUiState({ hasApiKeys, hasLocalLlm, siteSupported, pipelineState }) {
+  if (!hasApiKeys && !hasLocalLlm) {
     return UiState.WELCOME;
   }
 

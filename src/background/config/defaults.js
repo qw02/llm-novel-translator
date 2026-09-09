@@ -302,7 +302,7 @@ export const PROVIDER_CONFIGS = {
     // gating lives in config-manager.js.
     endpoint: null,
     models: [
-      { id: 'local-1', model: 'local', label: 'Local' },
+      { id: 'local-1', model: 'local', label: 'Local', tokens: 8192 },
     ],
     limits: {
       stage1: 'all',
@@ -387,4 +387,3 @@ export function getDefaultTranslationConfig() {
     showAllModels: false,     // advanced-only
   };
 }
-
