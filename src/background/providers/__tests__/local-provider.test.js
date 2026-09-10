@@ -52,6 +52,7 @@ describe('LocalProvider', () => {
             messages,
             model: 'qwen3.8',
             foo: 'bar',
+            max_tokens: 4096,
         });
         expect(result.assistant).toBe('translated text');
         expect(result.reasoning).toBe('some reasoning');
@@ -66,7 +67,7 @@ describe('LocalProvider', () => {
 
         await provider.completion(messages, {});
 
-        expect(createMock).toHaveBeenCalledWith({ messages });
+        expect(createMock).toHaveBeenCalledWith({ messages, max_tokens: 4096 });
     });
 
     it('should throw when local LLM is disabled', async () => {
@@ -81,7 +82,7 @@ describe('LocalProvider', () => {
 
         await provider.completion(messages, {});
 
-        expect(createMock).toHaveBeenCalledWith({ messages });
+        expect(createMock).toHaveBeenCalledWith({ messages, max_tokens: 4096 });
     });
 
     it('should throw on invalid extra params JSON', async () => {
