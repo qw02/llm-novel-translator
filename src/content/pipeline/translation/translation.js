@@ -55,7 +55,11 @@ export async function translateText(config, texts, glossary, intervals) {
       const sourceText = intervalTexts.map(t => t.text).join('\n');
 
       const fullContextText = precedingText + '\n' + sourceText;
-      const relevantEntries = filterRelevantGlossary(glossary, fullContextText);
+      const relevantEntries = filterRelevantGlossary(
+        glossary,
+        fullContextText,
+        !!config.glossaryIncludeSecondaryRefs,
+      );
 
       const prompt = promptBuilder.build(
         sourceText,
@@ -166,23 +170,43 @@ export function computePrecedingText(texts, start, config) {
 /**
  * Filters glossary entries relevant to the current context.
  *
+ * By default, an entry is relevant when any of its keys appears in the context.
+ * When `includeSecondaryRefs` is enabled, the values of the initially matched
+ * entries are scanned again for other entries' keys, and any hits are appended
+ * (e.g. a translation value that itself contains another glossary term).
+ *
  * @param {Object} glossary - Glossary object with entries array
  * @param {string} fullContextText - Combined preceding + source text
+ * @param {boolean} [includeSecondaryRefs=false] - Whether to scan matched values for further matches
  * @returns {Array<string>} Array of relevant glossary values
  */
-export function filterRelevantGlossary(glossary, fullContextText) {
+export function filterRelevantGlossary(glossary, fullContextText, includeSecondaryRefs = false) {
   if (!glossary || !glossary.entries) {
     return [];
   }
 
-  const relevantEntries = [];
+  const matchedEntries = [];
   for (const entry of glossary.entries) {
     if (entry.keys.some(key => fullContextText.includes(key))) {
-      relevantEntries.push(entry.value);
+      matchedEntries.push(entry);
     }
   }
 
-  return relevantEntries;
+  // Optionally scan the matched values (not the source text) against the
+  // glossary again, and include any further entries whose keys appear there.
+  if (includeSecondaryRefs && matchedEntries.length > 0) {
+    const matchedValuesText = matchedEntries.map(entry => entry.value).join('\n');
+    for (const entry of glossary.entries) {
+      if (
+        !matchedEntries.includes(entry) &&
+        entry.keys.some(key => matchedValuesText.includes(key))
+      ) {
+        matchedEntries.push(entry);
+      }
+    }
+  }
+
+  return matchedEntries.map(entry => entry.value);
 }
 
 /**

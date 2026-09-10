@@ -4,6 +4,7 @@ class MiscSettingsTabController {
     this.tabId = 'misc-settings';
     this.root = null;
     this.inputLogging = null;
+    this.glossarySecondaryRefs = null;
     this.statusElement = null;
     this.saveButton = null;
     this.cancelButton = null;
@@ -25,6 +26,7 @@ class MiscSettingsTabController {
   initDom() {
     this.root = document.getElementById('tab-misc-settings');
     this.inputLogging = document.getElementById('misc-logging-enabled');
+    this.glossarySecondaryRefs = document.getElementById('misc-glossary-secondary-refs');
     this.statusElement = document.getElementById('misc-settings-status');
     this.saveButton = document.getElementById('misc-settings-save');
     this.cancelButton = document.getElementById('misc-settings-cancel');
@@ -33,6 +35,12 @@ class MiscSettingsTabController {
   attachListeners() {
     if (this.inputLogging) {
       this.inputLogging.addEventListener('change', () => {
+        this.markDirty();
+      });
+    }
+
+    if (this.glossarySecondaryRefs) {
+      this.glossarySecondaryRefs.addEventListener('change', () => {
         this.markDirty();
       });
     }
@@ -52,13 +60,18 @@ class MiscSettingsTabController {
 
   async loadSettings() {
     try {
-      const result = await chrome.storage.local.get('loggingEnabled');
+      const result = await chrome.storage.local.get(['loggingEnabled', 'glossaryIncludeSecondaryRefs']);
       this.originalSettings = {
-        loggingEnabled: result.loggingEnabled ?? false
+        loggingEnabled: result.loggingEnabled ?? false,
+        glossaryIncludeSecondaryRefs: result.glossaryIncludeSecondaryRefs ?? false
       };
 
       if (this.inputLogging) {
         this.inputLogging.checked = this.originalSettings.loggingEnabled;
+      }
+
+      if (this.glossarySecondaryRefs) {
+        this.glossarySecondaryRefs.checked = this.originalSettings.glossaryIncludeSecondaryRefs;
       }
 
       this.isDirty = false;
@@ -75,7 +88,8 @@ class MiscSettingsTabController {
 
   async save() {
     const updated = {
-      loggingEnabled: this.inputLogging ? this.inputLogging.checked : false
+      loggingEnabled: this.inputLogging ? this.inputLogging.checked : false,
+      glossaryIncludeSecondaryRefs: this.glossarySecondaryRefs ? this.glossarySecondaryRefs.checked : false
     };
 
     try {
@@ -93,6 +107,10 @@ class MiscSettingsTabController {
   reset() {
     if (this.inputLogging) {
       this.inputLogging.checked = this.originalSettings.loggingEnabled;
+    }
+
+    if (this.glossarySecondaryRefs) {
+      this.glossarySecondaryRefs.checked = this.originalSettings.glossaryIncludeSecondaryRefs;
     }
 
     this.isDirty = false;

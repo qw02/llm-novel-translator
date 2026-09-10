@@ -27,7 +27,7 @@
                 Custom Instructions
             </button>
             <button class="sidebar-item" data-tab="misc-settings">
-                Misc. Settings
+                Misc. / Advanced Settings
             </button>
         </nav>
     </aside>
@@ -495,8 +495,8 @@
         </section>
 
         <section id="tab-misc-settings" class="tab" hidden>
-            <h2>Miscellaneous Settings</h2>
-            <p>Various settings for the extension.</p>
+            <h2>Misc. / Advanced Settings</h2>
+            <p>Various settings for the extension, including experimental / optional features.</p>
 
             <div class="misc-settings-group">
                 <h3>Debug / Logging</h3>
@@ -509,6 +509,20 @@
                     This can make the console noisy.
                     Some messages appear in the extension’s service worker log and may disappear when it stops, so open the service worker inspector first (chrome://extensions → Inspect views →
                     service worker).
+                </p>
+            </div>
+
+            <div class="misc-settings-group">
+                <h3>Glossary (Experimental)</h3>
+                <label class="setting-row">
+                    <input type="checkbox" id="misc-glossary-secondary-refs">
+                    Include secondary glossary references
+                </label>
+                <p class="setting-desc">
+                    When enabled, glossary entries whose keys appear in the page text are looked up as usual.
+                    In addition, the values of those matched entries are scanned again for other glossary
+                    entries' keys, and any hits are also added to the translation context. This can help when
+                    a translation value itself contains another glossary term. Default: off.
                 </p>
             </div>
 

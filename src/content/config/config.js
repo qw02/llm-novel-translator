@@ -89,6 +89,10 @@ export async function getTranslationConfig(popupOverrides = {}) {
     config.customInstruction = customInstructions;
   }
 
+  // Misc. / Advanced settings flag (stored separately from translation_config)
+  const { glossaryIncludeSecondaryRefs } = await chrome.storage.local.get('glossaryIncludeSecondaryRefs');
+  config.glossaryIncludeSecondaryRefs = glossaryIncludeSecondaryRefs ?? false;
+
   return config;
 }
 

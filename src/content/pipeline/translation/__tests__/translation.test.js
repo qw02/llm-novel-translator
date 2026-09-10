@@ -88,6 +88,51 @@ describe('filterRelevantGlossary', () => {
     const result = filterRelevantGlossary(glossary, 'oranges everywhere');
     expect(result).toEqual([]);
   });
+
+  it('does not scan secondary refs by default', () => {
+    const nestedGlossary = {
+      entries: [
+        { keys: ['apple'], value: 'apple: リンゴ' },
+        { keys: ['リンゴ'], value: 'リンゴ: ringo' },
+      ],
+    };
+    const result = filterRelevantGlossary(nestedGlossary, 'I ate an apple');
+    expect(result).toEqual(['apple: リンゴ']);
+  });
+
+  it('includes secondary refs when enabled, appended after the matched values', () => {
+    const nestedGlossary = {
+      entries: [
+        { keys: ['apple'], value: 'apple: リンゴ' },
+        { keys: ['リンゴ'], value: 'リンゴ: ringo' },
+        { keys: ['banana'], value: 'banana: バナナ' },
+      ],
+    };
+    const result = filterRelevantGlossary(nestedGlossary, 'I ate an apple', true);
+    expect(result).toEqual(['apple: リンゴ', 'リンゴ: ringo']);
+  });
+
+  it('does not duplicate an entry already present in the first pass', () => {
+    const nestedGlossary = {
+      entries: [
+        { keys: ['apple'], value: 'apple: リンゴ' },
+        { keys: ['リンゴ'], value: 'リンゴ: ringo' },
+      ],
+    };
+    // 'リンゴ' matches via the context text directly and via the value of the apple entry
+    const result = filterRelevantGlossary(nestedGlossary, 'I ate an apple リンゴ', true);
+    expect(result).toEqual(['apple: リンゴ', 'リンゴ: ringo']);
+  });
+
+  it('returns unchanged results when enabled but no values contain other keys', () => {
+    const result = filterRelevantGlossary(glossary, 'I ate a banana today', true);
+    expect(result).toEqual(['banana: バナナ']);
+  });
+
+  it('returns empty when enabled but first pass has no matches', () => {
+    const result = filterRelevantGlossary(glossary, 'oranges everywhere', true);
+    expect(result).toEqual([]);
+  });
 });
 
 describe('mapTranslationToTexts', () => {
